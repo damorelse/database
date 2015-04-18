@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <iostream>
+#include <cstring>
 #include "rm.h"
 
 using namespace std;
@@ -83,7 +84,7 @@ RC RM_FileHandle::GetRec     (const RID &rid, RM_Record &rec) const
 	rec.rid = rid;
 	delete rec.recordCopy; // just in case
 	rec.recordCopy = new char[rec.length];
-	strncpy(rec.recordCopy, ptr, rec.length);
+	memcpy(rec.recordCopy, ptr, rec.length);
 
 	// Clean up.
 	pData = NULL;
@@ -320,7 +321,7 @@ RC RM_FileHandle::UpdateRec  (const RM_Record &rec)              // Update a rec
 
 	// Check RID
 	PageNum pageNum;
-	RC rc = rid.GetPageNum(pageNum);
+	rc = rid.GetPageNum(pageNum);
 	if (rc != OK_RC)
 		return rc;
 	
@@ -368,7 +369,7 @@ RC RM_FileHandle::UpdateRec  (const RM_Record &rec)              // Update a rec
 	char* ptr = GetRecordPtr(pData, slotNum);
 
 	// Copy info to page
-	strncpy(ptr, rData, rmFileHeader.recordSize);
+	memcpy(ptr, rData, rmFileHeader.recordSize);
 
 	// Clean up.
 	rData = NULL;

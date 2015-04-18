@@ -72,8 +72,8 @@ class RM_FileHandle {
 	public:
 		RM_FileHandle ();
 		~RM_FileHandle();
-		RM_FileHandle(const RM_Record &other);
-		RM_FileHandle& operator= (const RM_Record &other);
+		RM_FileHandle(const RM_FileHandle &other);
+		RM_FileHandle& operator= (const RM_FileHandle &other);
 
 		// Given a RID, return the record
 		RC GetRec     (const RID &rid, RM_Record &rec) const;
