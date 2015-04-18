@@ -26,37 +26,76 @@
 // RM_Record: RM Record interface
 //
 class RM_Record {
-public:
-    RM_Record ();
-    ~RM_Record();
+	friend class RM_FileHandle;
+	friend class RM_FileScan;
+	public:
+		RM_Record ();
+		~RM_Record();
+		RM_Record (const RM_Record &other);
+		RM_Record& operator=  (const RM_Record &other);
 
-    // Return the data corresponding to the record.  Sets *pData to the
-    // record contents.
-    RC GetData(char *&pData) const;
+		// Return the data corresponding to the record.  Sets *pData to the
+		// record contents.
+		RC GetData(char *&pData) const;
 
-    // Return the RID associated with the record
-    RC GetRid (RID &rid) const;
+		// Return the RID associated with the record
+		RC GetRid (RID &rid) const;
+
+	private: 
+		char * recordCopy;
+		RID rid;
+		size_t length;
 };
 
 //
 // RM_FileHandle: RM File interface
 //
+
+const int RM_FILE_HDR_SIZE = PF_PAGE_SIZE;
+struct RM_FileHeader {
+	size_t recordSize; // in bytes
+	size_t maxSlot;
+	size_t maxPage;	//CHANGES
+	int firstFreeSpace; // page num, CHANGES
+	size_t pageHeaderSize; //in bytes
+};
+#define RM_PAGE_LIST_END  -1       // end of list of free pages
+#define RM_PAGE_FULL      -2       // no free space
+#define RM_BIT_START	  sizeof(int)
+struct RM_PageHeader {
+	int nextFreeSpace;
+	char *slotsBits;
+};
 class RM_FileHandle {
-public:
-    RM_FileHandle ();
-    ~RM_FileHandle();
+	friend class RM_Manager;
+	friend class RM_FileScan;
+	public:
+		RM_FileHandle ();
+		~RM_FileHandle();
+		RM_FileHandle(const RM_Record &other);
+		RM_FileHandle& operator= (const RM_Record &other);
 
-    // Given a RID, return the record
-    RC GetRec     (const RID &rid, RM_Record &rec) const;
+		// Given a RID, return the record
+		RC GetRec     (const RID &rid, RM_Record &rec) const;
 
-    RC InsertRec  (const char *pData, RID &rid);       // Insert a new record
+		RC InsertRec  (const char *pData, RID &rid);       // Insert a new record
 
-    RC DeleteRec  (const RID &rid);                    // Delete a record
-    RC UpdateRec  (const RM_Record &rec);              // Update a record
+		RC DeleteRec  (const RID &rid);                    // Delete a record
+		RC UpdateRec  (const RM_Record &rec);              // Update a record
 
-    // Forces a page (along with any contents stored in this class)
-    // from the buffer pool to disk.  Default value forces all pages.
-    RC ForcePages (PageNum pageNum = ALL_PAGES);
+		// Forces a page (along with any contents stored in this class)
+		// from the buffer pool to disk.  Default value forces all pages.
+		RC ForcePages (PageNum pageNum = ALL_PAGES);
+
+private:
+	bool open;
+	bool modified;
+	PF_FileHandle pfFileHandle;
+	RM_FileHeader rmFileHeader;
+
+	bool GetSlotBitValue(char* pData, const SlotNum slotNum) const;
+	void SetSlotBitValue(char* pData, const SlotNum slotNum, bool b);
+	char* GetRecordPtr(char* pData, const SlotNum slotNum) const;
 };
 
 //
@@ -76,6 +115,18 @@ public:
                   ClientHint pinHint = NO_HINT); // Initialize a file scan
     RC GetNextRec(RM_Record &rec);               // Get next matching record
     RC CloseScan ();                             // Close the scan
+
+private:
+	bool open;
+	PageNum pageNum;
+	SlotNum slotNum;
+
+	const RM_FileHandle* rmFileHandle;
+	AttrType attrType;
+	int attrLength;
+	int attrOffset;
+	CompOp compOp;
+	void* value;
 };
 
 //
@@ -91,11 +142,28 @@ public:
     RC OpenFile   (const char *fileName, RM_FileHandle &fileHandle);
 
     RC CloseFile  (RM_FileHandle &fileHandle);
+private:
+	PF_Manager* pfm;
+
+	size_t CalculateMaxSlots(int recordSize);
 };
 
 //
 // Print-error function
 //
 void RM_PrintError(RC rc);
+
+#define RM_RECORDNOTREAD        (START_RM_WARN + 1)  
+#define RM_FILENOTOPEN			(START_RM_WARN + 2)  
+#define RM_RECORD_DNE			(START_RM_WARN + 3)  
+#define RM_EOF					(START_RM_WARN + 4)
+#define RM_LASTWARN		RM_EOF
+
+#define RM_RECORDSIZE           (START_RM_ERR - 0)
+#define RM_FILENAMELEN          (START_RM_ERR - 1) 
+#define RM_INPUTNULL			(START_RM_ERR - 2)	
+#define RM_STRLEN				(START_RM_ERR - 3)
+#define RM_NEGOFFSET			(START_RM_ERR - 4)
+#define RM_LASTERROR	RM_NEGOFFSET
 
 #endif

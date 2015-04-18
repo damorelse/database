@@ -34,7 +34,13 @@ public:
     RC GetPageNum(PageNum &pageNum) const;         // Return page number
     RC GetSlotNum(SlotNum &slotNum) const;         // Return slot number
 
+	PageNum pageNum;
+	SlotNum slotNum;
+
 private:
+	bool IsViable() const;
 };
+
+#define RM_INVALIDRID     (START_RM_WARN + 0) // invalid rid
 
 #endif
