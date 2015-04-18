@@ -385,7 +385,7 @@ RC RM_FileHandle::UpdateRec  (const RM_Record &rec)              // Update a rec
 
 // Forces a page (along with any contents stored in this class)
 // from the buffer pool to disk.  Default value forces all pages.
-RC RM_FileHandle::ForcePages (PageNum pageNum = ALL_PAGES)
+RC RM_FileHandle::ForcePages (PageNum pageNum)
 {
 	if (!open){
 		PrintError(RM_FILENOTOPEN);

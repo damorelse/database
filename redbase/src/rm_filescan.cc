@@ -20,7 +20,7 @@ RC RM_FileScan::OpenScan  (const RM_FileHandle &fileHandle,
 						   int        attrOffset,
 						   CompOp     compOp,
 						   void       *value,
-						   ClientHint pinHint = NO_HINT) // Initialize a file scan
+						   ClientHint pinHint) // Initialize a file scan
 {
 	// Check input
 	if (attrType == STRING && (attrLength > MAXSTRINGLEN || attrLength < 1)){
