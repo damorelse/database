@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <iostream>
+#include <cstring>
 #include "rm.h"
 
 using namespace std;
