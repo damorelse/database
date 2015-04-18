@@ -97,4 +97,8 @@ typedef char Boolean;
 #define NULL 0
 #endif
 
+
+// Global print error
+void PrintError(RC rc);
+
 #endif
