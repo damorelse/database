@@ -19,7 +19,9 @@ static char *RM_ErrorMsg[] = {
   (char*)"filename size invalid; either exceeds name size or empty",
   (char*)"input pointer parameter is null",
   (char*)"string length invalid, either empty or exceeds max string length",
-  (char*)"record offset invalid, is negative",
+  (char*)"record index access invalid, either negative or will exceed record size",
+  (char*)"invalid input given, not one of the listed enumerations",
+  (char*)"invalid length for given attribute type; should be 4 for ints and floats",
 };
 
 void RM_PrintError(RC rc)

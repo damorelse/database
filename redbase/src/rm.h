@@ -163,7 +163,9 @@ void RM_PrintError(RC rc);
 #define RM_FILENAMELEN          (START_RM_ERR - 1) 
 #define RM_INPUTNULL			(START_RM_ERR - 2)	
 #define RM_STRLEN				(START_RM_ERR - 3)
-#define RM_NEGOFFSET			(START_RM_ERR - 4)
-#define RM_LASTERROR	RM_NEGOFFSET
+#define RM_MEMVIOLATION			(START_RM_ERR - 4)
+#define RM_INVALIDENUM			(START_RM_ERR - 5)
+#define RM_NUMLEN			(START_RM_ERR - 6)
+#define RM_LASTERROR	RM_NUMLEN
 
 #endif

@@ -23,13 +23,28 @@ RC RM_FileScan::OpenScan  (const RM_FileHandle &fileHandle,
 						   ClientHint pinHint) // Initialize a file scan
 {
 	// Check input
+	if (attrType != INT && attrType != FLOAT && attrType != STRING){
+		PrintError(RM_INVALIDENUM);
+		return RM_INVALIDENUM;
+	}
+	if (compOp != NO_OP && compOp != EQ_OP && compOp !=NE_OP && 
+		compOp !=LT_OP && compOp !=GT_OP && compOp !=LE_OP && 
+		compOp !=GE_OP){
+		PrintError(RM_INVALIDENUM);
+		return RM_INVALIDENUM;
+	}
 	if (attrType == STRING && (attrLength > MAXSTRINGLEN || attrLength < 1)){
 		PrintError(RM_STRLEN);
 		return RM_STRLEN;
 	}
-	if (attrOffset < 0){
-		PrintError(RM_NEGOFFSET);
-		return RM_NEGOFFSET;
+	if (attrType != STRING && attrLength != 4){
+		PrintError(RM_NUMLEN);
+		return RM_NUMLEN;
+	}
+	if (attrOffset < 0 || 
+		attrOffset + attrLength > fileHandle.rmFileHeader.recordSize){
+		PrintError(RM_MEMVIOLATION);
+		return RM_MEMVIOLATION;
 	}
 	// End check input
 
