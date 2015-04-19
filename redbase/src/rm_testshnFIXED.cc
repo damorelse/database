@@ -229,10 +229,9 @@ RC AddRecs(RM_FileHandle &fh, int numRecs, RID* r_arr)
         sprintf(recBuf.str, "a%d", i);
         recBuf.num = i;
         recBuf.r = (float)i;
-		printf("\n%d\n", i);
         if ((rc = InsertRec(fh, (char *)&recBuf, r_arr[i])) ||
-            (rc = rid.GetPageNum(pageNum)) ||
-            (rc = rid.GetSlotNum(slotNum)))
+            (rc = r_arr[i].GetPageNum(pageNum)) ||       //GINA
+            (rc = r_arr[i].GetSlotNum(slotNum)))         //GINA
             return (rc);
 
         if ((i + 1) % PROG_UNIT == 0){
@@ -497,7 +496,6 @@ RC Test1(void)
       (rc = AddRecs (fh, FEW_RECS, array)))
     goto err;
 
-  printf("\nGINA HERE\n");
 
   memset((void *)&recBuf, 0, sizeof(recBuf));
   memset(recBuf.str, ' ', STRLEN);
@@ -518,16 +516,16 @@ RC Test1(void)
 
   
   /* this test will only work if you give pages back once they're empty */
+  /***
   printf ("\n ***** DELETE RECORD BEYOND FILE SIZE *** \n");
   lastRec = array[FEW_RECS -1]; 
   if (rc = fh.GetRec(lastRec, lastrec))
     goto err; 
-
   if (rc = DeleteRec (fh, lastRec))
     goto err; 
   printf ("%s\n", (DeleteRec(fh, lastRec)) ? "PASS" : "FAIL\a");
+  ***/
   
-
   printf ("\n ***** UPDATE UNOCCUPIED RECORD *** %s\n", 
          (UpdateRec(fh, rec)) ? "PASS" : "FAIL\a");
 
