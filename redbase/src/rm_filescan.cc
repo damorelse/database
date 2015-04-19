@@ -240,4 +240,5 @@ RC RM_FileScan::CloseScan ()                            // Close the scan
 {
 	open = false;
 	rmFileHandle = NULL;
+	return OK_RC;
 }

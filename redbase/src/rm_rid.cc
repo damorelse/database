@@ -6,7 +6,9 @@ RID::RID(): pageNum(-1), slotNum(-1){}
 
 RID::RID(PageNum pageNum, SlotNum slotNum): pageNum(pageNum), slotNum(slotNum){}
 
-//use default destructor, copy constructor, and copy assignment operator
+RID::~RID(){}
+
+//use default copy constructor, and copy assignment operator
 
 RC RID::GetPageNum(PageNum &pageNum) const
 {
