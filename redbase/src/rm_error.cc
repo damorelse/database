@@ -8,6 +8,7 @@ using namespace std;
 // Error tables
 static char *RM_WarnMsg[] = {
   (char*)"rid was not set",
+  (char*)"record not yet read",
   (char*)"file not yet opened",
   (char*)"record does not exist",
   (char*)"Reached end of file",
