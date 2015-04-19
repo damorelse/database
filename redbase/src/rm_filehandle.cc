@@ -83,7 +83,7 @@ RC RM_FileHandle::GetRec     (const RID &rid, RM_Record &rec) const
 	// Copy info to record
 	rec.length = rmFileHeader.recordSize;
 	rec.rid = rid;
-	delete rec.recordCopy; // just in case
+	delete [] rec.recordCopy; // just in case
 	rec.recordCopy = new char[rec.length];
 	memcpy(rec.recordCopy, ptr, rec.length);
 

@@ -10,7 +10,7 @@ RM_Record::RM_Record (): recordCopy(NULL), rid(RID()), length(0){}
 RM_Record::~RM_Record()
 {
 	if (recordCopy)
-		delete recordCopy;
+		delete [] recordCopy;
 }
 
 RM_Record::RM_Record (const RM_Record &other): recordCopy(NULL), rid(RID()), length(0)
@@ -21,7 +21,7 @@ RM_Record::RM_Record (const RM_Record &other): recordCopy(NULL), rid(RID()), len
 RM_Record& RM_Record::operator=  (const RM_Record &other)
 {
 	if (this != &other){
-		delete recordCopy;
+		delete [] recordCopy;
 		recordCopy = NULL;
 		rid = other.rid;
 		length = other.length;

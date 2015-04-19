@@ -102,7 +102,6 @@ RC RM_FileScan::GetNextRec(RM_Record &rec)               // Get next matching re
 			case INT:
 				memcpy(&a_i, ptr, attrLength);
 				memcpy(&v_i, value, attrLength);
-				cerr << "HEREEEEE" << a_i << "   " << v_i << endl;
 			case FLOAT:
 				memcpy(&a_f, ptr, attrLength);
 				memcpy(&v_f, value, attrLength);
@@ -111,7 +110,7 @@ RC RM_FileScan::GetNextRec(RM_Record &rec)               // Get next matching re
 				memcpy(tmp, ptr, attrLength);
 				a_s = string(tmp);
 				v_s = string((char*)value);
-				delete tmp;
+				delete [] tmp;
 			}
 
 			// Check if record fulfills condition
@@ -221,7 +220,8 @@ RC RM_FileScan::GetNextRec(RM_Record &rec)               // Get next matching re
 	// Copy matching record info to rec
 	rec.rid.pageNum = pageNum;
 	rec.rid.slotNum = slotNum;
-	delete rec.recordCopy;
+	if (rec.recordCopy)
+		delete [] rec.recordCopy;
 	int length = rmFileHandle->rmFileHeader.recordSize;
 	rec.recordCopy = new char[length];
 	memcpy(rec.recordCopy, rmFileHandle->GetRecordPtr(pData, slotNum), length);
