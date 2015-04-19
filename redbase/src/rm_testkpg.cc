@@ -727,6 +727,8 @@ RC Test2(void)
    }
    printf("%s\n",  (numSel == 1) ? "PASS" : "FAIL\a");
    printf("Found:%d.  Supposed to find: 1.\n",numSel);
+
+   return OK_RC; //TODO: REMOVE
    goto bp;
 err2:
    printf("FAIL\a\n");

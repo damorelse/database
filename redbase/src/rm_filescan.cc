@@ -102,6 +102,7 @@ RC RM_FileScan::GetNextRec(RM_Record &rec)               // Get next matching re
 			case INT:
 				memcpy(&a_i, ptr, attrLength);
 				memcpy(&v_i, value, attrLength);
+				cerr << "HEREEEEE" << a_i << "   " << v_i << endl;
 			case FLOAT:
 				memcpy(&a_f, ptr, attrLength);
 				memcpy(&v_f, value, attrLength);
