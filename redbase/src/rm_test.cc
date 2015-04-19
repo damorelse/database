@@ -14,7 +14,7 @@
 // interface.  For example, FileHandle no longer supports a Scan over the
 // relation.  All scans are done via a FileScan.
 //
-
+#include <cerrno>
 #include <cstdio>
 #include <iostream>
 #include <cstring>
