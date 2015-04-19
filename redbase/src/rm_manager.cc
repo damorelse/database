@@ -77,6 +77,13 @@ RC RM_Manager::CreateFile (const char *fileName, int recordSize)
 	memcpy(ptr, &tmp, sizeof(size_t)); // pageHeaderSize
 	// End write info to header page.
 
+	// Mark header page as dirty.
+	rc = fileHandle.MarkDirty(0);
+	if (rc != OK_RC){
+		PrintError(rc);
+		return rc;
+	}
+
 	//// Clean up
 	pData = NULL;
 	ptr = NULL;

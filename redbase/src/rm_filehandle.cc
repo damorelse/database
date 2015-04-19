@@ -151,6 +151,13 @@ RC RM_FileHandle::InsertRec  (const char *inData, RID &rid)       // Insert a ne
 		char* ptr = GetRecordPtr(pData, 0);
 		memcpy(ptr, inData, rmFileHeader.recordSize);
 
+		// Mark page as dirty.
+		rc = pfFileHandle.MarkDirty(pageNum);
+		if (rc != OK_RC){
+			PrintError(rc);
+			return rc;
+		}
+
 		// Clean up.
 		pData = NULL;
 		ptr = NULL;
@@ -217,6 +224,13 @@ RC RM_FileHandle::InsertRec  (const char *inData, RID &rid)       // Insert a ne
 			// Modify page header
 			i = RM_PAGE_FULL;
 			memcpy(pData, &i, sizeof(int));
+		}
+
+		// Mark page as dirty.
+		rc = pfFileHandle.MarkDirty(pageNum);
+		if (rc != OK_RC){
+			PrintError(rc);
+			return rc;
 		}
 
 		// Clean up.
@@ -288,6 +302,13 @@ RC RM_FileHandle::DeleteRec  (const RID &rid)                    // Delete a rec
 		modified = true;
 		memcpy(pData, &rmFileHeader.firstFreeSpace, sizeof(int));
 		rmFileHeader.firstFreeSpace = pageNum;
+	}
+
+	// Mark page as dirty.
+	rc = pfFileHandle.MarkDirty(pageNum);
+	if (rc != OK_RC){
+		PrintError(rc);
+		return rc;
 	}
 
 	// Clean up.
@@ -372,6 +393,13 @@ RC RM_FileHandle::UpdateRec  (const RM_Record &rec)              // Update a rec
 	// Copy info to page
 	memcpy(ptr, rData, rmFileHeader.recordSize);
 
+	// Mark page as dirty.
+	rc = pfFileHandle.MarkDirty(pageNum);
+	if (rc != OK_RC){
+		PrintError(rc);
+		return rc;
+	}
+
 	// Clean up.
 	rData = NULL;
 	ptr = NULL;
@@ -423,6 +451,13 @@ RC RM_FileHandle::ForcePages (PageNum pageNum)
 
 		ptr += sizeof(size_t);
 		memcpy(ptr, &rmFileHeader.firstFreeSpace, sizeof(int));
+
+		// Mark header page as dirty.
+		rc = pfFileHandle.MarkDirty(0);
+		if (rc != OK_RC){
+			PrintError(rc);
+			return rc;
+		}
 
 		// Clean up.
 		modified = false;
