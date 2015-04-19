@@ -134,6 +134,7 @@ RC RM_FileHandle::InsertRec  (const char *inData, RID &rid)       // Insert a ne
 		// Modify file header
 		modified = true;
 		// maxPage
+		cerr << "CHECK" << rmFileHeader.maxPage << " " << pageNum << endl;
 		rmFileHeader.maxPage = pageNum;
 		// freeSpace list
 		if (rmFileHeader.maxSlot > 0){
