@@ -447,7 +447,6 @@ RC RM_FileHandle::ForcePages (PageNum pageNum)
 
 		size_t test;
 		memcpy(&test, ptr, sizeof(size_t));
-		cerr << "E. " << rmFileHeader.maxPage << " " << test << endl; //TODO
 
 		ptr += sizeof(size_t);
 		memcpy(ptr, &rmFileHeader.firstFreeSpace, sizeof(int));

@@ -181,7 +181,6 @@ RC RM_Manager::OpenFile   (const char *fileName, RM_FileHandle &fileHandle)
 	ptr += sizeof(int);
 	memcpy(&fileHandle.rmFileHeader.pageHeaderSize, ptr, sizeof(size_t));
 
-    cerr << "B. " <<fileHandle.rmFileHeader.recordSize << " " << fileHandle.rmFileHeader.maxPage << endl; //TODO
 	
 	// Clean up
 	pData = NULL;
@@ -201,7 +200,6 @@ RC RM_Manager::CloseFile  (RM_FileHandle &fileHandle)
 	RC rc = fileHandle.ForcePages();
 	if (rc != OK_RC)
 		return rc;
-    cerr << "D. " << fileHandle.rmFileHeader.maxPage << endl; //TODO
         
 	// Close file handle.
 	rc = pfm->CloseFile(fileHandle.pfFileHandle);

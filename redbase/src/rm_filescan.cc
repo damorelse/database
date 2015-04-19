@@ -46,7 +46,6 @@ RC RM_FileScan::OpenScan  (const RM_FileHandle &fileHandle,
 	pageNum = 1;	// Skip header page
 	slotNum = -1;	// Auto-increments at GetNextRec start
 
-	cerr << "A. " << rmFileHandle->rmFileHeader.maxPage << " " << fileHandle.rmFileHeader.maxPage << endl; //TODO
 	return OK_RC;
 }
 
@@ -113,68 +112,92 @@ RC RM_FileScan::GetNextRec(RM_Record &rec)               // Get next matching re
 				v_s = string((char*)value);
 				delete [] tmp;
 			}
-
 			// Check if record fulfills condition
 			switch(compOp) {
 			case EQ_OP:
 				switch(attrType) {
 				case INT:
 					found = (a_i == v_i);
+                    break;
 				case FLOAT:
 					found = (a_f == v_f);
+                    break;
 				case STRING:
 					found = (a_s == v_s);
+                    break;
 				}
+                break;
 			case LT_OP:
 				switch(attrType) {
 				case INT:
 					found = (a_i < v_i);
+                    break;
 				case FLOAT:
 					found = (a_f < v_f);
+                    break;
 				case STRING:
 					found = (a_s < v_s);
+                    break;
 				}
+                break;
 			case GT_OP:
 				switch(attrType) {
 				case INT:
 					found = (a_i > v_i);
+                    break;
 				case FLOAT:
 					found = (a_f > v_f);
+                    break;
 				case STRING:
 					found = (a_s > v_s);
+                    break;
 				}
+                break;
 			case LE_OP:
 				switch(attrType) {
 				case INT:
 					found = (a_i <= v_i);
+                    break;
 				case FLOAT:
 					found = (a_f <= v_f);
+                    break;
 				case STRING:
 					found = (a_s <= v_s);
+                    break;
 				}
+                break;
 			case GE_OP:
 				switch(attrType) {
 				case INT:
 					found = (a_i >= v_i);
+                    break;
 				case FLOAT:
 					found = (a_f >= v_f);
+                    break;
 				case STRING:
 					found = (a_s >= v_s);
+                    break;
 				}
+                break;
 			case NE_OP:
 				switch(attrType) {
 				case INT:
 					found = (a_i != v_i);
+                    break;
 				case FLOAT:
 					found = (a_f != v_f);
+                    break;
 				case STRING:
 					found = (a_s != v_s);
+                    break;
 				}
+                break;
 			}
 		}
 
-		if (found)
+		if (found){
 			break;
+        }
 
 		// Record did not exist or did not satisfy condition...
 		// Update pageNum/slotNum
