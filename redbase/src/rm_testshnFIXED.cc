@@ -229,6 +229,7 @@ RC AddRecs(RM_FileHandle &fh, int numRecs, RID* r_arr)
         sprintf(recBuf.str, "a%d", i);
         recBuf.num = i;
         recBuf.r = (float)i;
+		printf("\n%d\n", i);
         if ((rc = InsertRec(fh, (char *)&recBuf, r_arr[i])) ||
             (rc = rid.GetPageNum(pageNum)) ||
             (rc = rid.GetSlotNum(slotNum)))
@@ -496,7 +497,7 @@ RC Test1(void)
       (rc = AddRecs (fh, FEW_RECS, array)))
     goto err;
 
-  cerr << "GINA HERE" << endl;
+  printf("\nGINA HERE\n");
 
   memset((void *)&recBuf, 0, sizeof(recBuf));
   memset(recBuf.str, ' ', STRLEN);

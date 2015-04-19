@@ -264,7 +264,8 @@ RC RM_FileHandle::DeleteRec  (const RID &rid)                    // Delete a rec
 	if (rc != OK_RC)
 		return rc;
 
-	if (pageNum > rmFileHeader.maxPage || slotNum > rmFileHeader.maxSlot){
+	if (pageNum > rmFileHeader.maxPage || pageNum < 1 ||
+		slotNum > rmFileHeader.maxSlot || slotNum < 0){
 		PrintError(RM_RECORD_DNE);
 		return RM_RECORD_DNE;
 	}
@@ -290,6 +291,15 @@ RC RM_FileHandle::DeleteRec  (const RID &rid)                    // Delete a rec
 		pfFileHandle.UnpinPage(pageNum);
 		PrintError(rc);
 		return rc;
+	}
+
+	// Check if record exists
+	if (!GetSlotBitValue(pData, slotNum)){
+		pData = NULL;
+		pfFileHandle.UnpinPage(pageNum);
+
+		PrintError(RM_RECORD_DNE);
+		return RM_RECORD_DNE;
 	}
 
 	// "Delete" record by clearing slot bit
@@ -352,7 +362,8 @@ RC RM_FileHandle::UpdateRec  (const RM_Record &rec)              // Update a rec
 	if (rc != OK_RC)
 		return rc;
 
-	if (pageNum > rmFileHeader.maxPage || slotNum > rmFileHeader.maxSlot){
+	if (pageNum > rmFileHeader.maxPage || pageNum < 1 ||
+		slotNum > rmFileHeader.maxSlot || slotNum < 0){
 		PrintError(RM_RECORD_DNE);
 		return RM_RECORD_DNE;
 	}
@@ -382,6 +393,7 @@ RC RM_FileHandle::UpdateRec  (const RM_Record &rec)              // Update a rec
 
 	// Check if record exists
 	if (!GetSlotBitValue(pData, slotNum)){
+		pData = NULL;
 		pfFileHandle.UnpinPage(pageNum);
 		PrintError(RM_RECORD_DNE);
 		return RM_RECORD_DNE;
