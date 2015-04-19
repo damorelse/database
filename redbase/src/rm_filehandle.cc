@@ -134,7 +134,6 @@ RC RM_FileHandle::InsertRec  (const char *inData, RID &rid)       // Insert a ne
 		// Modify file header
 		modified = true;
 		// maxPage
-		cerr << "CHECK" << rmFileHeader.maxPage << " " << pageNum << endl;
 		rmFileHeader.maxPage = pageNum;
 		// freeSpace list
 		if (rmFileHeader.maxSlot > 0){
@@ -396,6 +395,7 @@ RC RM_FileHandle::ForcePages (PageNum pageNum)
 
 	// Update header page if necessary
 	if (modified && (pageNum == ALL_PAGES || pageNum == 0)){
+
 		// Get page handle
 		PF_PageHandle pfPageHandle = PF_PageHandle();
 		RC rc = pfFileHandle.GetThisPage(0, pfPageHandle);
@@ -414,8 +414,13 @@ RC RM_FileHandle::ForcePages (PageNum pageNum)
 		}
 		
 		// Write to header page
-		char *ptr = pData + sizeof(size_t) * 2;
+		char *ptr = pData + sizeof(size_t) + sizeof(size_t);
 		memcpy(ptr, &rmFileHeader.maxPage, sizeof(size_t));
+
+		size_t test;
+		memcpy(&test, ptr, sizeof(size_t));
+		cerr << "E. " << rmFileHeader.maxPage << " " << test << endl; //TODO
+
 		ptr += sizeof(size_t);
 		memcpy(ptr, &rmFileHeader.firstFreeSpace, sizeof(int));
 

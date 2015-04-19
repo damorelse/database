@@ -46,6 +46,7 @@ RC RM_FileScan::OpenScan  (const RM_FileHandle &fileHandle,
 	pageNum = 1;	// Skip header page
 	slotNum = -1;	// Auto-increments at GetNextRec start
 
+	cerr << "A. " << rmFileHandle->rmFileHeader.maxPage << " " << fileHandle.rmFileHeader.maxPage << endl; //TODO
 	return OK_RC;
 }
 

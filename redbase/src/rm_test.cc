@@ -14,7 +14,6 @@
 // interface.  For example, FileHandle no longer supports a Scan over the
 // relation.  All scans are done via a FileScan.
 //
-#include <cerrno>
 #include <cstdio>
 #include <iostream>
 #include <cstring>
@@ -107,6 +106,7 @@ int main(int argc, char *argv[])
 
     // Delete files from last time
     unlink(FILENAME);
+	
 
     // If no argument given, do all tests
     if (argc == 1) {
