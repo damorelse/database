@@ -41,7 +41,8 @@ RC RM_FileHandle::GetRec     (const RID &rid, RM_Record &rec) const
 	if (rc != OK_RC)
 		return rc;
 
-	if (pageNum > rmFileHeader.maxPage || slotNum > rmFileHeader.maxSlot){
+	if (pageNum > rmFileHeader.maxPage || pageNum < 1 ||
+		slotNum > rmFileHeader.maxSlot || slotNum < 0){
 		PrintError(RM_RECORD_DNE);
 		return RM_RECORD_DNE;
 	}
