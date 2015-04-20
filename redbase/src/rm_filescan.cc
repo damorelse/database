@@ -23,24 +23,29 @@ RC RM_FileScan::OpenScan  (const RM_FileHandle &fileHandle,
 						   ClientHint pinHint) // Initialize a file scan
 {
 	// Check input
+	// Check attribute type is one of the three allowed
 	if (attrType != INT && attrType != FLOAT && attrType != STRING){
 		PrintError(RM_INVALIDENUM);
 		return RM_INVALIDENUM;
 	}
+	// Check compare operation is one of the seven allowed
 	if (compOp != NO_OP && compOp != EQ_OP && compOp !=NE_OP && 
 		compOp !=LT_OP && compOp !=GT_OP && compOp !=LE_OP && 
 		compOp !=GE_OP){
 		PrintError(RM_INVALIDENUM);
 		return RM_INVALIDENUM;
 	}
+	// Check string attribute length is greater than 0 and less than 255 bytes
 	if (attrType == STRING && (attrLength > MAXSTRINGLEN || attrLength < 1)){
 		PrintError(RM_STRLEN);
 		return RM_STRLEN;
 	}
+	// Check int or float attribute length is exactly 4 bytes
 	if (attrType != STRING && attrLength != 4){
 		PrintError(RM_NUMLEN);
 		return RM_NUMLEN;
 	}
+	// Check all memory accesses is within the bounds of the intended record
 	if (attrOffset < 0 || 
 		attrOffset + attrLength > fileHandle.rmFileHeader.recordSize){
 		PrintError(RM_MEMVIOLATION);
@@ -96,7 +101,7 @@ RC RM_FileScan::GetNextRec(RM_Record &rec)               // Get next matching re
 		return rc;
 	}
 
-	// Iterate through pages and records until find one
+	// Iterate through pages and records until find one that satisfies condition (or EOF)
 	while (!found && pageNum <= rmFileHandle->rmFileHeader.maxPage){
 		// If record exists in slot
 		if (rmFileHandle->GetSlotBitValue(pData, slotNum)){
@@ -210,6 +215,7 @@ RC RM_FileScan::GetNextRec(RM_Record &rec)               // Get next matching re
 			}
 		}
 
+		// Check if record satisfied condition, break out of loop
 		if (found){
 			break;
         }
@@ -250,13 +256,14 @@ RC RM_FileScan::GetNextRec(RM_Record &rec)               // Get next matching re
 		
 	}
 
-	// No matching record found, EOF
+	// After loop
+	// No matching record was found, EOF
 	if (!found){
 		PrintError(RM_EOF);
 		return RM_EOF;
 	}
 
-	// Copy matching record info to rec
+	// Matching record was found, copy matching record info to rec
 	rec.rid.pageNum = pageNum;
 	rec.rid.slotNum = slotNum;
 	if (rec.recordCopy)

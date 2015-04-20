@@ -38,7 +38,7 @@ public:
 	SlotNum slotNum;
 
 private:
-	bool IsViable() const;
+	bool IsViable() const; // Primitive check for page and slot number values
 };
 
 #define RM_INVALIDRID     (START_RM_WARN + 0) // invalid rid

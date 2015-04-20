@@ -47,25 +47,27 @@ class RM_Record {
 		size_t length;
 };
 
+
+#define RM_PAGE_LIST_END  -1           // end of list of free pages
+#define RM_PAGE_FULL      -2           // no free space in page
+#define RM_BIT_START	  sizeof(int)  //bit slots page offset
+const int RM_FILE_HDR_SIZE = PF_PAGE_SIZE;
+
+struct RM_FileHeader {
+	size_t recordSize;      // in bytes
+	size_t maxSlot;
+	size_t maxPage;	        // CHANGES
+	int firstFreeSpace;     // page num, CHANGES
+	size_t pageHeaderSize;  // in bytes
+};
+struct RM_PageHeader {
+	int nextFreeSpace;      // page num
+	char *slotsBits;
+};
+
 //
 // RM_FileHandle: RM File interface
 //
-
-const int RM_FILE_HDR_SIZE = PF_PAGE_SIZE;
-struct RM_FileHeader {
-	size_t recordSize; // in bytes
-	size_t maxSlot;
-	size_t maxPage;	//CHANGES
-	int firstFreeSpace; // page num, CHANGES
-	size_t pageHeaderSize; //in bytes
-};
-#define RM_PAGE_LIST_END  -1       // end of list of free pages
-#define RM_PAGE_FULL      -2       // no free space
-#define RM_BIT_START	  sizeof(int)
-struct RM_PageHeader {
-	int nextFreeSpace;
-	char *slotsBits;
-};
 class RM_FileHandle {
 	friend class RM_Manager;
 	friend class RM_FileScan;
@@ -93,9 +95,9 @@ private:
 	PF_FileHandle pfFileHandle;
 	RM_FileHeader rmFileHeader;
 
-	bool GetSlotBitValue(char* pData, const SlotNum slotNum) const;
-	void SetSlotBitValue(char* pData, const SlotNum slotNum, bool b);
-	char* GetRecordPtr(char* pData, const SlotNum slotNum) const;
+	bool GetSlotBitValue(char* pData, const SlotNum slotNum) const;   // Read a specific record's bit value in page header
+	void SetSlotBitValue(char* pData, const SlotNum slotNum, bool b); // Write a specific record's bit value in page header
+	char* GetRecordPtr(char* pData, const SlotNum slotNum) const;     // Gets a pointer to a specific record's start location
 };
 
 //
@@ -145,7 +147,7 @@ public:
 private:
 	PF_Manager* pfm;
 
-	size_t CalculateMaxSlots(int recordSize);
+	size_t CalculateMaxSlots(int recordSize);  //Calculate max number of records that will fit in one page
 };
 
 //

@@ -8,10 +8,9 @@ RID::RID(PageNum pageNum, SlotNum slotNum): pageNum(pageNum), slotNum(slotNum){}
 
 RID::~RID(){}
 
-//use default copy constructor, and copy assignment operator
-
 RC RID::GetPageNum(PageNum &pageNum) const
 {
+	// Primitive check if page and slot number have been set
 	if (!IsViable()){
 		PrintError(RM_INVALIDRID);
 		return RM_INVALIDRID;
@@ -22,6 +21,7 @@ RC RID::GetPageNum(PageNum &pageNum) const
 
 RC RID::GetSlotNum(SlotNum &slotNum) const
 {
+	// Check if page and slot number have been set
 	if (!IsViable()){
 		PrintError(RM_INVALIDRID);
 		return RM_INVALIDRID;
@@ -30,6 +30,8 @@ RC RID::GetSlotNum(SlotNum &slotNum) const
 	return OK_RC;
 }
 
+// Primitive check for page and slot number values
+// Will return false if numbers have not been changed since initialization
 bool RID::IsViable() const
 {
 	if (pageNum < 0 || slotNum < 0)

@@ -19,12 +19,14 @@ RC RM_Manager::CreateFile (const char *fileName, int recordSize)
 		PrintError(RM_INPUTNULL);
 		return RM_INPUTNULL;
 	}
+	// Check filename does not exceed max relation name size and is not empty
 	size_t nameLen = strlen(fileName);
 	if (nameLen > MAXNAME || nameLen == 0){
 		PrintError(RM_FILENAMELEN);
 		return RM_FILENAMELEN;
 	}
-	if (recordSize > PF_PAGE_SIZE || recordSize <= 0){
+	// Check record size is feasible, accounting for available space and page header size, and greater than zero
+	if (recordSize > PF_PAGE_SIZE-sizeof(int) * 2 || recordSize <= 0){
 		PrintError(RM_RECORDSIZE);
 		return RM_RECORDSIZE;
 	}
@@ -52,7 +54,7 @@ RC RM_Manager::CreateFile (const char *fileName, int recordSize)
 		return rc;
 	}
 
-	// Write info to header page
+	// Get header page info
 	char *pData;
 	rc = pageHandle.GetData(pData);
 	if (rc != OK_RC){
@@ -60,6 +62,7 @@ RC RM_Manager::CreateFile (const char *fileName, int recordSize)
 		return rc;
 	}
 
+	// Write info to header page
 	char* ptr = pData;
 	size_t tmp = recordSize;
 	memcpy(ptr, &tmp, sizeof(size_t)); // recordSize
@@ -84,7 +87,7 @@ RC RM_Manager::CreateFile (const char *fileName, int recordSize)
 		return rc;
 	}
 
-	//// Clean up
+	// Clean up
 	pData = NULL;
 	ptr = NULL;
 
@@ -110,6 +113,7 @@ RC RM_Manager::DestroyFile(const char *fileName)
 		PrintError(RM_INPUTNULL);
 		return RM_INPUTNULL;
 	}
+	// Check filename does not exceed max relation name size and is not empty
 	size_t nameLen = strlen(fileName);
 	if (nameLen > MAXNAME || nameLen == 0){
 		PrintError(RM_FILENAMELEN);
@@ -117,6 +121,7 @@ RC RM_Manager::DestroyFile(const char *fileName)
 	}
 	// End check input parameters.
 
+	// Delete file
 	RC rc = pfm->DestroyFile(fileName);
 	if (rc != OK_RC){
 		PrintError(rc);
@@ -133,6 +138,8 @@ RC RM_Manager::OpenFile   (const char *fileName, RM_FileHandle &fileHandle)
 		PrintError(RM_INPUTNULL);
 		return RM_INPUTNULL;
 	}
+
+	// Check filename does not exceed max relation name size and is not empty
 	size_t nameLen = strlen(fileName);
 	if (nameLen > MAXNAME || nameLen == 0){
 		PrintError(RM_FILENAMELEN);
@@ -151,7 +158,6 @@ RC RM_Manager::OpenFile   (const char *fileName, RM_FileHandle &fileHandle)
 	fileHandle.open = true;
 	fileHandle.modified = false;
 
-	// Copy over file header info
 	// Get header page handle
 	PF_PageHandle pfPageHandle = PF_PageHandle();
 	rc = fileHandle.pfFileHandle.GetThisPage(0, pfPageHandle);
@@ -212,6 +218,8 @@ RC RM_Manager::CloseFile  (RM_FileHandle &fileHandle)
 	return OK_RC;
 }
 
+//Calculate max number of records that will fit in one page
+// Accounts for increasing page header size due to bit slots
 size_t RM_Manager::CalculateMaxSlots(int recordSize){
 	return floor((PF_PAGE_SIZE - sizeof(int)) / (recordSize + 1/8.0));
 }

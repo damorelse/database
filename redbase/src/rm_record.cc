@@ -37,6 +37,7 @@ RM_Record& RM_Record::operator=  (const RM_Record &other)
 // Return the data corresponding to the record.  Sets *pData to the record contents.
 RC RM_Record::GetData(char *&pData) const
 {
+	// Checks if record has been materialized
 	if(!recordCopy){
 		PrintError(RM_RECORDNOTREAD);
 		return RM_RECORDNOTREAD;
@@ -48,6 +49,7 @@ RC RM_Record::GetData(char *&pData) const
 // Return the RID associated with the record
 RC RM_Record::GetRid (RID &rid) const
 {
+	// Checks if record has been materialized
 	if(!recordCopy){
 		PrintError(RM_RECORDNOTREAD);
 		return RM_RECORDNOTREAD;

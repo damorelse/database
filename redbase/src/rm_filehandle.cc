@@ -41,6 +41,7 @@ RC RM_FileHandle::GetRec     (const RID &rid, RM_Record &rec) const
 	if (rc != OK_RC)
 		return rc;
 
+	// Check page and slot numbers are within record-holding page bounds
 	if (pageNum > rmFileHeader.maxPage || pageNum < 1 ||
 		slotNum > rmFileHeader.maxSlot || slotNum < 0){
 		PrintError(RM_RECORD_DNE);
@@ -48,6 +49,7 @@ RC RM_FileHandle::GetRec     (const RID &rid, RM_Record &rec) const
 	}
 	// End check RID
 
+	// Check if file has been opened yet
 	if (!open){
 		PrintError(RM_FILENOTOPEN);
 		return RM_FILENOTOPEN;
@@ -101,11 +103,13 @@ RC RM_FileHandle::GetRec     (const RID &rid, RM_Record &rec) const
 
 RC RM_FileHandle::InsertRec  (const char *inData, RID &rid)       // Insert a new record
 {
+	// Check if file has been opened yet
 	if (!open){
 		PrintError(RM_FILENOTOPEN);
 		return RM_FILENOTOPEN;
 	}
 
+	// If no pages with free space exist...
 	if (rmFileHeader.firstFreeSpace == RM_PAGE_LIST_END){
 		// Allocate new page
 		PF_PageHandle pfPageHandle;
@@ -141,11 +145,9 @@ RC RM_FileHandle::InsertRec  (const char *inData, RID &rid)       // Insert a ne
 		}
 
 		// Fill in page header
-		// nextFreeSpace
 		int i = RM_PAGE_LIST_END;
-		memcpy(pData, &i, sizeof(int));
-		// slotsBit
-		SetSlotBitValue(pData, 0, true);
+		memcpy(pData, &i, sizeof(int));  // nextFreeSpace
+		SetSlotBitValue(pData, 0, true); // slotsBit
 
 		// Copy pData to page
 		char* ptr = GetRecordPtr(pData, 0);
@@ -171,8 +173,9 @@ RC RM_FileHandle::InsertRec  (const char *inData, RID &rid)       // Insert a ne
 		rid.pageNum = pageNum;
 		rid.slotNum = 0;
 	}
+	// if exists pages with free space
 	else {
-		// Get page num from free space list
+		// Get page number from free space list
 		PageNum pageNum = rmFileHeader.firstFreeSpace;
 
 		// Get page handle
@@ -264,6 +267,7 @@ RC RM_FileHandle::DeleteRec  (const RID &rid)                    // Delete a rec
 	if (rc != OK_RC)
 		return rc;
 
+	// Check page and slot numbers are within record-holding page bounds
 	if (pageNum > rmFileHeader.maxPage || pageNum < 1 ||
 		slotNum > rmFileHeader.maxSlot || slotNum < 0){
 		PrintError(RM_RECORD_DNE);
@@ -271,6 +275,7 @@ RC RM_FileHandle::DeleteRec  (const RID &rid)                    // Delete a rec
 	}
 	// End check RID.
 
+	// Check if file has been opened yet
 	if (!open){
 		PrintError(RM_FILENOTOPEN);
 		return RM_FILENOTOPEN;
@@ -345,7 +350,8 @@ RC RM_FileHandle::UpdateRec  (const RM_Record &rec)              // Update a rec
 	if (rc != OK_RC)
 		return rc;
 
-	if (rec.length != rmFileHeader.recordSize){ // if not correct size, DNE
+	// If given record's length is not the correct size, do not update
+	if (rec.length != rmFileHeader.recordSize){
 		PrintError(RM_RECORD_DNE);
 		return RM_RECORD_DNE;
 	}
@@ -362,6 +368,7 @@ RC RM_FileHandle::UpdateRec  (const RM_Record &rec)              // Update a rec
 	if (rc != OK_RC)
 		return rc;
 
+	// Check page and slot numbers are within record-holding page bounds
 	if (pageNum > rmFileHeader.maxPage || pageNum < 1 ||
 		slotNum > rmFileHeader.maxSlot || slotNum < 0){
 		PrintError(RM_RECORD_DNE);
@@ -369,6 +376,7 @@ RC RM_FileHandle::UpdateRec  (const RM_Record &rec)              // Update a rec
 	}
 	// End check RID.
 
+	// Check if file is open
 	if (!open){
 		PrintError(RM_FILENOTOPEN);
 		return RM_FILENOTOPEN;
@@ -428,6 +436,7 @@ RC RM_FileHandle::UpdateRec  (const RM_Record &rec)              // Update a rec
 // from the buffer pool to disk.  Default value forces all pages.
 RC RM_FileHandle::ForcePages (PageNum pageNum)
 {
+	// Check if file is open
 	if (!open){
 		PrintError(RM_FILENOTOPEN);
 		return RM_FILENOTOPEN;
@@ -491,13 +500,14 @@ RC RM_FileHandle::ForcePages (PageNum pageNum)
 	return OK_RC;
 }
 
-
+// Read a specific record's bit value in page header
 bool RM_FileHandle::GetSlotBitValue(char* pData, const SlotNum slotNum) const
 {
 	char c = *(pData + RM_BIT_START + slotNum / 8); //bits per byte
 	return c & (1 << slotNum % 8);
 }
 
+// Write a specific record's bit value in page header
 void RM_FileHandle::SetSlotBitValue(char* pData, const SlotNum slotNum, bool b)
 {
 	if (b)
@@ -506,6 +516,7 @@ void RM_FileHandle::SetSlotBitValue(char* pData, const SlotNum slotNum, bool b)
 		pData[RM_BIT_START + slotNum / 8] &= ~( 1 << slotNum % 8);
 }
 
+// Gets a pointer to a specific record's start location in a page
 char* RM_FileHandle::GetRecordPtr(char* pData, const SlotNum slotNum) const
 {
 	return pData + rmFileHeader.pageHeaderSize + slotNum * rmFileHeader.recordSize;
