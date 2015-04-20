@@ -1,0 +1,47 @@
+Gina Pai
+gpai
+05603432
+
+Overall Design:
+
+	*File Structure
+Within each paged file, the first page is reserved for the file header information. The file header stores the record size, the maximum record slot number allowed, the current maximum page number, the number of the first page in the free space linked list, and page header size.
+
+Within each non-header page, the first N bytes are reserved for the page header information. The page header stores the number of the next page in the free space linked list (or a number indicating the page is full). It also stores a records bitmap, one bit per slot; 1 indicates the slot is occupied by a record, while 0 indicates the slot is free.
+
+	*Free Space Linked List
+The file header stores the head of the linked list as the number of a page containing free space. The second page in the list is stored by having its number stored in the first page's header, and the third page's number is stored in the second page's header, and so on and so forth. The list is maintained in a LIFO fashion, where pages are added and removed from the head of the list.
+
+	*Global PrintError
+Lastly, I decided to make a global PrintError function. All non-zero return codes are passed through the global PrintError where it will determine which component the return code originated from. It is then sent to the component's PrintError method to print the specific error message.
+
+If a non-zero return code is returned from a PF function, PrintError is called immediately upon receiving it. Else, PrintError is called only from within the non-zero return code generating function. This protocol will prevent duplicate error messages being printed for the same return code.
+
+	*RM Manager
+CloseFile calls ForcePages on all pages to guarantee all dirty pages have been copied to disk before closing.
+
+	*RM File Handle
+Once the file handle is opened, it copies over all the header page information and stores it in memory. This allows frequent reads of the values without pinning the header page. In addition, frequent changes to the max page and free space linked list can be stored in memory so that the header page is only written back to the buffer when ForcePages is called on it.
+
+InsertRec checks the file header's free space linked list. If it is not empty, InsertRec gets the first page number and inserts the record into a free slot. If the free space linked list is empty, InsertRec creates a new page and inserts the record in the first slot.
+
+DeleteRec simply clears the record's bit in the bitmap. Empty pages are not disposed of (due to convenience), but simply wait in the free space linked list to become non-empty.
+
+ForcePages writes the modified header information from the file handle to the page in buffer before calling (PF's) ForcePages if the header page is included in the pages to be forced.
+
+	*RM File Scan
+GetNextRec iterates through the record-holding pages from the lowest to highest page number and the records within each from the lowest to highest slot number, stopping only once it has found a record satisfying its condition. It stores the latest matching record's page and slot numbers to remember where to start iterating for the next record the next time GetNextRec is called.
+
+Key Data Structures:
+	File headers
+	Page headers
+	Free space linked list
+
+Testing Process:
+My testing process involved running the provided test 'rm_test' and the shared tests 'rm_testkpg', 'rm_testshnFIXED', and 'rm_testrecsizes'. Once I guaranteed my code passed all these tests, I then re-ran the tests with Valgrind turned on and guaranteed there were no memory-related errors.
+
+Known Bugs:
+There are no known bugs at this time.
+
+Received Assistance:
+I received debugging assistance from Michael Fitzpatrick. He told me which shared tests he found most useful.
