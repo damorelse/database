@@ -71,6 +71,12 @@ RC RM_FileScan::OpenScan  (const RM_FileHandle &fileHandle,
 
 RC RM_FileScan::GetNextRec(RM_Record &rec)               // Get next matching record
 {
+	// Check if scan is open
+	if (!open){
+		PrintError(RM_SCANNOTOPEN);
+		return RM_SCANNOTOPEN;
+	}
+
 	bool found = false;
 	PF_PageHandle pfPageHandle;
 	char* pData;

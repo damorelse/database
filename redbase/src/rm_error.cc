@@ -11,7 +11,8 @@ static char *RM_WarnMsg[] = {
   (char*)"record not yet read",
   (char*)"file not yet opened",
   (char*)"record does not exist",
-  (char*)"Reached end of file",
+  (char*)"reached end of file",
+  (char*)"scan not yet opened",
 };
 
 static char *RM_ErrorMsg[] = {
