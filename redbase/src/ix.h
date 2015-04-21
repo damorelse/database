@@ -17,6 +17,8 @@
 // IX_IndexHandle: IX Index File interface
 //
 class IX_IndexHandle {
+	friend class IX_Manager;
+	friend class IX_IndexScan;
 public:
     IX_IndexHandle();
     ~IX_IndexHandle();
@@ -29,6 +31,10 @@ public:
 
     // Force index files to disk
     RC ForcePages();
+
+private:
+	bool open;
+	PF_FileHandle pfFileHandle;
 };
 
 //
@@ -51,6 +57,12 @@ public:
 
     // Close index scan
     RC CloseScan();
+
+private:
+	bool open;
+	const IX_IndexHandle* ixIndexHandle;
+	CompOp compOp;
+	void *value;
 };
 
 //
@@ -74,11 +86,28 @@ public:
 
     // Close an Index
     RC CloseIndex(IX_IndexHandle &indexHandle);
+
+private:
+	PF_Manager* pfManager;
+
+	const char* GetIndexFileName(const char *fileName, int indexNo);
 };
 
 //
 // Print-error function
 //
 void IX_PrintError(RC rc);
+
+#define IX_FILENOTOPEN           (START_IX_WARN + 0)  
+#define IX_ENTRYDNE				 (START_IX_WARN + 1)
+#define IX_LASTWARN		END_IX_WARN                  //TODO: set
+
+#define IX_INVALIDENUM           (START_IX_ERR - 0)
+#define IX_NULLINPUT			 (START_IX_ERR - 1)
+#define IX_STRLEN				 (START_IX_ERR - 2)
+#define IX_NUMLEN				 (START_IX_ERR - 3)
+#define IX_FILENAMELEN			 (START_IX_ERR - 4)
+#define IX_LASTERROR	END_IX_ERR                   //TODO: set
+
 
 #endif
