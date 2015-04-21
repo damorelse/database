@@ -13,6 +13,7 @@ static char *RM_WarnMsg[] = {
   (char*)"record does not exist",
   (char*)"reached end of file",
   (char*)"scan not yet opened",
+  (char*)"invalid scan parameters; either value is null and compOp is not NO_OP, or value is not null and compOp is NO_OP.",
 };
 
 static char *RM_ErrorMsg[] = {

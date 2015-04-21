@@ -35,6 +35,12 @@ RC RM_FileScan::OpenScan  (const RM_FileHandle &fileHandle,
 		PrintError(RM_INVALIDENUM);
 		return RM_INVALIDENUM;
 	}
+	// Check for invalid value/compOp combinations
+	if ((compOp == NO_OP && value) || (compOp != NO_OP && !value)){
+		PrintError(RM_INVALIDSCANCOMBO);
+		return RM_INVALIDSCANCOMBO;
+	}
+
 	// Check string attribute length is greater than 0 and less than 255 bytes
 	if (attrType == STRING && (attrLength > MAXSTRINGLEN || attrLength < 1)){
 		PrintError(RM_STRLEN);
