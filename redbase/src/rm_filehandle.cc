@@ -108,12 +108,6 @@ RC RM_FileHandle::InsertRec  (const char *inData, RID &rid)       // Insert a ne
 		PrintError(RM_INPUTNULL);
 		return RM_INPUTNULL;
 	}
-
-	// 
-	if (strlen(inData) != rmFileHeader.recordSize){
-		PrintError(RM_MEMVIOLATION);
-		return RM_MEMVIOLATION;
-	}
 	// End check input
 
 	// Check if file has been opened yet
