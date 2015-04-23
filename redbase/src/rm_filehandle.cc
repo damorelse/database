@@ -358,10 +358,10 @@ RC RM_FileHandle::UpdateRec  (const RM_Record &rec)              // Update a rec
 		return rc;
 
 	// If given record's length is not the correct size, do not update
-	if (rec.length != rmFileHeader.recordSize){
-		PrintError(RM_RECORD_DNE);
-		return RM_RECORD_DNE;
-	}
+	//if (rec.length != rmFileHeader.recordSize){
+	//	PrintError(RM_RECORD_DNE);
+	//	return RM_RECORD_DNE;
+	//}
 	// End check record.
 
 	// Check RID
