@@ -59,6 +59,8 @@ struct RM_FileHeader {
 	size_t maxPage;	        // CHANGES
 	int firstFreeSpace;     // page num, CHANGES
 	size_t pageHeaderSize;  // in bytes
+
+	RM_FileHeader(): recordSize(0), maxSlot(0), maxPage(0), firstFreeSpace(RM_PAGE_LIST_END), pageHeaderSize(0){}
 };
 struct RM_PageHeader {
 	int nextFreeSpace;      // page num

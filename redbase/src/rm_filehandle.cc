@@ -103,6 +103,19 @@ RC RM_FileHandle::GetRec     (const RID &rid, RM_Record &rec) const
 
 RC RM_FileHandle::InsertRec  (const char *inData, RID &rid)       // Insert a new record
 {
+	// Check input
+	if (!inData){
+		PrintError(RM_INPUTNULL);
+		return RM_INPUTNULL;
+	}
+
+	// 
+	if (strlen(inData) != rmFileHeader.recordSize){
+		PrintError(RM_MEMVIOLATION);
+		return RM_MEMVIOLATION;
+	}
+	// End check input
+
 	// Check if file has been opened yet
 	if (!open){
 		PrintError(RM_FILENOTOPEN);
@@ -465,9 +478,6 @@ RC RM_FileHandle::ForcePages (PageNum pageNum)
 		// Write to header page
 		char *ptr = pData + sizeof(size_t) + sizeof(size_t);
 		memcpy(ptr, &rmFileHeader.maxPage, sizeof(size_t));
-
-		size_t test;
-		memcpy(&test, ptr, sizeof(size_t));
 
 		ptr += sizeof(size_t);
 		memcpy(ptr, &rmFileHeader.firstFreeSpace, sizeof(int));

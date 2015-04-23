@@ -134,15 +134,18 @@ RC RM_FileScan::GetNextRec(RM_Record &rec)               // Get next matching re
 			case INT:
 				memcpy(&a_i, ptr, attrLength);
 				memcpy(&v_i, value, attrLength);
+				break;
 			case FLOAT:
 				memcpy(&a_f, ptr, attrLength);
 				memcpy(&v_f, value, attrLength);
+				break;
 			case STRING:
 				char* tmp = new char[attrLength];
 				memcpy(tmp, ptr, attrLength);
 				a_s = string(tmp);
 				v_s = string((char*)value);
 				delete [] tmp;
+				break;
 			}
 			// Check if record fulfills condition
 			switch(compOp) {
