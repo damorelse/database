@@ -41,6 +41,7 @@ struct IX_InternalHeader{
 	PageNum parentPage;
 };
 // format: <header> ptr {key ptr} ...
+#define IX_BIT_START sizeof(int) + 4*sizeof(PageNum)
 struct IX_LeafHeader{
 	int numEntries;
 	PageNum nextBucketPage;
@@ -76,6 +77,11 @@ private:
 	bool modified;
 	PF_FileHandle pfFileHandle;
 	IX_IndexHeader ixIndexHeader;
+
+	char* GetKeyPtr(char* pData, const SlotNum slotNum) const;        // Gets a pointer to a specific key's start location
+	char* GetRecordPtr(char* pData, const SlotNum slotNum) const;     // Gets a pointer to a specific entry's start location
+	bool GetSlotBitValue(char* pData, const SlotNum slotNum) const;   // Read a specific entry's bit value in page header
+	void SetSlotBitValue(char* pData, const SlotNum slotNum, bool b); // Write a specific entry's bit value in page header
 };
 
 //
