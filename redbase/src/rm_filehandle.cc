@@ -320,10 +320,8 @@ RC RM_FileHandle::DeleteRec  (const RID &rid)                    // Delete a rec
 
 		PrintError(RM_RECORD_DNE);
         printf("\nB\n");
-        if (GetSlotBitValue(pData, slotNum))
-        	printf("\nGetSlotBitValue: true, this should not show up\n");
-        else
-            printf("\nGetSlotBitValue: false\n");
+        if (GetRecordPtr(pData, 0) < (pData + RM_BIT_START + slotNum / 8 + sizeof(char)))
+			printf("\nISSUES WITH POINTER MATH\n");
 		return RM_RECORD_DNE;
 	}
 
