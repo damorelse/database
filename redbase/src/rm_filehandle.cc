@@ -1,6 +1,8 @@
 #include <cstdio>
 #include <iostream>
 #include <cstring>
+#include <cerrno>
+#include <string>
 #include "rm.h"
 
 using namespace std;
@@ -155,6 +157,8 @@ RC RM_FileHandle::InsertRec  (const char *inData, RID &rid)       // Insert a ne
 		int i = RM_PAGE_LIST_END;
 		memcpy(pData, &i, sizeof(int));  // nextFreeSpace
 		SetSlotBitValue(pData, 0, true); // slotsBit
+        for (i = 1; i <= rmFileHeader.maxSlot; ++i)
+			SetSlotBitValue(pData, i, false);
 
 		// Copy pData to page
 		char* ptr = GetRecordPtr(pData, 0);
@@ -257,7 +261,7 @@ RC RM_FileHandle::InsertRec  (const char *inData, RID &rid)       // Insert a ne
 		rid.slotNum = slotNum;
 
 	}
-
+    printf("\nAdded: %d %d\n", rid.pageNum, rid.slotNum);
 	return OK_RC;
 }
 
@@ -273,11 +277,15 @@ RC RM_FileHandle::DeleteRec  (const RID &rid)                    // Delete a rec
 	rc = rid.GetSlotNum(slotNum);
 	if (rc != OK_RC)
 		return rc;
+    
+    printf("\nWant to delete: %d %d\n", pageNum, slotNum);
 
 	// Check page and slot numbers are within record-holding page bounds
 	if (pageNum > rmFileHeader.maxPage || pageNum < 1 ||
 		slotNum > rmFileHeader.maxSlot || slotNum < 0){
 		PrintError(RM_RECORD_DNE);
+        printf("\nA\n");
+        cerr << "\nmax page: " << rmFileHeader.maxPage << " " << pageNum << " max slot: " << rmFileHeader.maxSlot << " " << slotNum << endl;
 		return RM_RECORD_DNE;
 	}
 	// End check RID.
@@ -307,10 +315,15 @@ RC RM_FileHandle::DeleteRec  (const RID &rid)                    // Delete a rec
 
 	// Check if record exists
 	if (!GetSlotBitValue(pData, slotNum)){
-		pData = NULL;
+		//pData = NULL;
 		pfFileHandle.UnpinPage(pageNum);
 
 		PrintError(RM_RECORD_DNE);
+        printf("\nB\n");
+        if (GetSlotBitValue(pData, slotNum))
+        	printf("\nGetSlotBitValue: true, this should not show up\n");
+        else
+            printf("\nGetSlotBitValue: false\n");
 		return RM_RECORD_DNE;
 	}
 
@@ -507,7 +520,8 @@ RC RM_FileHandle::ForcePages (PageNum pageNum)
 // Read a specific record's bit value in page header
 bool RM_FileHandle::GetSlotBitValue(char* pData, const SlotNum slotNum) const
 {
-	char c = *(pData + RM_BIT_START + slotNum / 8); //bits per byte
+	char c;
+    memcpy(&c, (pData + RM_BIT_START + slotNum / 8), sizeof(char)); //bits per byte
 	return c & (1 << slotNum % 8);
 }
 

@@ -26,7 +26,7 @@ RC RM_Manager::CreateFile (const char *fileName, int recordSize)
 		return RM_FILENAMELEN;
 	}
 	// Check record size is feasible, accounting for available space and page header size, and greater than zero
-	if (recordSize > PF_PAGE_SIZE-sizeof(int) * 2 || recordSize <= 0){
+	if (recordSize > PF_PAGE_SIZE-sizeof(int)-sizeof(char) || recordSize <= 0){
 		PrintError(RM_RECORDSIZE);
 		return RM_RECORDSIZE;
 	}
