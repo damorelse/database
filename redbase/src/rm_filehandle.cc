@@ -164,13 +164,6 @@ RC RM_FileHandle::InsertRec  (const char *inData, RID &rid)       // Insert a ne
 		char* ptr = GetRecordPtr(pData, 0);
 		memcpy(ptr, inData, rmFileHeader.recordSize);
 
-		// TODO: Remove
-        if (GetSlotBitValue(pData, 0) != true)
-			printf("\nUnset new page's 0 slot to true\n");
-        for (i = 1; i <= rmFileHeader.maxSlot; ++i)
-			if(GetSlotBitValue(pData, i) != false)
-				printf("\nUnset not set new page's %d slot to false\n", i);
-
 		// Mark page as dirty.
 		rc = pfFileHandle.MarkDirty(pageNum);
 		if (rc != OK_RC){
@@ -268,7 +261,6 @@ RC RM_FileHandle::InsertRec  (const char *inData, RID &rid)       // Insert a ne
 		rid.pageNum = pageNum;
 		rid.slotNum = slotNum;
 	}
-    //printf("\nAdded: %d %d\n", rid.pageNum, rid.slotNum);
 	return OK_RC;
 }
 
@@ -285,14 +277,10 @@ RC RM_FileHandle::DeleteRec  (const RID &rid)                    // Delete a rec
 	if (rc != OK_RC)
 		return rc;
    
-    // TODO: Remove 
-    //printf("\nWant to delete: %d %d\n", pageNum, slotNum);
-
 	// Check page and slot numbers are within record-holding page bounds
 	if (pageNum > rmFileHeader.maxPage || pageNum < 1 ||
 		slotNum > rmFileHeader.maxSlot || slotNum < 0){
 		PrintError(RM_RECORD_DNE);
-        printf("\nA\n");
 		return RM_RECORD_DNE;
 	}
 	// End check RID.
@@ -322,11 +310,10 @@ RC RM_FileHandle::DeleteRec  (const RID &rid)                    // Delete a rec
 
 	// Check if record exists
 	if (!GetSlotBitValue(pData, slotNum)){
-		//pData = NULL;
+		pData = NULL;
 		pfFileHandle.UnpinPage(pageNum);
 
 		PrintError(RM_RECORD_DNE);
-        printf("\nB\n");
 		return RM_RECORD_DNE;
 	}
 
@@ -372,12 +359,6 @@ RC RM_FileHandle::UpdateRec  (const RM_Record &rec)              // Update a rec
 	rc = rec.GetData(rData);
 	if (rc != OK_RC)
 		return rc;
-
-	// If given record's length is not the correct size, do not update
-	//if (rec.length != rmFileHeader.recordSize){
-	//	PrintError(RM_RECORD_DNE);
-	//	return RM_RECORD_DNE;
-	//}
 	// End check record.
 
 	// Check RID
