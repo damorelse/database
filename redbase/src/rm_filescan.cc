@@ -22,6 +22,11 @@ RC RM_FileScan::OpenScan  (const RM_FileHandle &fileHandle,
 						   void       *value,
 						   ClientHint pinHint) // Initialize a file scan
 {
+	if (open){
+		PrintError(RM_SCANOPEN);
+		return RM_SCANOPEN;
+	}
+
 	// Check input
 	// Check attribute type is one of the three allowed
 	if (attrType != INT && attrType != FLOAT && attrType != STRING){

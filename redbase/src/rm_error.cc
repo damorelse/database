@@ -14,6 +14,7 @@ static char *RM_WarnMsg[] = {
   (char*)"reached end of file",
   (char*)"scan not yet opened",
   (char*)"invalid scan parameters; either value is null and compOp is not NO_OP, or value is not null and compOp is NO_OP.",
+  (char*)"tried to re-open an already opened scan",
 };
 
 static char *RM_ErrorMsg[] = {

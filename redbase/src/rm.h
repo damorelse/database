@@ -163,7 +163,8 @@ void RM_PrintError(RC rc);
 #define RM_EOF					(START_RM_WARN + 4)
 #define RM_SCANNOTOPEN			(START_RM_WARN + 5)
 #define RM_INVALIDSCANCOMBO		(START_RM_WARN + 6)
-#define RM_LASTWARN		RM_SCANNOTOPEN
+#define RM_SCANOPEN				(START_RM_WARN + 7)
+#define RM_LASTWARN		RM_SCANOPEN
 
 #define RM_RECORDSIZE           (START_RM_ERR - 0)
 #define RM_FILENAMELEN          (START_RM_ERR - 1) 
