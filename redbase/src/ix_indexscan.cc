@@ -2,10 +2,12 @@
 
 using namespace std;
 
-IX_IndexScan::IX_IndexScan(): open(false)
+IX_IndexScan::IX_IndexScan(): open(false), ixIndexHandle(NULL)
 {}
 IX_IndexScan::~IX_IndexScan()
-{}
+{
+	ixIndexHandle = NULL;
+}
 
 // Open index scan
 RC IX_IndexScan::OpenScan(const IX_IndexHandle &indexHandle,
@@ -13,6 +15,12 @@ RC IX_IndexScan::OpenScan(const IX_IndexHandle &indexHandle,
 						  void *value,
 						  ClientHint  pinHint = NO_HINT)
 {
+	// Check if filescan already open
+	if (open){
+		PrintError(IX_FILESCANREOPEN);
+		return IX_FILESCANREOPEN;
+	}
+
 	// Check input parameters
 	// Check compare operation is one of the seven allowed
 	if (compOp != NO_OP && compOp != EQ_OP && compOp !=NE_OP && 
@@ -20,6 +28,12 @@ RC IX_IndexScan::OpenScan(const IX_IndexHandle &indexHandle,
 		compOp !=GE_OP){
 		PrintError(IX_INVALIDENUM);
 		return IX_INVALIDENUM;
+	}
+
+	// Check if value is null
+	if (!value){
+		PrintError(IX_NULLINPUT);
+		return IX_NULLINPUT;
 	}
 	// End check input parameters
 

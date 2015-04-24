@@ -14,7 +14,7 @@
 #include "pf.h"
 
 // Internal
-#define NO_PAGE -1
+#define IX_NO_PAGE -1
 struct IX_IndexHeader{
 	PageNum rootPage;  // CHANGES
 	int height;        // CHANGES
@@ -26,7 +26,7 @@ struct IX_IndexHeader{
 	int leafHeaderSize;
 
 	IX_IndexHeader(){
-		rootPage = NO_PAGE;
+		rootPage = IX_NO_PAGE;
 		height = 0;
 		attrType = (AttrType) -1;
 		attrLength = 0;
@@ -64,10 +64,10 @@ public:
     ~IX_IndexHandle();
 
     // Insert a new index entry
-    RC InsertEntry(void *pData, const RID &rid);
+    RC InsertEntry(void *attribute, const RID &rid);
 
     // Delete a new index entry
-    RC DeleteEntry(void *pData, const RID &rid);
+    RC DeleteEntry(void *attribute, const RID &rid);
 
     // Force index files to disk
     RC ForcePages();
@@ -82,6 +82,9 @@ private:
 	char* GetRecordPtr(char* pData, const SlotNum slotNum) const;     // Gets a pointer to a specific entry's start location
 	bool GetSlotBitValue(char* pData, const SlotNum slotNum) const;   // Read a specific entry's bit value in page header
 	void SetSlotBitValue(char* pData, const SlotNum slotNum, bool b); // Write a specific entry's bit value in page header
+
+	PageNum FindLeafNode(void* attribute);
+	PageNum FindLeafNodeHelper(void* attribute, PageNum currPage, int currHeight);
 };
 
 //
@@ -150,6 +153,7 @@ void IX_PrintError(RC rc);
 
 #define IX_FILENOTOPEN           (START_IX_WARN + 0)  
 #define IX_ENTRYDNE				 (START_IX_WARN + 1)
+#define IX_FILESCANREOPEN		 (START_IX_WARN + 2)
 #define IX_LASTWARN		END_IX_WARN                  //TODO: set
 
 #define IX_INVALIDENUM           (START_IX_ERR - 0)
