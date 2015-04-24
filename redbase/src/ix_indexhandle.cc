@@ -2,7 +2,7 @@
 
 using namespace std;
 
-IX_IndexHandle::IX_IndexHandle(): open(false), pfFileHandle(PF_FileHandle())
+IX_IndexHandle::IX_IndexHandle(): open(false), modified(false), pfFileHandle(PF_FileHandle()), ixIndexHeader(IX_IndexHeader())
 {}
 IX_IndexHandle::~IX_IndexHandle()
 {
@@ -47,6 +47,10 @@ RC IX_IndexHandle::ForcePages()
 	}
 
 	// TODO: check if header is modified, and if so, write to buffer?
+	if (modified) {
+
+
+	}
 
 	// Force pages
 	RC rc = pfFileHandle.ForcePages();

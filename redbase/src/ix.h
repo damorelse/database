@@ -13,6 +13,45 @@
 #include "rm_rid.h"  // Please don't change these lines
 #include "pf.h"
 
+// Internal
+#define NO_PAGE -1
+struct IX_IndexHeader{
+	PageNum rootPage;  // CHANGES
+	int height;        // CHANGES
+	AttrType attrType;
+	int attrLength;
+	SlotNum maxKeyIndex;
+	SlotNum maxEntryIndex;
+	int internalHeaderSize;
+	int leafHeaderSize;
+
+	IX_IndexHeader(){
+		rootPage = NO_PAGE;
+		height = 0;
+		attrType = (AttrType) -1;
+		attrLength = 0;
+		maxKeyIndex = -1;
+		maxEntryIndex = -1;
+		internalHeaderSize = 0;
+		leafHeaderSize = 0;
+	}
+};
+struct IX_InternalHeader{
+	int numKeys;
+	PageNum parentPage;
+};
+// format: <header> ptr {key ptr} ...
+struct IX_LeafHeader{
+	int numEntries;
+	PageNum nextBucketPage;
+	PageNum parentPage;
+	PageNum leftLeaf;
+	PageNum rightLeaf;
+	char* bitSlots;
+};
+// format: <header> {key page slot} ...
+// End Internal
+
 //
 // IX_IndexHandle: IX Index File interface
 //
@@ -34,7 +73,9 @@ public:
 
 private:
 	bool open;
+	bool modified;
 	PF_FileHandle pfFileHandle;
+	IX_IndexHeader ixIndexHeader;
 };
 
 //
@@ -91,6 +132,9 @@ private:
 	PF_Manager* pfManager;
 
 	const char* GetIndexFileName(const char *fileName, int indexNo);
+
+	int CalculateMaxKeys(int attrLength);  //Calculate max number of entries that will fit in one page
+	int CalculateMaxEntries(int attrLength);  //Calculate max number of entries that will fit in one page
 };
 
 //
