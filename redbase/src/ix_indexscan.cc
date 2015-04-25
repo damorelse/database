@@ -52,7 +52,13 @@ RC IX_IndexScan::OpenScan(const IX_IndexHandle &indexHandle,
 // Get the next matching entry return IX_EOF if no more matching entries.
 RC IX_IndexScan::GetNextEntry(RID &rid)
 {
+	if (ixIndexHandle->ixIndexHeader.rootPage == IX_NO_PAGE){
+		PrintError(IX_EOF);
+		return IX_EOF;
+	}
+
 	// TODO: search B+ tree
+	PageNum leafPage = ixIndexHandle->FindLeafNode(value);
 }
 
 // Close index scan
@@ -63,4 +69,9 @@ RC IX_IndexScan::CloseScan()
 	ixIndexHandle = NULL;
 
 	return OK_RC;
+}
+
+PageNum IX_IndexScan::FindMinLeafNode() const
+{
+	return ixIndexHandle->FindLeafNodeHelper(ixIndexHandle->ixIndexHeader.rootPage, ixIndexHandle->ixIndexHeader.height, true, NULL);
 }

@@ -228,35 +228,15 @@ void IX_IndexHandle::SetSlotBitValue(char* pData, const SlotNum slotNum, bool b)
 }
 
 
-// TODO: Check
-PageNum IX_IndexHandle::FindLeafNode(void* attribute)
+PageNum IX_IndexHandle::FindLeafNode(void* attribute) const
 {
-	return FindLeafNodeHelper(attribute, ixIndexHeader.rootPage, ixIndexHeader.height);
+	return FindLeafNodeHelper(ixIndexHeader.rootPage, ixIndexHeader.height, false, attribute);
 }
-PageNum IX_IndexHandle::FindLeafNodeHelper(void* attribute, PageNum currPage, int currHeight)
+PageNum IX_IndexHandle::FindLeafNodeHelper(PageNum currPage, int currHeight, bool findMin, void* attribute) const
 {
 	// At leaf page, done.
-	if (currHeight == 0 || currPage == IX_NO_PAGE)
+	if (currHeight == 0)
 		return currPage;
-
-	// Convert attribute into correct form
-	int a_i, k_i;
-	float a_f, k_f;
-	string a_s, k_s;
-	switch(ixIndexHeader.attrType) {
-	case INT:
-		memcpy(&a_i, attribute, ixIndexHeader.attrLength);
-        break;
-	case FLOAT:
-		memcpy(&a_f, attribute, ixIndexHeader.attrLength);
-        break;
-	case STRING:
-		char* tmp = new char[ixIndexHeader.attrLength];
-		memcpy(tmp, attribute, ixIndexHeader.attrLength);
-		a_s = string(tmp);
-		delete [] tmp;
-        break;
-	}
 
 	// At internal page
 	// Get page handle
@@ -276,50 +256,88 @@ PageNum IX_IndexHandle::FindLeafNodeHelper(void* attribute, PageNum currPage, in
 		return rc;
 	}
 
-	// Get number of keys
-	int numKeys;
-	memcpy(&numKeys, pData, sizeof(int));
-
-	// Iterate through keys until find first key greater than attribute.
 	char* ptr;
-	bool greaterThan = false;
 	PageNum nextPage;
-	for (SlotNum keyNum = 0; keyNum < numKeys; ++keyNum){
-		ptr = GetKeyPtr(pData, keyNum);
 
-		// Convert key into correct form, check if greater than
+	// Finding min leaf page
+	if (findMin){
+		// Choose left-most page pointer
+		ptr = pData + ixIndexHeader.internalHeaderSize;
+		memcpy(&nextPage, ptr, sizeof(PageNum));
+	}
+	// Not finding min leaf page
+	else {
+		// Convert attribute to correct type
+		int a_i, k_i;
+		float a_f, k_f;
+		string a_s, k_s;
 		switch(ixIndexHeader.attrType) {
 		case INT:
-			memcpy(&k_i, ptr, ixIndexHeader.attrLength);
-			greaterThan = a_i < k_i;
+			memcpy(&a_i, attribute, ixIndexHeader.attrLength);
 			break;
 		case FLOAT:
-			memcpy(&k_f, ptr, ixIndexHeader.attrLength);
-			greaterThan = a_f < k_f;
+			memcpy(&a_f, attribute, ixIndexHeader.attrLength);
 			break;
 		case STRING:
 			char* tmp = new char[ixIndexHeader.attrLength];
-			memcpy(tmp, ptr, ixIndexHeader.attrLength);
-			k_s = string(tmp);
+			memcpy(tmp, attribute, ixIndexHeader.attrLength);
+			a_s = string(tmp);
 			delete [] tmp;
-			greaterThan = a_s < k_s;
 			break;
 		}
 
-		// Found first greaterthan key, copy preceding page pointer
-		if (greaterThan){
-			ptr -= sizeof(PageNum);
+		// Get number of keys
+		int numKeys;
+		memcpy(&numKeys, pData, sizeof(int));
+
+		// Iterate through keys until find first key greater than attribute.
+		bool greaterThan = false;
+		for (SlotNum keyNum = 0; keyNum < numKeys; ++keyNum){
+			ptr = GetKeyPtr(pData, keyNum);
+
+			// Convert key into correct form, check if greater than
+			switch(ixIndexHeader.attrType) {
+			case INT:
+				memcpy(&k_i, ptr, ixIndexHeader.attrLength);
+				greaterThan = a_i < k_i;
+				break;
+			case FLOAT:
+				memcpy(&k_f, ptr, ixIndexHeader.attrLength);
+				greaterThan = a_f < k_f;
+				break;
+			case STRING:
+				char* tmp = new char[ixIndexHeader.attrLength];
+				memcpy(tmp, ptr, ixIndexHeader.attrLength);
+				k_s = string(tmp);
+				delete [] tmp;
+				greaterThan = a_s < k_s;
+				break;
+			}
+
+			// Found first greaterthan key, copy preceding page pointer
+			if (greaterThan){
+				ptr -= sizeof(PageNum);
+				memcpy(&nextPage, ptr, sizeof(PageNum));
+				break;
+			}
+		}
+
+		// Did not find a greaterThan key, copy last page pointer
+		if (!greaterThan){
+			ptr += ixIndexHeader.attrLength;
 			memcpy(&nextPage, ptr, sizeof(PageNum));
-			break;
 		}
 	}
 
-	// Did not find a greaterThan key, copy last page pointer
-	if (!greaterThan){
-		ptr += ixIndexHeader.attrLength;
-		memcpy(&nextPage, ptr, sizeof(PageNum));
+	// Clean up
+	pData = NULL;
+	ptr = NULL;
+	rc =  pfFileHandle.UnpinPage(currPage);
+	if (rc != OK_RC){
+		PrintError(rc);
+		return rc;
 	}
 
 	// Recursive call to next index level
-	return FindLeafNodeHelper(attribute, nextPage, currHeight - 1);
+	return FindLeafNodeHelper(nextPage, currHeight - 1, findMin, attribute);
 }

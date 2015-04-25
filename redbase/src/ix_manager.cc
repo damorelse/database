@@ -80,7 +80,7 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
 
 	// Write info to header page
 	char* ptr = pData;
-	PageNum pageNumTmp = NO_PAGE;
+	PageNum pageNumTmp = IX_NO_PAGE;
 	memcpy(ptr, &pageNumTmp, sizeof(PageNum)); // rootPage
 
 	ptr += sizeof(PageNum);

@@ -16,8 +16,8 @@
 // Internal
 #define IX_NO_PAGE -1
 struct IX_IndexHeader{
-	PageNum rootPage;  // CHANGES
-	int height;        // CHANGES
+	PageNum rootPage;   // CHANGES
+	int height;         // CHANGES
 	AttrType attrType;
 	int attrLength;
 	SlotNum maxKeyIndex;
@@ -83,8 +83,8 @@ private:
 	bool GetSlotBitValue(char* pData, const SlotNum slotNum) const;   // Read a specific entry's bit value in page header
 	void SetSlotBitValue(char* pData, const SlotNum slotNum, bool b); // Write a specific entry's bit value in page header
 
-	PageNum FindLeafNode(void* attribute);
-	PageNum FindLeafNodeHelper(void* attribute, PageNum currPage, int currHeight);
+	PageNum FindLeafNode(void* attribute) const;
+	PageNum FindLeafNodeHelper(PageNum currPage, int currHeight, bool findMin, void* attribute) const;
 };
 
 //
@@ -113,6 +113,8 @@ private:
 	const IX_IndexHandle* ixIndexHandle;
 	CompOp compOp;
 	void *value;
+
+	PageNum FindMinLeafNode() const;
 };
 
 //
@@ -154,6 +156,7 @@ void IX_PrintError(RC rc);
 #define IX_FILENOTOPEN           (START_IX_WARN + 0)  
 #define IX_ENTRYDNE				 (START_IX_WARN + 1)
 #define IX_FILESCANREOPEN		 (START_IX_WARN + 2)
+#define IX_EOF					 (START_IX_WARN + 3)
 #define IX_LASTWARN		END_IX_WARN                  //TODO: set
 
 #define IX_INVALIDENUM           (START_IX_ERR - 0)
