@@ -7,11 +7,19 @@ using namespace std;
 
 // Error tables
 static char *IX_WarnMsg[] = {
-  (char*)"",
+  (char*)"file not yet opened",
+  (char*)"entry does not exist, cannot delete",
+  (char*)"file scan already opened, do not re-open",
+  (char*)"end of file",
 };
 
 static char *IX_ErrorMsg[] = {
-	(char*)"",
+	(char*)"invalid type given for enumeration",
+	(char*)"invalid null input",
+	(char*)"invalid string length, should be 0 < < 255",
+	(char*)"invalid number length, should be 4",
+	(char*)"invalid file name length",
+	(char*)"invalid scan parameters; either value null and compOp not NO_OP, or value not null and compOp NO_OP",
 };
 
 void IX_PrintError(RC rc)

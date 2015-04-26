@@ -79,7 +79,10 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
 	}
 
 	//Create root leaf page
-	PageNum rootPage = CreateNewLeaf(fileHandle, CalculateMaxEntries(attrLength), IX_NO_PAGE, IX_NO_PAGE, IX_NO_PAGE);
+	PageNum rootPage;
+	rc = CreateNewLeaf(fileHandle, CalculateMaxEntries(attrLength), IX_NO_PAGE, IX_NO_PAGE, rootPage);
+	if (rc != OK_RC)
+		return rc;
 
 	// Write info to header page
 	char* ptr = pData;
@@ -104,11 +107,11 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
 	memcpy(ptr, &slotNumTmp, sizeof(SlotNum)); // maxEntryIndex
 
 	ptr += sizeof(SlotNum);
-	intTmp = sizeof(int) + sizeof(PageNum);
+	intTmp = sizeof(int);
 	memcpy(ptr, &intTmp, sizeof(int)); // internalHeaderSize
 
 	ptr += sizeof(int);
-	intTmp = sizeof(int) + 4*sizeof(PageNum) + ceil(CalculateMaxEntries(attrLength) / 8.0);
+	intTmp = sizeof(int) + 3*sizeof(PageNum) + ceil(CalculateMaxEntries(attrLength) / 8.0);
 	memcpy(ptr, &intTmp, sizeof(int)); // leafHeaderSize
 	// End write info to header page.
 
@@ -288,7 +291,7 @@ int IX_Manager::CalculateMaxEntries(int attrLength)
 	return floor((PF_PAGE_SIZE - sizeof(int) - 4*sizeof(PageNum)) / (attrLength + sizeof(PageNum) + sizeof(SlotNum) + 1/8.0));
 }
 
-PageNum IX_Manager::CreateNewLeaf(PF_FileHandle pfFileHandle, SlotNum maxEntry, PageNum parentPage, PageNum leftLeaf, PageNum rightLeaf)
+RC IX_Manager::CreateNewLeaf(PF_FileHandle pfFileHandle, SlotNum maxEntry, PageNum leftLeaf, PageNum rightLeaf, PageNum &resultPage)
 {
 	// Allocate new page
 	PF_PageHandle pfPageHandle;
@@ -324,9 +327,6 @@ PageNum IX_Manager::CreateNewLeaf(PF_FileHandle pfFileHandle, SlotNum maxEntry, 
 	memcpy(ptr, &pageNumTmp, sizeof(PageNum)); // nextBucketPage
 
 	ptr += sizeof(PageNum);
-	memcpy(ptr, &parentPage, sizeof(PageNum));	// parentPage
-
-	ptr += sizeof(PageNum);
 	memcpy(ptr, &leftLeaf, sizeof(PageNum)); // leftLeaf
 
 	ptr += sizeof(PageNum);
@@ -339,7 +339,7 @@ PageNum IX_Manager::CreateNewLeaf(PF_FileHandle pfFileHandle, SlotNum maxEntry, 
 		ptr += sizeof(char);
 	}
 
-	// Mark page as dirty, root internal page
+	// Mark page as dirty
 	rc = pfFileHandle.MarkDirty(pageNum);
 	if (rc != OK_RC){
 		PrintError(rc);
@@ -355,5 +355,6 @@ PageNum IX_Manager::CreateNewLeaf(PF_FileHandle pfFileHandle, SlotNum maxEntry, 
 		return rc;
 	}
 
-	return pageNum;
+	resultPage = pageNum;
+	return OK_RC;
 }

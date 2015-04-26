@@ -38,17 +38,15 @@ struct IX_IndexHeader{
 };
 struct IX_InternalHeader{
 	int numKeys;			// CHANGES
-	PageNum parentPage;
 };
 // format: <header> ptr {key ptr} ...
-#define IX_BIT_START sizeof(int) + 4*sizeof(PageNum)
+#define IX_BIT_START sizeof(int) + 3*sizeof(PageNum)
 struct IX_LeafHeader{
-	int numEntries;
-	PageNum nextBucketPage;
-	PageNum parentPage;
-	PageNum leftLeaf;
-	PageNum rightLeaf;
-	char* bitSlots;
+	int numEntries;         // CHANGES
+	PageNum nextBucketPage; // CHANGES
+	PageNum leftLeaf;		// CHANGES
+	PageNum rightLeaf;		// CHANGES
+	char* bitSlots;			// CHANGES
 };
 // format: <header> {key page slot} ...
 // End Internal
@@ -83,12 +81,7 @@ private:
 	bool GetSlotBitValue(char* pData, const SlotNum slotNum) const;   // Read a specific entry's bit value in page header
 	void SetSlotBitValue(char* pData, const SlotNum slotNum, bool b); // Write a specific entry's bit value in page header
 
-	//PageNum FindLeafNode(void* attribute) const;
-	//PageNum FindLeafNodeHelper(PageNum currPage, int currHeight, bool findMin, void* attribute) const;
-
-	//PageNum CreateNewLeaf(PageNum parentPage, PageNum leftLeaf, PageNum rightLeaf);
-	
-	void InsertEntryHelper(void* attribute, PageNum currPage, int height, PageNum* newChildPage);
+	RC InsertEntryHelper(PageNum currPage, int height, void* attribute, const RID &rid, PageNum &newChildPage, void* newAttribute);
 };
 
 //
@@ -125,10 +118,10 @@ private:
 	bool finished;
 	string lastEntry;
 
-	PageNum FindLeafNode(void* attribute) const;
-	PageNum FindMinLeafNode() const;
-	PageNum FindLeafNodeHelper(PageNum currPage, int currHeight, bool findMin, void* attribute) const;
-	PageNum GetNextPage(PageNum pageNum);
+	RC FindLeafNode(void* attribute, PageNum &resultPage) const;
+	RC FindMinLeafNode(PageNum &resultPage) const;
+	RC FindLeafNodeHelper(PageNum currPage, int currHeight, bool findMin, void* attribute, PageNum &resultPage) const;
+	RC GetNextPage(PageNum pageNum, PageNum &resultPage);
 };
 
 //
@@ -161,7 +154,7 @@ private:
 	int CalculateMaxKeys(int attrLength);  //Calculate max number of entries that will fit in one page
 	int CalculateMaxEntries(int attrLength);  //Calculate max number of entries that will fit in one page
 
-	PageNum CreateNewLeaf(PF_FileHandle pfFileHandle, SlotNum maxEntry, PageNum parentPage, PageNum leftLeaf, PageNum rightLeaf);
+	RC CreateNewLeaf(PF_FileHandle pfFileHandle, SlotNum maxEntry, PageNum leftLeaf, PageNum rightLeaf, PageNum &resultPage);
 };
 
 //

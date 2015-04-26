@@ -5,6 +5,7 @@
 #include "redbase.h"
 #include "pf.h"
 #include "rm.h"
+#include "ix.h"
 
 using namespace std;
 
@@ -19,7 +20,7 @@ void PrintError(RC rc)
 	else if (posRc >= START_RM_WARN && posRc <= END_RM_WARN)
 		RM_PrintError(rc);
 	else if (posRc >= START_IX_WARN && posRc <= END_IX_WARN)
-		;// TODO: replace
+		IX_PrintError(rc);
 	else if (posRc >= START_SM_WARN && posRc <= END_SM_WARN)
 		;// TODO: replace
 	else if (posRc >= START_QL_WARN && posRc <= END_QL_WARN)

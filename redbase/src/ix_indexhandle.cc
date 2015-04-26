@@ -36,9 +36,46 @@ RC IX_IndexHandle::InsertEntry(void *attribute, const RID &rid)
 	if (rc != OK_RC)
 		return rc;
 	// End check input.
+	
+	// Recursive call
+	PageNum newChildPage = IX_NO_PAGE;
+	void* newAttribute = NULL;
+	rc = InsertEntryHelper(ixIndexHeader.rootPage, ixIndexHeader.height, attribute, rid, newChildPage, newAttribute);
+	if (rc != OK_RC)
+		return rc;
 
+	// Need to add level to index
+	if (newChildPage != IX_NO_PAGE){
+		// Create new root
+		PF_PageHandle pageHandle = PF_PageHandle();
+		rc = pfFileHandle.AllocatePage(pageHandle);
+		if (rc != OK_RC){
+			PrintError(rc);
+			return rc;
+		}
 
-	// TODO:
+		// Get page info
+		char *pData;
+		rc = pageHandle.GetData(pData);
+		if (rc != OK_RC){
+			PrintError(rc);
+			return rc;
+		}
+
+		// Write header info
+		char* ptr = pData;
+		int intTmp = 1;
+		memcpy(ptr, &intTmp, sizeof(int));
+
+		// TODO
+		// Write key<old root> attribute<newAttribute> key<newChildPage>
+
+		// Mark page as dirty
+
+		// Clean up
+
+		// Modify index header info: root page, height
+	}
 
 	return OK_RC;
 }
@@ -164,47 +201,31 @@ void IX_IndexHandle::SetSlotBitValue(char* pData, const SlotNum slotNum, bool b)
 		pData[IX_BIT_START + slotNum / 8] &= ~( 1 << slotNum % 8);
 }
 
-
-/**
-PageNum IX_IndexHandle::FindLeafNode(void* attribute) const
+RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribute, const RID &rid, PageNum &newChildPage, void* newAttribute)
 {
-	return FindLeafNodeHelper(ixIndexHeader.rootPage, ixIndexHeader.height, false, attribute);
-}
-PageNum IX_IndexHandle::FindLeafNodeHelper(PageNum currPage, int currHeight, bool findMin, void* attribute) const
-{
-	// At leaf page, done.
-	if (currHeight == 0)
-		return currPage;
+	// If at an internal node...
+	if (height != 0){
+		// Get page handle
+		PF_PageHandle pfPageHandle = PF_PageHandle();
+		RC rc = pfFileHandle.GetThisPage(currPage, pfPageHandle);
+		if (rc != OK_RC){
+			PrintError(rc);
+			return rc;
+		}
 
-	// At internal page
-	// Get page handle
-	PF_PageHandle pfPageHandle = PF_PageHandle();
-	RC rc = pfFileHandle.GetThisPage(currPage, pfPageHandle);
-	if (rc != OK_RC){
-		PrintError(rc);
-		return rc;
-	}
+		// Get page data
+		char *pData;
+		rc = pfPageHandle.GetData(pData);
+		if (rc != OK_RC){
+			pfFileHandle.UnpinPage(currPage);
+			PrintError(rc);
+			return rc;
+		}
 
-	// Get page data
-	char *pData;
-	rc = pfPageHandle.GetData(pData);
-	if (rc != OK_RC){
-		pfFileHandle.UnpinPage(currPage);
-		PrintError(rc);
-		return rc;
-	}
+		// Choose subtree
+		char* ptr;
+		PageNum nextPage;
 
-	char* ptr;
-	PageNum nextPage;
-
-	// Finding min leaf page
-	if (findMin){
-		// Choose left-most page pointer
-		ptr = pData + ixIndexHeader.internalHeaderSize;
-		memcpy(&nextPage, ptr, sizeof(PageNum));
-	}
-	// Not finding min leaf page
-	else {
 		// Convert attribute to correct type
 		int a_i, k_i;
 		float a_f, k_f;
@@ -265,84 +286,33 @@ PageNum IX_IndexHandle::FindLeafNodeHelper(PageNum currPage, int currHeight, boo
 			ptr += ixIndexHeader.attrLength;
 			memcpy(&nextPage, ptr, sizeof(PageNum));
 		}
-	}
+		// End choose subtree.
 
-	// Clean up
-	pData = NULL;
-	ptr = NULL;
-	rc =  pfFileHandle.UnpinPage(currPage);
-	if (rc != OK_RC){
-		PrintError(rc);
-		return rc;
-	}
+		// Recursively insert entry
+		newChildPage = IX_NO_PAGE;
+		rc = InsertEntryHelper(nextPage, height - 1, attribute, rid, newChildPage, newAttribute);
+		if (rc != OK_RC)
+			return rc;
 
-	// Recursive call to next index level
-	return FindLeafNodeHelper(nextPage, currHeight - 1, findMin, attribute);
+		// Usual case, didn't split child
+		if (newChildPage == IX_NO_PAGE)
+			return OK_RC;
+
+		// We split child, must insert newChildEntry in N
+		int numKeys;
+		memcpy(&numKeys, pData, sizeof(int));
+		// If N has space... usual case
+		if (numKeys - 1 < ixIndexHeader.maxKeyIndex){
+			// TODO
+		}
+		// note difference wrt splitting of leaf page!
+		else {
+			// TODO
+		}
+	}
+	// If at a leaf node...
+	else {
+
+
+	}
 }
-
-PageNum IX_IndexHandle::CreateNewLeaf(PageNum parentPage, PageNum leftLeaf, PageNum rightLeaf)
-{
-	// Allocate new page
-	PF_PageHandle pfPageHandle;
-	RC rc = pfFileHandle.AllocatePage(pfPageHandle);
-	if (rc != OK_RC){
-		PrintError(rc);
-		return rc;
-	}
-
-	PageNum pageNum;
-	rc = pfPageHandle.GetPageNum(pageNum);
-	if (rc != OK_RC){
-		PrintError(rc);
-		return rc;
-	}
-
-	// Get page data
-	char *pData;
-	rc = pfPageHandle.GetData(pData);
-	if (rc != OK_RC){
-		pfFileHandle.UnpinPage(pageNum);
-		PrintError(rc);
-		return rc;
-	}
-
-	//Fill in header, leaf page
-	char* ptr = pData;
-	int intTmp = 0;
-	memcpy(ptr, &intTmp, sizeof(int)); // numEntries
-
-	ptr += sizeof(int);
-	PageNum pageNumTmp = IX_NO_PAGE;
-	memcpy(ptr, &pageNumTmp, sizeof(PageNum)); // nextBucketPage
-
-	ptr += sizeof(PageNum);
-	memcpy(ptr, &parentPage, sizeof(PageNum));	// parentPage
-
-	ptr += sizeof(PageNum);
-	memcpy(ptr, &leftLeaf, sizeof(PageNum)); // leftLeaf
-
-	ptr += sizeof(PageNum);
-	memcpy(ptr, &rightLeaf, sizeof(PageNum)); // rightLeaf
-
-	for (SlotNum i = 0; i <= ixIndexHeader.maxEntryIndex; ++i) //bitSlots
-		SetSlotBitValue(pData, i, false);
-
-	// Mark page as dirty, root internal page
-	rc = pfFileHandle.MarkDirty(pageNum);
-	if (rc != OK_RC){
-		PrintError(rc);
-		return rc;
-	}
-
-	// Clean up.
-	pData = NULL;
-	//ptr = NULL;
-	rc = pfFileHandle.UnpinPage(pageNum);
-	if (rc != OK_RC){
-		PrintError(rc);
-		return rc;
-	}
-
-	return pageNum;
-}
-**/

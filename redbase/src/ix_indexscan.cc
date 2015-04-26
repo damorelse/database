@@ -44,13 +44,15 @@ RC IX_IndexScan::OpenScan(const IX_IndexHandle &indexHandle,
 	this->value = value;
 
 	// Set state
+	RC rc;
+	if (compOp == NO_OP || compOp == LT_OP || compOp == LE_OP)
+		rc = FindMinLeafNode(pageNum);
+	else if (compOp == EQ_OP || compOp == GE_OP || compOp == GT_OP)
+		rc = FindLeafNode(value, pageNum);
+	if (rc != OK_RC)
+		return rc;
+
 	open = true;
-	if (compOp == NO_OP || compOp == LT_OP || compOp == LE_OP){
-		pageNum = FindMinLeafNode();
-	}
-	else if (compOp == EQ_OP || compOp == GE_OP || compOp == GT_OP){
-		pageNum = FindLeafNode(value);
-	}
 	entryNum = 0;
 	rightLeaf = IX_NO_PAGE;
 	inBucket = false;
@@ -103,7 +105,9 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 		// Increment entry num
 		entryNum += 1;
 		if (entryNum > ixIndexHandle->ixIndexHeader.maxEntryIndex){
-			pageNum = GetNextPage(pageNum);
+			rc = GetNextPage(prevPage, pageNum);
+			if (rc != OK_RC)
+				return rc;
 			entryNum = 0;
 		}
 	}
@@ -269,7 +273,9 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 		prevPage = pageNum;
 		entryNum += 1;
 		if (entryNum > ixIndexHandle->ixIndexHeader.maxEntryIndex){
-			pageNum = GetNextPage(pageNum);
+			rc = GetNextPage(prevPage, pageNum);
+			if (rc != OK_RC)
+				return rc;
 			entryNum = 0;
 		}
 
@@ -346,19 +352,21 @@ RC IX_IndexScan::CloseScan()
 	return OK_RC;
 }
 
-PageNum IX_IndexScan::FindLeafNode(void* attribute) const
+RC IX_IndexScan::FindLeafNode(void* attribute, PageNum &resultPage) const
 {
-	return FindLeafNodeHelper(ixIndexHandle->ixIndexHeader.rootPage, ixIndexHandle->ixIndexHeader.height, false, attribute);
+	return FindLeafNodeHelper(ixIndexHandle->ixIndexHeader.rootPage, ixIndexHandle->ixIndexHeader.height, false, attribute, resultPage);
 }
-PageNum IX_IndexScan::FindMinLeafNode() const
+RC IX_IndexScan::FindMinLeafNode(PageNum &resultPage) const
 {
-	return FindLeafNodeHelper(ixIndexHandle->ixIndexHeader.rootPage, ixIndexHandle->ixIndexHeader.height, true, NULL);
+	return FindLeafNodeHelper(ixIndexHandle->ixIndexHeader.rootPage, ixIndexHandle->ixIndexHeader.height, true, NULL, resultPage);
 }
-PageNum IX_IndexScan::FindLeafNodeHelper(PageNum currPage, int currHeight, bool findMin, void* attribute) const
+RC IX_IndexScan::FindLeafNodeHelper(PageNum currPage, int currHeight, bool findMin, void* attribute, PageNum &resultPage) const
 {
 	// At leaf page, done.
-	if (currHeight == 0)
-		return currPage;
+	if (currHeight == 0){
+		resultPage = currPage;
+		return OK_RC;
+	}
 
 	// At internal page
 	// Get page handle
@@ -461,11 +469,11 @@ PageNum IX_IndexScan::FindLeafNodeHelper(PageNum currPage, int currHeight, bool 
 	}
 
 	// Recursive call to next index level
-	return FindLeafNodeHelper(nextPage, currHeight - 1, findMin, attribute);
+	return FindLeafNodeHelper(nextPage, currHeight - 1, findMin, attribute, resultPage);
 }
 
 // Assumes at a leaf node
-PageNum IX_IndexScan::GetNextPage(PageNum pageNum)
+RC IX_IndexScan::GetNextPage(PageNum pageNum, PageNum &resultPage)
 {
 	// Get page handle
 	PF_PageHandle pfPageHandle = PF_PageHandle();
@@ -493,7 +501,7 @@ PageNum IX_IndexScan::GetNextPage(PageNum pageNum)
 
 	// if currently at leaf page, store right leaf
 	if (!inBucket){
-		ptr += 3 * sizeof(PageNum);
+		ptr += 2 * sizeof(PageNum);
 		memcpy(&rightLeaf, ptr, sizeof(PageNum));
 	}
 
@@ -516,5 +524,6 @@ PageNum IX_IndexScan::GetNextPage(PageNum pageNum)
 		return rc;
 	}
 
-	return nextPage;
+	resultPage = nextPage;
+	return OK_RC;
 }
