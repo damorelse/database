@@ -78,10 +78,12 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
 		return rc;
 	}
 
+	//Create root leaf page
+	PageNum rootPage = CreateNewLeaf(fileHandle, CalculateMaxEntries(attrLength), IX_NO_PAGE, IX_NO_PAGE, IX_NO_PAGE);
+
 	// Write info to header page
 	char* ptr = pData;
-	PageNum pageNumTmp = IX_NO_PAGE;
-	memcpy(ptr, &pageNumTmp, sizeof(PageNum)); // rootPage
+	memcpy(ptr, &rootPage, sizeof(PageNum)); // rootPage
 
 	ptr += sizeof(PageNum);
 	int intTmp = 0;
@@ -284,4 +286,74 @@ int IX_Manager::CalculateMaxKeys(int attrLength)
 int IX_Manager::CalculateMaxEntries(int attrLength)
 {
 	return floor((PF_PAGE_SIZE - sizeof(int) - 4*sizeof(PageNum)) / (attrLength + sizeof(PageNum) + sizeof(SlotNum) + 1/8.0));
+}
+
+PageNum IX_Manager::CreateNewLeaf(PF_FileHandle pfFileHandle, SlotNum maxEntry, PageNum parentPage, PageNum leftLeaf, PageNum rightLeaf)
+{
+	// Allocate new page
+	PF_PageHandle pfPageHandle;
+	RC rc = pfFileHandle.AllocatePage(pfPageHandle);
+	if (rc != OK_RC){
+		PrintError(rc);
+		return rc;
+	}
+
+	PageNum pageNum;
+	rc = pfPageHandle.GetPageNum(pageNum);
+	if (rc != OK_RC){
+		PrintError(rc);
+		return rc;
+	}
+
+	// Get page data
+	char *pData;
+	rc = pfPageHandle.GetData(pData);
+	if (rc != OK_RC){
+		pfFileHandle.UnpinPage(pageNum);
+		PrintError(rc);
+		return rc;
+	}
+
+	//Fill in header, leaf page
+	char* ptr = pData;
+	int intTmp = 0;
+	memcpy(ptr, &intTmp, sizeof(int)); // numEntries
+
+	ptr += sizeof(int);
+	PageNum pageNumTmp = IX_NO_PAGE;
+	memcpy(ptr, &pageNumTmp, sizeof(PageNum)); // nextBucketPage
+
+	ptr += sizeof(PageNum);
+	memcpy(ptr, &parentPage, sizeof(PageNum));	// parentPage
+
+	ptr += sizeof(PageNum);
+	memcpy(ptr, &leftLeaf, sizeof(PageNum)); // leftLeaf
+
+	ptr += sizeof(PageNum);
+	memcpy(ptr, &rightLeaf, sizeof(PageNum)); // rightLeaf
+
+	ptr += sizeof(PageNum);
+	char charTmp = 0;
+	for (SlotNum i = 0; i < ceil(maxEntry / 8.0); ++i){ //bitSlots
+		memcpy(ptr, &charTmp, sizeof(char));
+		ptr += sizeof(char);
+	}
+
+	// Mark page as dirty, root internal page
+	rc = pfFileHandle.MarkDirty(pageNum);
+	if (rc != OK_RC){
+		PrintError(rc);
+		return rc;
+	}
+
+	// Clean up.
+	pData = NULL;
+	ptr = NULL;
+	rc = pfFileHandle.UnpinPage(pageNum);
+	if (rc != OK_RC){
+		PrintError(rc);
+		return rc;
+	}
+
+	return pageNum;
 }

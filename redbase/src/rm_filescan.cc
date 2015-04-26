@@ -292,7 +292,7 @@ RC RM_FileScan::GetNextRec(RM_Record &rec)               // Get next matching re
 	rec.recordCopy = new char[length];
 	memcpy(rec.recordCopy, rmFileHandle->GetRecordPtr(pData, slotNum), length);
 
-	//// Clean up.
+	// Clean up.
 	pData = NULL;
 	rc = rmFileHandle->pfFileHandle.UnpinPage(pageNum);
 	if (rc != OK_RC){

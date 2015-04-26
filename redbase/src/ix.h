@@ -37,7 +37,7 @@ struct IX_IndexHeader{
 	}
 };
 struct IX_InternalHeader{
-	int numKeys;
+	int numKeys;			// CHANGES
 	PageNum parentPage;
 };
 // format: <header> ptr {key ptr} ...
@@ -79,12 +79,16 @@ private:
 	IX_IndexHeader ixIndexHeader;
 
 	char* GetKeyPtr(char* pData, const SlotNum slotNum) const;        // Gets a pointer to a specific key's start location
-	char* GetRecordPtr(char* pData, const SlotNum slotNum) const;     // Gets a pointer to a specific entry's start location
+	char* GetEntryPtr(char* pData, const SlotNum slotNum) const;     // Gets a pointer to a specific entry's start location
 	bool GetSlotBitValue(char* pData, const SlotNum slotNum) const;   // Read a specific entry's bit value in page header
 	void SetSlotBitValue(char* pData, const SlotNum slotNum, bool b); // Write a specific entry's bit value in page header
 
-	PageNum FindLeafNode(void* attribute) const;
-	PageNum FindLeafNodeHelper(PageNum currPage, int currHeight, bool findMin, void* attribute) const;
+	//PageNum FindLeafNode(void* attribute) const;
+	//PageNum FindLeafNodeHelper(PageNum currPage, int currHeight, bool findMin, void* attribute) const;
+
+	//PageNum CreateNewLeaf(PageNum parentPage, PageNum leftLeaf, PageNum rightLeaf);
+	
+	void InsertEntryHelper(void* attribute, PageNum currPage, int height, PageNum* newChildPage);
 };
 
 //
@@ -109,12 +113,22 @@ public:
     RC CloseScan();
 
 private:
-	bool open;
 	const IX_IndexHandle* ixIndexHandle;
 	CompOp compOp;
 	void *value;
 
+	bool open;
+	PageNum pageNum;
+	SlotNum entryNum;
+	PageNum rightLeaf;
+	bool inBucket;
+	bool finished;
+	string lastEntry;
+
+	PageNum FindLeafNode(void* attribute) const;
 	PageNum FindMinLeafNode() const;
+	PageNum FindLeafNodeHelper(PageNum currPage, int currHeight, bool findMin, void* attribute) const;
+	PageNum GetNextPage(PageNum pageNum);
 };
 
 //
@@ -146,6 +160,8 @@ private:
 
 	int CalculateMaxKeys(int attrLength);  //Calculate max number of entries that will fit in one page
 	int CalculateMaxEntries(int attrLength);  //Calculate max number of entries that will fit in one page
+
+	PageNum CreateNewLeaf(PF_FileHandle pfFileHandle, SlotNum maxEntry, PageNum parentPage, PageNum leftLeaf, PageNum rightLeaf);
 };
 
 //
@@ -164,6 +180,7 @@ void IX_PrintError(RC rc);
 #define IX_STRLEN				 (START_IX_ERR - 2)
 #define IX_NUMLEN				 (START_IX_ERR - 3)
 #define IX_FILENAMELEN			 (START_IX_ERR - 4)
+#define IX_INVALIDSCANCOMBO      (START_IX_ERR - 5)
 #define IX_LASTERROR	END_IX_ERR                   //TODO: set
 
 

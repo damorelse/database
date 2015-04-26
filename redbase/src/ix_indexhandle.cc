@@ -27,74 +27,18 @@ RC IX_IndexHandle::InsertEntry(void *attribute, const RID &rid)
 		return IX_NULLINPUT;
 	}
 	// Check RID
-	PageNum pageNum;
-	RC rc = rid.GetPageNum(pageNum);
+	PageNum entryPageNum;
+	RC rc = rid.GetPageNum(entryPageNum);
 	if (rc != OK_RC)
 		return rc;
-	SlotNum slotNum;
-	rc = rid.GetSlotNum(slotNum);
+	SlotNum entrySlotNum;
+	rc = rid.GetSlotNum(entrySlotNum);
 	if (rc != OK_RC)
 		return rc;
 	// End check input.
 
 
-	// If index is empty, create index
-	if (ixIndexHeader.rootPage == IX_NO_PAGE){
-		// TODO: Create left and right leaf pages
-		// TODO: insert entry into one of the leaf pages 
-
-		// Allocate new page, root internal page
-		PF_PageHandle pfPageHandle;
-		RC rc = pfFileHandle.AllocatePage(pfPageHandle);
-		if (rc != OK_RC){
-			PrintError(rc);
-			return rc;
-		}
-
-		PageNum rootPage;
-		rc = pfPageHandle.GetPageNum(rootPage);
-		if (rc != OK_RC){
-			PrintError(rc);
-			return rc;
-		}
-
-		// Get page data, root internal page
-		char *pData;
-		rc = pfPageHandle.GetData(pData);
-		if (rc != OK_RC){
-			pfFileHandle.UnpinPage(rootPage);
-			PrintError(rc);
-			return rc;
-		}
-
-		// TODO: Fill in header and data, root internal page
-
-		// Mark page as dirty, root internal page
-		rc = pfFileHandle.MarkDirty(rootPage);
-		if (rc != OK_RC){
-			PrintError(rc);
-			return rc;
-		}
-
-		// Clean up.
-		pData = NULL;
-		//ptr = NULL;
-		rc = pfFileHandle.UnpinPage(rootPage);
-		if (rc != OK_RC){
-			PrintError(rc);
-			return rc;
-		}
-
-		// Update index header
-		modified = true;
-		ixIndexHeader.rootPage = rootPage;
-		ixIndexHeader.height = 1;
-	}
-	// Index is not empty...
-	else {
-		PageNum leafNode = FindLeafNode(attribute);
-		// TODO: 
-	}
+	// TODO:
 
 	return OK_RC;
 }
@@ -106,12 +50,6 @@ RC IX_IndexHandle::DeleteEntry(void *attribute, const RID &rid)
 	if (!open){
 		PrintError(IX_FILENOTOPEN);
 		return IX_FILENOTOPEN;
-	}
-
-	// Check if index is empty
-	if (ixIndexHeader.rootPage == IX_NO_PAGE){
-		PrintError(IX_ENTRYDNE);
-		return IX_ENTRYDNE;
 	}
 
 	// Check input
@@ -132,7 +70,6 @@ RC IX_IndexHandle::DeleteEntry(void *attribute, const RID &rid)
 	// End check input
 
 	// Find correct leaf node
-	PageNum leafNode = FindLeafNode(attribute);
 	// TODO: check page and bucket pages for {attribute, rid}. Delete if find. Return error if not.
 
 	return OK_RC;
@@ -208,7 +145,7 @@ char* IX_IndexHandle::GetKeyPtr(char* pData, const SlotNum slotNum) const
 	ptr += slotNum * (ixIndexHeader.attrLength + sizeof(PageNum));
 	return ptr;
 }
-char* IX_IndexHandle::GetRecordPtr(char* pData, const SlotNum slotNum) const
+char* IX_IndexHandle::GetEntryPtr(char* pData, const SlotNum slotNum) const
 {
 	char* ptr = pData + ixIndexHeader.leafHeaderSize;
 	ptr += slotNum * (ixIndexHeader.attrLength + sizeof(PageNum) + sizeof(SlotNum));
@@ -228,6 +165,7 @@ void IX_IndexHandle::SetSlotBitValue(char* pData, const SlotNum slotNum, bool b)
 }
 
 
+/**
 PageNum IX_IndexHandle::FindLeafNode(void* attribute) const
 {
 	return FindLeafNodeHelper(ixIndexHeader.rootPage, ixIndexHeader.height, false, attribute);
@@ -341,3 +279,70 @@ PageNum IX_IndexHandle::FindLeafNodeHelper(PageNum currPage, int currHeight, boo
 	// Recursive call to next index level
 	return FindLeafNodeHelper(nextPage, currHeight - 1, findMin, attribute);
 }
+
+PageNum IX_IndexHandle::CreateNewLeaf(PageNum parentPage, PageNum leftLeaf, PageNum rightLeaf)
+{
+	// Allocate new page
+	PF_PageHandle pfPageHandle;
+	RC rc = pfFileHandle.AllocatePage(pfPageHandle);
+	if (rc != OK_RC){
+		PrintError(rc);
+		return rc;
+	}
+
+	PageNum pageNum;
+	rc = pfPageHandle.GetPageNum(pageNum);
+	if (rc != OK_RC){
+		PrintError(rc);
+		return rc;
+	}
+
+	// Get page data
+	char *pData;
+	rc = pfPageHandle.GetData(pData);
+	if (rc != OK_RC){
+		pfFileHandle.UnpinPage(pageNum);
+		PrintError(rc);
+		return rc;
+	}
+
+	//Fill in header, leaf page
+	char* ptr = pData;
+	int intTmp = 0;
+	memcpy(ptr, &intTmp, sizeof(int)); // numEntries
+
+	ptr += sizeof(int);
+	PageNum pageNumTmp = IX_NO_PAGE;
+	memcpy(ptr, &pageNumTmp, sizeof(PageNum)); // nextBucketPage
+
+	ptr += sizeof(PageNum);
+	memcpy(ptr, &parentPage, sizeof(PageNum));	// parentPage
+
+	ptr += sizeof(PageNum);
+	memcpy(ptr, &leftLeaf, sizeof(PageNum)); // leftLeaf
+
+	ptr += sizeof(PageNum);
+	memcpy(ptr, &rightLeaf, sizeof(PageNum)); // rightLeaf
+
+	for (SlotNum i = 0; i <= ixIndexHeader.maxEntryIndex; ++i) //bitSlots
+		SetSlotBitValue(pData, i, false);
+
+	// Mark page as dirty, root internal page
+	rc = pfFileHandle.MarkDirty(pageNum);
+	if (rc != OK_RC){
+		PrintError(rc);
+		return rc;
+	}
+
+	// Clean up.
+	pData = NULL;
+	//ptr = NULL;
+	rc = pfFileHandle.UnpinPage(pageNum);
+	if (rc != OK_RC){
+		PrintError(rc);
+		return rc;
+	}
+
+	return pageNum;
+}
+**/
