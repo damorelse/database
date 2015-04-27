@@ -64,15 +64,39 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
 	}
 
 	// Create header page in file
-	PageNum headerPage;
-	char *pData;
+	PageNum headerPage = -1;
+	char *pData = NULL;
+	/*
 	rc = CreatePage(fileHandle, headerPage, pData);
 	if (rc != OK_RC){
 		return rc;
 	}
+	*/
+	// Begin
+	PF_PageHandle pfPageHandle;
+	RC rc = fileHandle.AllocatePage(pfPageHandle);
+	if (rc != OK_RC){
+		PrintError(rc);
+		return rc;
+	}
+
+	rc = pfPageHandle.GetPageNum(headerPage);
+	if (rc != OK_RC){
+		PrintError(rc);
+		return rc;
+	}
+
+	// Get page data
+	rc = pfPageHandle.GetData(pData);
+	if (rc != OK_RC){
+		fileHandle.UnpinPage(headerPage);
+		PrintError(rc);
+		return rc;
+	}
+	// End
 
 	//Create root leaf page
-	PageNum rootPage;
+	PageNum rootPage = -1;
 	rc = CreateNewLeaf(fileHandle, CalculateMaxEntries(attrLength), IX_NO_PAGE, IX_NO_PAGE, rootPage);
 	if (rc != OK_RC){
 		fileHandle.UnpinPage(0);
@@ -282,10 +306,35 @@ RC IX_Manager::CreateNewLeaf(PF_FileHandle pfFileHandle, SlotNum maxEntry, PageN
 	// Create page
 	PageNum pageNum;
 	char *pData;
+	/*
 	RC rc = CreatePage(pfFileHandle, pageNum, pData);
 	if (rc != OK_RC){
 		return rc;
 	}
+	*/
+	// Begin
+	PF_PageHandle pfPageHandle;
+	RC rc = pfFileHandle.AllocatePage(pfPageHandle);
+	if (rc != OK_RC){
+		PrintError(rc);
+		return rc;
+	}
+
+	rc = pfPageHandle.GetPageNum(pageNum);
+	if (rc != OK_RC){
+		PrintError(rc);
+		return rc;
+	}
+
+	// Get page data
+	rc = pfPageHandle.GetData(pData);
+	if (rc != OK_RC){
+		pfFileHandle.UnpinPage(pageNum);
+		PrintError(rc);
+		return rc;
+	}
+	// End
+
 
 	//Fill in header, leaf page
 	char* ptr = pData;
