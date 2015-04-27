@@ -16,7 +16,7 @@ IX_IndexScan::~IX_IndexScan()
 RC IX_IndexScan::OpenScan(const IX_IndexHandle &indexHandle,
 						  CompOp compOp,
 						  void *value,
-						  ClientHint  pinHint = NO_HINT)
+						  ClientHint  pinHint)
 {
 	// Check if filescan already open
 	if (open){
@@ -95,7 +95,7 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 	}
 
 	// If previous entry is the same, increment entry iterator
-	if (string(lastEntry) == strTmp && strTmp.length > 0){
+	if (string(lastEntry) == strTmp && strTmp.length() > 0){
 		// Increment entry num
 		entryNum += 1;
 		if (entryNum > ixIndexHandle->ixIndexHeader.maxEntryIndex){
