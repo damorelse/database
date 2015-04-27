@@ -64,9 +64,21 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
 	}
 
 	// Create header page in file
-	PageNum headerPage;
+	PageNum headerPage = 0;
 	char *pData;
-	rc = CreatePage(fileHandle, headerPage, pData);
+	//rc = CreatePage(fileHandle, headerPage, pData);
+	PF_PageHandle pfPageHandle;
+	rc = fileHandle.AllocatePage(pfPageHandle);
+	if (rc != OK_RC){
+		PrintError(rc);
+		return rc;
+	}
+	rc = pfPageHandle.GetData(pData);
+	if (rc != OK_RC){
+		fileHandle.UnpinPage(0);
+		PrintError(rc);
+		return rc;
+	}
 	if (rc != OK_RC){
 		return rc;
 	}
@@ -198,9 +210,19 @@ RC IX_Manager::OpenIndex(const char *fileName, int indexNo,
 	// Get header page info
 	PageNum pageNum = 0;
 	char *pData;
-	rc = GetPage(indexHandle.pfFileHandle, pageNum, pData);
-	if (rc != OK_RC)
+	//rc = GetPage(indexHandle.pfFileHandle, pageNum, pData);
+	PF_PageHandle pfPageHandle = PF_PageHandle();
+	RC rc = indexHandle.pfFileHandle.GetThisPage(pageNum, pfPageHandle);
+	if (rc != OK_RC){
+		PrintError(rc);
 		return rc;
+	}
+	rc = pfPageHandle.GetData(pData);
+	if (rc != OK_RC){
+		indexHandle.pfFileHandle.UnpinPage(pageNum);
+		PrintError(rc);
+		return rc;
+	}
 
 	// Copy over header data
 	char* ptr = pData;
@@ -277,13 +299,27 @@ int IX_Manager::CalculateMaxEntries(int attrLength)
 	return floor((PF_PAGE_SIZE - sizeof(int) - 4*sizeof(PageNum)) / (attrLength + sizeof(PageNum) + sizeof(SlotNum) + 1/8.0));
 }
 
-RC IX_Manager::CreateNewLeaf(PF_FileHandle pfFileHandle, SlotNum maxEntry, PageNum leftLeaf, PageNum rightLeaf, PageNum &resultPage)
+RC IX_Manager::CreateNewLeaf(PF_FileHandle fileHandle, SlotNum maxEntry, PageNum leftLeaf, PageNum rightLeaf, PageNum &pageNum)
 {
 	// Create page
-	PageNum pageNum;
 	char *pData;
-	RC rc = CreatePage(pfFileHandle, pageNum, pData);
+	//RC rc = CreatePage(pfFileHandle, pageNum, pData);
+	PF_PageHandle pfPageHandle;
+	RC rc = fileHandle.AllocatePage(pfPageHandle);
 	if (rc != OK_RC){
+		PrintError(rc);
+		return rc;
+	}
+	rc = pfPageHandle.GetPageNum(pageNum);
+	if (rc != OK_RC){
+		PrintError(rc);
+		return rc;
+	}
+	// Get page data
+	rc = pfPageHandle.GetData(pData);
+	if (rc != OK_RC){
+		fileHandle.UnpinPage(pageNum);
+		PrintError(rc);
 		return rc;
 	}
 
@@ -310,9 +346,9 @@ RC IX_Manager::CreateNewLeaf(PF_FileHandle pfFileHandle, SlotNum maxEntry, PageN
 	}
 
 	// Mark page as dirty
-	rc = pfFileHandle.MarkDirty(pageNum);
+	rc = fileHandle.MarkDirty(pageNum);
 	if (rc != OK_RC){
-		pfFileHandle.UnpinPage(pageNum);
+		fileHandle.UnpinPage(pageNum);
 		PrintError(rc);
 		return rc;
 	}
@@ -320,17 +356,16 @@ RC IX_Manager::CreateNewLeaf(PF_FileHandle pfFileHandle, SlotNum maxEntry, PageN
 	// Clean up.
 	pData = NULL;
 	ptr = NULL;
-	rc = pfFileHandle.UnpinPage(pageNum);
+	rc = fileHandle.UnpinPage(pageNum);
 	if (rc != OK_RC){
 		PrintError(rc);
 		return rc;
 	}
 
-	resultPage = pageNum;
 	return OK_RC;
 }
 
-
+/*
 RC IX_Manager::CreatePage(PF_FileHandle fileHandle, PageNum &pageNum, char* pData){
 	PF_PageHandle pfPageHandle;
 	RC rc = fileHandle.AllocatePage(pfPageHandle);
@@ -373,3 +408,4 @@ RC IX_Manager::GetPage(PF_FileHandle fileHandle, PageNum pageNum, char* pData) c
 
 	return OK_RC;
 }
+*/
