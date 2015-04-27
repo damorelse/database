@@ -158,9 +158,19 @@ RC IX_IndexHandle::ForcePages()
 	if (modified) {
 		// Get page data
 		char *pData;
-		RC rc = GetPage(pfFileHandle, 0, pData);
-		if (rc != OK_RC)
+		//RC rc = GetPage(pfFileHandle, 0, pData);
+		PF_PageHandle pfPageHandle = PF_PageHandle();
+		RC rc = pfFileHandle.GetThisPage(0, pfPageHandle);
+		if (rc != OK_RC){
+			PrintError(rc);
 			return rc;
+		}
+		rc = pfPageHandle.GetData(pData);
+		if (rc != OK_RC){
+			pfFileHandle.UnpinPage(0);
+			PrintError(rc);
+			return rc;
+		}
 		
 		// Write to header page
 		char* ptr = pData;
@@ -229,9 +239,19 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 {
 	// Get page data
 	char *pData;
-	RC rc = GetPage(pfFileHandle, currPage, pData);
-	if (rc != OK_RC)
+	//RC rc = GetPage(pfFileHandle, currPage, pData);
+	PF_PageHandle pfPageHandle = PF_PageHandle();
+	RC rc = pfFileHandle.GetThisPage(currPage, pfPageHandle);
+	if (rc != OK_RC){
+		PrintError(rc);
 		return rc;
+	}
+	rc = pfPageHandle.GetData(pData);
+	if (rc != OK_RC){
+		pfFileHandle.UnpinPage(currPage);
+		PrintError(rc);
+		return rc;
+	}
 
 	// If at an internal node...
 	if (height != 0){
@@ -630,9 +650,19 @@ RC IX_IndexHandle::InternalInsert(PageNum pageNum, PageNum &newChildPage, void* 
 {
 	// Get page data
 	char *pData;
-	RC rc = GetPage(pfFileHandle, pageNum, pData);
-	if (rc != OK_RC)
+	//RC rc = GetPage(pfFileHandle, pageNum, pData);
+	PF_PageHandle pfPageHandle = PF_PageHandle();
+	RC rc = pfFileHandle.GetThisPage(pageNum, pfPageHandle);
+	if (rc != OK_RC){
+		PrintError(rc);
 		return rc;
+	}
+	rc = pfPageHandle.GetData(pData);
+	if (rc != OK_RC){
+		pfFileHandle.UnpinPage(pageNum);
+		PrintError(rc);
+		return rc;
+	}
 
 	// Get number of keys
 	int numKeys;
@@ -739,9 +769,19 @@ RC IX_IndexHandle::LeafInsert(PageNum pageNum, void* attribute, const RID &rid)
 {
 	// Get page data
 	char *pData;
-	RC rc = GetPage(pfFileHandle, pageNum, pData);
-	if (rc != OK_RC)
+	//RC rc = GetPage(pfFileHandle, pageNum, pData);
+	PF_PageHandle pfPageHandle = PF_PageHandle();
+	RC rc = pfFileHandle.GetThisPage(pageNum, pfPageHandle);
+	if (rc != OK_RC){
+		PrintError(rc);
 		return rc;
+	}
+	rc = pfPageHandle.GetData(pData);
+	if (rc != OK_RC){
+		pfFileHandle.UnpinPage(pageNum);
+		PrintError(rc);
+		return rc;
+	}
 
 	char* copyBack;
 	int copyBackSize;
@@ -904,9 +944,19 @@ RC IX_IndexHandle::SetSiblingPointers(PageNum L1Page, PageNum L2Page, char* L1, 
 
 	// Set L3's left sibling to be L2
 	char *L3;
-	RC rc = GetPage(pfFileHandle, L3Page, L3);
-	if (rc != OK_RC)
+	//RC rc = GetPage(pfFileHandle, L3Page, L3);
+	PF_PageHandle pfPageHandle = PF_PageHandle();
+	RC rc = pfFileHandle.GetThisPage(L3Page, pfPageHandle);
+	if (rc != OK_RC){
+		PrintError(rc);
 		return rc;
+	}
+	rc = pfPageHandle.GetData(L3);
+	if (rc != OK_RC){
+		pfFileHandle.UnpinPage(L3Page);
+		PrintError(rc);
+		return rc;
+	}
 
 	memcpy(L3 + leftOffset, &L2Page, sizeof(PageNum));
 
@@ -965,9 +1015,19 @@ RC IX_IndexHandle::DeleteEntryHelper(PageNum parentPage, PageNum currPage, int h
 {
 	// Get page data
 	char *pData;
-	RC rc = GetPage(pfFileHandle, currPage, pData);
-	if (rc != OK_RC)
+	//RC rc = GetPage(pfFileHandle, currPage, pData);
+	PF_PageHandle pfPageHandle = PF_PageHandle();
+	RC rc = pfFileHandle.GetThisPage(currPage, pfPageHandle);
+	if (rc != OK_RC){
+		PrintError(rc);
 		return rc;
+	}
+	rc = pfPageHandle.GetData(pData);
+	if (rc != OK_RC){
+		pfFileHandle.UnpinPage(currPage);
+		PrintError(rc);
+		return rc;
+	}
 
 	// If at an internal node...
 	if (height != 0){
@@ -1189,9 +1249,19 @@ RC IX_IndexHandle::LeafDelete(PageNum currPage, char* pData, void* attribute, co
 				}
 
 				// Get new page data
-				rc = GetPage(pfFileHandle, deletePage, deleteData);
-				if (rc != OK_RC)
+				//rc = GetPage(pfFileHandle, deletePage, deleteData);
+				PF_PageHandle pfPageHandle = PF_PageHandle();
+				rc = pfFileHandle.GetThisPage(deletePage, pfPageHandle);
+				if (rc != OK_RC){
+					PrintError(rc);
 					return rc;
+				}
+				rc = pfPageHandle.GetData(deleteData);
+				if (rc != OK_RC){
+					pfFileHandle.UnpinPage(deletePage);
+					PrintError(rc);
+					return rc;
+				}
 			}
 		}
 	}
@@ -1234,13 +1304,34 @@ RC IX_IndexHandle::LeafDelete(PageNum currPage, char* pData, void* attribute, co
 	PageNum lastPage;
 	char* lastData;
 	
-	rc = GetPage(pfFileHandle, notLastPage, notLastData);
-	if (rc != OK_RC)
+	//rc = GetPage(pfFileHandle, notLastPage, notLastData);
+	PF_PageHandle pfPageHandle = PF_PageHandle();
+	rc = pfFileHandle.GetThisPage(notLastPage, pfPageHandle);
+	if (rc != OK_RC){
+		PrintError(rc);
 		return rc;
+	}
+	rc = pfPageHandle.GetData(notLastData);
+	if (rc != OK_RC){
+		pfFileHandle.UnpinPage(notLastPage);
+		PrintError(rc);
+		return rc;
+	}
+
 	memcpy(&lastPage, notLastData + sizeof(int), sizeof(PageNum));
-	rc = GetPage(pfFileHandle, lastPage, lastData);
-	if (rc != OK_RC)
+	//rc = GetPage(pfFileHandle, lastPage, lastData);
+	PF_PageHandle pfPageHandle = PF_PageHandle();
+	rc = pfFileHandle.GetThisPage(lastPage, pfPageHandle);
+	if (rc != OK_RC){
+		PrintError(rc);
 		return rc;
+	}
+	rc = pfPageHandle.GetData(lastData);
+	if (rc != OK_RC){
+		pfFileHandle.UnpinPage(lastPage);
+		PrintError(rc);
+		return rc;
+	}
 
 	memcpy(&pageTmp, lastData + sizeof(int), sizeof(PageNum));
 	while(pageTmp != IX_NO_PAGE){
@@ -1253,9 +1344,19 @@ RC IX_IndexHandle::LeafDelete(PageNum currPage, char* pData, void* attribute, co
 		notLastData = lastData;
 
 		lastPage = pageTmp;
-		rc = GetPage(pfFileHandle, lastPage, lastData);
-		if (rc != OK_RC)
+		//rc = GetPage(pfFileHandle, lastPage, lastData);
+		PF_PageHandle pfPageHandle = PF_PageHandle();
+		rc = pfFileHandle.GetThisPage(lastPage, pfPageHandle);
+		if (rc != OK_RC){
+			PrintError(rc);
 			return rc;
+		}
+		rc = pfPageHandle.GetData(lastData);
+		if (rc != OK_RC){
+			pfFileHandle.UnpinPage(lastPage);
+			PrintError(rc);
+			return rc;
+		}
 
 		memcpy(&pageTmp, lastData + sizeof(int), sizeof(PageNum));
 	}
@@ -1448,9 +1549,19 @@ RC IX_IndexHandle::GetLastPageInBucketChain(PageNum &lastPage, char* lastData)
 			lastPage = bucket;
 
 			// Get new page data
-			rc = GetPage(pfFileHandle, lastPage, lastData);
-			if (rc != OK_RC)
+			//rc = GetPage(pfFileHandle, lastPage, lastData);
+			PF_PageHandle pfPageHandle = PF_PageHandle();
+			rc = pfFileHandle.GetThisPage(lastPage, pfPageHandle);
+			if (rc != OK_RC){
+				PrintError(rc);
 				return rc;
+			}
+			rc = pfPageHandle.GetData(lastData);
+			if (rc != OK_RC){
+				pfFileHandle.UnpinPage(lastPage);
+				PrintError(rc);
+				return rc;
+			}
 		}
 	} while( bucket != IX_NO_PAGE);
 
