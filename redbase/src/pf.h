@@ -101,6 +101,10 @@ public:
    // Force a page or pages to disk (but do not remove from the buffer pool)
    RC ForcePages  (PageNum pageNum=ALL_PAGES) const;
 
+   // Gina start
+   RC CreatePage(PageNum &pageNum, char* pData);
+   RC GetPage(PageNum pageNum, char* pData) const;
+   // Gina end
 private:
 
    // IsValidPageNum will return TRUE if page number is valid and FALSE

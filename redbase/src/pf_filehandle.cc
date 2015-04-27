@@ -510,3 +510,50 @@ int PF_FileHandle::IsValidPageNum(PageNum pageNum) const
          pageNum < hdr.numPages);
 }
 
+
+
+// Gina start
+RC PF_FileHandle::CreatePage(PageNum &pageNum, char* pData){
+	PF_PageHandle pfPageHandle;
+	RC rc = AllocatePage(pfPageHandle);
+	if (rc != OK_RC){
+		PrintError(rc);
+		return rc;
+	}
+
+	rc = pfPageHandle.GetPageNum(pageNum);
+	if (rc != OK_RC){
+		PrintError(rc);
+		return rc;
+	}
+
+	// Get page data
+	rc = pfPageHandle.GetData(pData);
+	if (rc != OK_RC){
+		UnpinPage(pageNum);
+		PrintError(rc);
+		return rc;
+	}
+
+	return OK_RC;
+}
+
+RC PF_FileHandle::GetPage(PageNum pageNum, char* pData) const{
+	PF_PageHandle pfPageHandle = PF_PageHandle();
+	RC rc = GetThisPage(pageNum, pfPageHandle);
+	if (rc != OK_RC){
+		PrintError(rc);
+		return rc;
+	}
+
+	char *pData;
+	rc = pfPageHandle.GetData(pData);
+	if (rc != OK_RC){
+		UnpinPage(pageNum);
+		PrintError(rc);
+		return rc;
+	}
+
+	return OK_RC;
+}
+// Gina end

@@ -79,16 +79,9 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 
 	// CHANGES TO ACCOMODATE DELETES DURING INDEXSCAN
 	// Initialize page handle and page data
-	rc = ixIndexHandle->pfFileHandle.GetThisPage(pageNum, pfPageHandle);
-	if (rc != OK_RC){
-		PrintError(rc);
+	rc = ixIndexHandle->pfFileHandle.GetPage(pageNum, pData);
+	if (rc != OK_RC)
 		return rc;
-	}
-	rc = pfPageHandle.GetData(pData);
-	if (rc != OK_RC){
-		PrintError(rc);
-		return rc;
-	}
 
 	// Read previous entry if entry still filled
 	string strTmp = "";
@@ -106,8 +99,10 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 		entryNum += 1;
 		if (entryNum > ixIndexHandle->ixIndexHeader.maxEntryIndex){
 			rc = GetNextPage(prevPage, pageNum);
-			if (rc != OK_RC)
+			if (rc != OK_RC){
+				ixIndexHandle->pfFileHandle.UnpinPage(prevPage);
 				return rc;
+			}
 			entryNum = 0;
 		}
 	}
@@ -124,17 +119,10 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 
 		// If more entries to read...
 		if (pageNum != IX_NO_PAGE){
-			// Get new page handle and page data
-			rc = ixIndexHandle->pfFileHandle.GetThisPage(pageNum, pfPageHandle);
-			if (rc != OK_RC){
-				PrintError(rc);
+			// Get new page data
+			rc = ixIndexHandle->pfFileHandle.GetPage(pageNum, pData);
+			if (rc != OK_RC)
 				return rc;
-			}
-			rc = pfPageHandle.GetData(pData);
-			if (rc != OK_RC){
-				PrintError(rc);
-				return rc;
-			}
 		}
 		// No more entries to read
 		else
@@ -274,8 +262,10 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 		entryNum += 1;
 		if (entryNum > ixIndexHandle->ixIndexHeader.maxEntryIndex){
 			rc = GetNextPage(prevPage, pageNum);
-			if (rc != OK_RC)
+			if (rc != OK_RC){
+				ixIndexHandle->pfFileHandle.UnpinPage(prevPage);
 				return rc;
+			}
 			entryNum = 0;
 		}
 
@@ -292,16 +282,9 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 			// If more entries to read...
 			if (pageNum != IX_NO_PAGE){
 				// Get new page handle and page data
-				rc = ixIndexHandle->pfFileHandle.GetThisPage(pageNum, pfPageHandle);
-				if (rc != OK_RC){
-					PrintError(rc);
+				rc = ixIndexHandle->pfFileHandle.GetPage(pageNum, pData);
+				if (rc != OK_RC)
 					return rc;
-				}
-				rc = pfPageHandle.GetData(pData);
-				if (rc != OK_RC){
-					PrintError(rc);
-					return rc;
-				}
 			}
 			// No more entries to read
 			else
@@ -370,21 +353,10 @@ RC IX_IndexScan::FindLeafNodeHelper(PageNum currPage, int currHeight, bool findM
 
 	// At internal page
 	// Get page handle
-	PF_PageHandle pfPageHandle = PF_PageHandle();
-	RC rc = ixIndexHandle->pfFileHandle.GetThisPage(currPage, pfPageHandle);
-	if (rc != OK_RC){
-		PrintError(rc);
-		return rc;
-	}
-
-	// Get page data
 	char *pData;
-	rc = pfPageHandle.GetData(pData);
-	if (rc != OK_RC){
-		ixIndexHandle->pfFileHandle.UnpinPage(currPage);
-		PrintError(rc);
+	RC rc = ixIndexHandle->pfFileHandle.GetPage(currPage, pData);
+	if (rc != OK_RC)
 		return rc;
-	}
 
 	char* ptr;
 	PageNum nextPage;
@@ -475,22 +447,11 @@ RC IX_IndexScan::FindLeafNodeHelper(PageNum currPage, int currHeight, bool findM
 // Assumes at a leaf node
 RC IX_IndexScan::GetNextPage(PageNum pageNum, PageNum &resultPage)
 {
-	// Get page handle
-	PF_PageHandle pfPageHandle = PF_PageHandle();
-	RC rc = ixIndexHandle->pfFileHandle.GetThisPage(pageNum, pfPageHandle);
-	if (rc != OK_RC){
-		PrintError(rc);
-		return rc;
-	}
-
 	// Get page data
 	char *pData;
-	rc = pfPageHandle.GetData(pData);
-	if (rc != OK_RC){
-		ixIndexHandle->pfFileHandle.UnpinPage(pageNum);
-		PrintError(rc);
+	RC rc = ixIndexHandle->pfFileHandle.GetPage(pageNum, pData);
+	if (rc != OK_RC)
 		return rc;
-	}
 
 	PageNum nextPage;
 	char* ptr = pData;
