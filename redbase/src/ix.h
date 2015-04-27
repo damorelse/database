@@ -151,7 +151,7 @@ private:
 	RC GetNextPage(PageNum pageNum, PageNum &resultPage);
 
 	// TODO: temp
-    RC GetPage(PF_FileHandle fileHandle, PageNum pageNum, char* pData) const;
+    //RC GetPage(PF_FileHandle fileHandle, PageNum pageNum, char* pData) const;
 };
 
 //
