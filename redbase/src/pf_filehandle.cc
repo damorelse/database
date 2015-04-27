@@ -546,7 +546,6 @@ RC PF_FileHandle::GetPage(PageNum pageNum, char* pData) const{
 		return rc;
 	}
 
-	char *pData;
 	rc = pfPageHandle.GetData(pData);
 	if (rc != OK_RC){
 		UnpinPage(pageNum);
