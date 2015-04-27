@@ -64,7 +64,6 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
 	}
 
 	// Create header page in file
-	PageNum headerPage = 0;
 	char *pData;
 	//rc = CreatePage(fileHandle, headerPage, pData);
 	PF_PageHandle pfPageHandle;
@@ -212,7 +211,7 @@ RC IX_Manager::OpenIndex(const char *fileName, int indexNo,
 	char *pData;
 	//rc = GetPage(indexHandle.pfFileHandle, pageNum, pData);
 	PF_PageHandle pfPageHandle = PF_PageHandle();
-	RC rc = indexHandle.pfFileHandle.GetThisPage(pageNum, pfPageHandle);
+	rc = indexHandle.pfFileHandle.GetThisPage(pageNum, pfPageHandle);
 	if (rc != OK_RC){
 		PrintError(rc);
 		return rc;
