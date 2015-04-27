@@ -1,5 +1,6 @@
 #include <cstring>
 #include <sstream>
+#include <cmath>
 #include "ix.h"
 
 using namespace std;
@@ -65,7 +66,7 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
 	// Create header page in file
 	PageNum headerPage;
 	char *pData;
-	RC rc = fileHandle.CreatePage(headerPage, pData);
+	rc = fileHandle.CreatePage(headerPage, pData);
 	if (rc != OK_RC){
 		return rc;
 	}
