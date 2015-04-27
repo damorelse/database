@@ -472,10 +472,37 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 			int numEntries;
 			MakeEntryCopyBack(pData, attribute, rid, copyBack, copyBackSize, numEntries);
 
-			// TODO: make sure split does not divide attributes of same value; where to put bucket pages
+			// Determine where to split
+			int newNumEntries = numEntries / 2;
+			int entrySize = ixIndexHeader.attrLength + sizeof(PageNum) + sizeof(SlotNum);
+			int entryItr = newNumEntries - 1;
+			while (entryItr > -1 && AttributeEqualEntry(copyBack + newNumEntries * entrySize, copyBack + entryItr * entrySize))
+				entryItr -= 1;
+			if (entryItr == -1){
+				entryItr = newNumEntries + 1;
+				while (entryItr < numEntries && AttributeEqualEntry(copyBack + newNumEntries * entrySize, copyBack + entryItr * entrySize))
+					entryItr += 1;
+			}
+			if (entryItr < newNumEntries)
+				newNumEntries = entryItr + 1;
+			else
+				newNumEntries = entryItr;
+
+			// Set L2's bucket page to empty, default
+			PageNum bucketPage = IX_NO_PAGE;
+			memcpy(newPData + sizeof(int), &bucketPage, sizeof(PageNum));
+			// Check if bucket page exists
+			memcpy(&bucketPage, pData + sizeof(int), sizeof(PageNum));
+			if (bucketPage != IX_NO_PAGE){
+				// Bucket page must be moved
+				if (newNumEntries == 1){
+					memcpy(newPData + sizeof(int), &bucketPage, sizeof(PageNum));
+					bucketPage = IX_NO_PAGE;
+					memcpy(pData + sizeof(int), &bucketPage, sizeof(PageNum));
+				}
+			}
 
 			// Write first d entries to L
-			int newNumEntries = numEntries / 2;
 			int newSize = (ixIndexHeader.attrLength + sizeof(PageNum) + sizeof(SlotNum)) * (newNumEntries);
 			WriteLeafFromEntryCopyBack(pData, copyBack, newSize, newNumEntries);
 
@@ -484,6 +511,8 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 			newNumEntries = numEntries - newNumEntries;
 			newSize = (ixIndexHeader.attrLength + sizeof(PageNum) + sizeof(SlotNum)) * (newNumEntries);
 			WriteLeafFromEntryCopyBack(newPData, ptr, newSize, newNumEntries);
+
+
 
 			// Set newAttribute
 			memcpy(newAttribute, ptr, ixIndexHeader.attrLength);
@@ -800,13 +829,8 @@ void IX_IndexHandle::WriteLeafFromEntryCopyBack(char* pData, char* copyBack, int
 }
 
 RC IX_IndexHandle::SetSiblingPointers(PageNum L1Page, PageNum L2Page, char* L1, char* L2){
-	int bucketOffset = sizeof(int);
 	int leftOffset = sizeof(int) + sizeof(PageNum);
 	int rightOffset = leftOffset + sizeof(PageNum);
-
-	// Set L2's nextBucketPage to no page
-	PageNum noPage = IX_NO_PAGE;
-	memcpy(L2 + bucketOffset, &noPage, sizeof(PageNum));
 
 	// Set L2's right sibling to be L's old right sibling (L3)
 	PageNum L3Page;
@@ -1372,6 +1396,38 @@ RC IX_IndexHandle::GetLastPageInBucketChain(PageNum &lastPage, char* lastData)
 	} while( bucket != IX_NO_PAGE);
 
 	return OK_RC;
+}
+
+bool IX_IndexHandle::AttributeEqualEntry(char* one, char* two){
+	bool equal = false;
+	int attrLength = ixIndexHeader.attrLength;
+
+	int a_i, v_i;
+	float a_f, v_f;
+	string a_s, v_s;
+	switch(ixIndexHeader.attrType) {
+	case INT:
+		memcpy(&a_i, one, attrLength);
+		memcpy(&v_i, two, attrLength);
+		equal = (a_i == v_i);
+        break;
+	case FLOAT:
+		memcpy(&a_f, one, attrLength);
+		memcpy(&v_f, two, attrLength);
+		equal = (a_f == v_f);
+        break;
+	case STRING:
+		char* tmp = new char[attrLength];
+		memcpy(tmp, one, attrLength);
+		a_s = string(tmp);
+		memcpy(tmp, two, attrLength);
+		v_s = string(tmp);
+		delete [] tmp;
+		equal = (a_s == v_s);
+        break;
+	}
+
+	return equal;
 }
 
 RC IX_IndexHandle::CreatePage(PF_FileHandle fileHandle, PageNum &pageNum, char* pData){

@@ -103,6 +103,7 @@ private:
 	// Both Insert/Delete helper functions
 	void ChooseSubtree(char* pData, void* attribute, PageNum &nextPage, int &numKeys, SlotNum &keyNum);
 	RC GetLastPageInBucketChain(PageNum &lastPage, char* lastData);
+	bool AttributeEqualEntry(char* one, char* two);
 
 	// TODO: temp
 	RC CreatePage(PF_FileHandle fileHandle, PageNum &pageNum, char* pData);
