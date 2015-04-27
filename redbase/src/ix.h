@@ -96,12 +96,13 @@ private:
 	bool ShouldBucket(void* attribute, char* pData);
 
 	// Delete helper functions
-	RC DeleteEntryHelper(PageNum parentPage, PageNum currPage, int height, void* attribute, const RID &rid, PageNum &oldPage, void* oldAttribute);
-	RC InternalDelete(char* pData, PageNum oldPage, void* oldAttribute, int &numKeys);
-	RC LeafDelete(char* pData, void* attribute, const RID &rid, int &numEntries);
+	RC DeleteEntryHelper(PageNum parentPage, PageNum currPage, int height, void* attribute, const RID &rid, PageNum &oldPage);
+	RC InternalDelete(char* pData, SlotNum deleteKeyIndex, int &numKeys);
+	RC LeafDelete(PageNum currPage, char* pData, void* attribute, const RID &rid, int &numEntries);
 
 	// Both Insert/Delete helper functions
 	void ChooseSubtree(char* pData, void* attribute, PageNum &nextPage, int &numKeys, SlotNum &keyNum);
+	RC GetLastPageInBucketChain(PageNum &lastPage, char* lastData);
 
 	// TODO: temp
 	RC CreatePage(PF_FileHandle fileHandle, PageNum &pageNum, char* pData);
