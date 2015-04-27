@@ -93,7 +93,7 @@ private:
 	void WriteLeafFromEntryCopyBack(char* pData, char* copyBack, int copyBackSize, int numEntries);
 	RC SetSiblingPointers(PageNum L1Page, PageNum L2Page, char* L1, char* L2);
 	// Bucket insert
-	bool IX_IndexHandle::ShouldBucket(void* attribute, char* pData);
+	bool ShouldBucket(void* attribute, char* pData);
 
 	// Delete helper functions
 	RC DeleteEntryHelper(PageNum parentPage, PageNum currPage, int height, void* attribute, const RID &rid, PageNum &oldPage, void* oldAttribute);

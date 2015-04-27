@@ -1,3 +1,4 @@
+#include <cstring>
 #include <string>
 #include <iostream>
 #include "ix.h"
@@ -39,7 +40,7 @@ RC IX_IndexHandle::InsertEntry(void *attribute, const RID &rid)
 	
 	// Recursive call
 	PageNum newChildPage = IX_NO_PAGE;
-	void* newAttribute = new char[ixIndexHeader.attrLength];
+	char* newAttribute = new char[ixIndexHeader.attrLength];
 	rc = InsertEntryHelper(ixIndexHeader.rootPage, ixIndexHeader.height, attribute, rid, newChildPage, newAttribute);
 	if (rc != OK_RC)
 		return rc;
@@ -123,7 +124,7 @@ RC IX_IndexHandle::DeleteEntry(void *attribute, const RID &rid)
 	// End check input
 
 	PageNum oldPage = IX_NO_PAGE;
-	void* oldAttribute = new char[ixIndexHeader.attrLength];
+	char* oldAttribute = new char[ixIndexHeader.attrLength];
 	rc = DeleteEntryHelper(IX_NO_PAGE, ixIndexHeader.rootPage, ixIndexHeader.height, attribute, rid, oldPage, oldAttribute);
 	if (rc != OK_RC)
 		return rc;
@@ -304,7 +305,7 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 			// Write rest of entries to new node N2
 			ptr += ixIndexHeader.attrLength;
 			newNumKeys = numKeys - newNumKeys - 1;
-			newCopyBackSize = (ixIndexHeader.attrLength + sizeof(PageNum) + sizeof(SlotNum)) * (newNumEntries);
+			newCopyBackSize = (ixIndexHeader.attrLength + sizeof(PageNum) + sizeof(SlotNum)) * (newNumKeys);
 			WriteLeafFromEntryCopyBack(newPData, ptr, newCopyBackSize, newNumKeys);
 
 			
@@ -959,11 +960,13 @@ RC IX_IndexHandle::DeleteEntryHelper(PageNum parentPage, PageNum currPage, int h
 
 RC IX_IndexHandle::InternalDelete(char* pData, PageNum oldPage, void* oldAttribute, int &numKeys)
 {
-
+	// TODO
+	return OK_RC;
 }
 RC IX_IndexHandle::LeafDelete(char* pData, void* attribute, const RID &rid, int &numEntries)
 {
-
+	// TODO
+	return OK_RC;
 }
 
 
