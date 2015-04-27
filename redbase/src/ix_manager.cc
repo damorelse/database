@@ -66,22 +66,8 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
 	// Create header page in file
 	PageNum headerPage;
 	char *pData;
-	//rc = CreatePage(fileHandle, headerPage, pData);
-	PF_PageHandle pfPageHandle;
-	rc = fileHandle.AllocatePage(pfPageHandle);
+	rc = CreatePage(fileHandle, headerPage, pData);
 	if (rc != OK_RC){
-		PrintError(rc);
-		return rc;
-	}
-	rc = pfPageHandle.GetPageNum(headerPage);
-	if (rc != OK_RC){
-		PrintError(rc);
-		return rc;
-	}
-	rc = pfPageHandle.GetData(pData);
-	if (rc != OK_RC){
-		fileHandle.UnpinPage(headerPage);
-		PrintError(rc);
 		return rc;
 	}
 
@@ -291,27 +277,13 @@ int IX_Manager::CalculateMaxEntries(int attrLength)
 	return floor((PF_PAGE_SIZE - sizeof(int) - 4*sizeof(PageNum)) / (attrLength + sizeof(PageNum) + sizeof(SlotNum) + 1/8.0));
 }
 
-RC IX_Manager::CreateNewLeaf(PF_FileHandle fileHandle, SlotNum maxEntry, PageNum leftLeaf, PageNum rightLeaf, PageNum &resultPage)
+RC IX_Manager::CreateNewLeaf(PF_FileHandle pfFileHandle, SlotNum maxEntry, PageNum leftLeaf, PageNum rightLeaf, PageNum &resultPage)
 {
 	// Create page
 	PageNum pageNum;
 	char *pData;
-	//RC rc = CreatePage(FileHandle, pageNum, pData);
-	PF_PageHandle pfPageHandle;
-	RC rc = fileHandle.AllocatePage(pfPageHandle);
+	RC rc = CreatePage(pfFileHandle, pageNum, pData);
 	if (rc != OK_RC){
-		PrintError(rc);
-		return rc;
-	}
-	rc = pfPageHandle.GetPageNum(pageNum);
-	if (rc != OK_RC){
-		PrintError(rc);
-		return rc;
-	}
-	rc = pfPageHandle.GetData(pData);
-	if (rc != OK_RC){
-		fileHandle.UnpinPage(pageNum);
-		PrintError(rc);
 		return rc;
 	}
 
@@ -359,8 +331,7 @@ RC IX_Manager::CreateNewLeaf(PF_FileHandle fileHandle, SlotNum maxEntry, PageNum
 }
 
 
-/*
-RC IX_Manager::CreatePage(PF_FileHandle fileHandle, PageNum &pageNum, char* &pData){
+RC IX_Manager::CreatePage(PF_FileHandle fileHandle, PageNum &pageNum, char* pData){
 	PF_PageHandle pfPageHandle;
 	RC rc = fileHandle.AllocatePage(pfPageHandle);
 	if (rc != OK_RC){
@@ -384,8 +355,8 @@ RC IX_Manager::CreatePage(PF_FileHandle fileHandle, PageNum &pageNum, char* &pDa
 
 	return OK_RC;
 }
-*/
-RC IX_Manager::GetPage(PF_FileHandle fileHandle, PageNum pageNum, char* &pData) const{
+
+RC IX_Manager::GetPage(PF_FileHandle fileHandle, PageNum pageNum, char* pData) const{
 	PF_PageHandle pfPageHandle = PF_PageHandle();
 	RC rc = fileHandle.GetThisPage(pageNum, pfPageHandle);
 	if (rc != OK_RC){

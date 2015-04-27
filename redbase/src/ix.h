@@ -106,8 +106,8 @@ private:
 	bool AttributeEqualEntry(char* one, char* two);
 
 	// TODO: temp
-	RC CreatePage(PF_FileHandle fileHandle, PageNum &pageNum, char* &pData);
-    RC GetPage(PF_FileHandle fileHandle, PageNum pageNum, char* &pData) const;
+	RC CreatePage(PF_FileHandle fileHandle, PageNum &pageNum, char* pData);
+    RC GetPage(PF_FileHandle fileHandle, PageNum pageNum, char* pData) const;
 };
 
 //
@@ -151,7 +151,7 @@ private:
 	RC GetNextPage(PageNum pageNum, PageNum &resultPage);
 
 	// TODO: temp
-    RC GetPage(PF_FileHandle fileHandle, PageNum pageNum, char* &pData) const;
+    RC GetPage(PF_FileHandle fileHandle, PageNum pageNum, char* pData) const;
 };
 
 //
@@ -187,8 +187,8 @@ private:
 	RC CreateNewLeaf(PF_FileHandle pfFileHandle, SlotNum maxEntry, PageNum leftLeaf, PageNum rightLeaf, PageNum &resultPage);
 
 	// TODO: temp
-	RC CreatePage(PF_FileHandle fileHandle, PageNum &pageNum, char* &pData);
-    RC GetPage(PF_FileHandle fileHandle, PageNum pageNum, char* &pData) const;
+	RC CreatePage(PF_FileHandle fileHandle, PageNum &pageNum, char* pData);
+    RC GetPage(PF_FileHandle fileHandle, PageNum pageNum, char* pData) const;
 };
 
 //
