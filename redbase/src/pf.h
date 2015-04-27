@@ -102,8 +102,8 @@ public:
    RC ForcePages  (PageNum pageNum=ALL_PAGES) const;
 
    // Gina start
-   RC CreatePage(PageNum &pageNum, char* pData);
-   RC GetPage(PageNum pageNum, char* pData) const;
+   /*RC CreatePage(PF_FileHandle fileHandle, PageNum &pageNum, char* pData);
+   RC GetPage(PF_FileHandle fileHandle, PageNum pageNum, char* pData) const;*/
    // Gina end
 private:
 

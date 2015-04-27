@@ -102,6 +102,10 @@ private:
 
 	// Both Insert/Delete helper functions
 	void ChooseSubtree(char* pData, void* attribute, PageNum &nextPage, int &numKeys, SlotNum &keyNum);
+
+	// TODO: temp
+	RC CreatePage(PF_FileHandle fileHandle, PageNum &pageNum, char* pData);
+    RC GetPage(PF_FileHandle fileHandle, PageNum pageNum, char* pData) const;
 };
 
 //
@@ -143,6 +147,9 @@ private:
 	RC FindMinLeafNode(PageNum &resultPage) const;
 	RC FindLeafNodeHelper(PageNum currPage, int currHeight, bool findMin, void* attribute, PageNum &resultPage) const;
 	RC GetNextPage(PageNum pageNum, PageNum &resultPage);
+
+	// TODO: temp
+    RC GetPage(PF_FileHandle fileHandle, PageNum pageNum, char* pData) const;
 };
 
 //
@@ -176,6 +183,10 @@ private:
 	int CalculateMaxEntries(int attrLength);  //Calculate max number of entries that will fit in one page
 
 	RC CreateNewLeaf(PF_FileHandle pfFileHandle, SlotNum maxEntry, PageNum leftLeaf, PageNum rightLeaf, PageNum &resultPage);
+
+	// TODO: temp
+	RC CreatePage(PF_FileHandle fileHandle, PageNum &pageNum, char* pData);
+    RC GetPage(PF_FileHandle fileHandle, PageNum pageNum, char* pData) const;
 };
 
 //

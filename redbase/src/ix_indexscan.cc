@@ -81,7 +81,7 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 
 	// CHANGES TO ACCOMODATE DELETES DURING INDEXSCAN
 	// Initialize page handle and page data
-	rc = ixIndexHandle->pfFileHandle.GetPage(pageNum, pData);
+	rc = GetPage(ixIndexHandle->pfFileHandle, pageNum, pData);
 	if (rc != OK_RC)
 		return rc;
 
@@ -121,7 +121,7 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 		// If more entries to read...
 		if (pageNum != IX_NO_PAGE){
 			// Get new page data
-			rc = ixIndexHandle->pfFileHandle.GetPage(pageNum, pData);
+			rc = GetPage(ixIndexHandle->pfFileHandle, pageNum, pData);
 			if (rc != OK_RC)
 				return rc;
 		}
@@ -283,7 +283,7 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 			// If more entries to read...
 			if (pageNum != IX_NO_PAGE){
 				// Get new page handle and page data
-				rc = ixIndexHandle->pfFileHandle.GetPage(pageNum, pData);
+				rc = GetPage(ixIndexHandle->pfFileHandle, pageNum, pData);
 				if (rc != OK_RC)
 					return rc;
 			}
@@ -352,7 +352,7 @@ RC IX_IndexScan::FindLeafNodeHelper(PageNum currPage, int currHeight, bool findM
 	// At internal page
 	// Get page handle
 	char *pData;
-	RC rc = ixIndexHandle->pfFileHandle.GetPage(currPage, pData);
+	RC rc = GetPage(ixIndexHandle->pfFileHandle, currPage, pData);
 	if (rc != OK_RC)
 		return rc;
 
@@ -447,7 +447,7 @@ RC IX_IndexScan::GetNextPage(PageNum pageNum, PageNum &resultPage)
 {
 	// Get page data
 	char *pData;
-	RC rc = ixIndexHandle->pfFileHandle.GetPage(pageNum, pData);
+	RC rc = GetPage(ixIndexHandle->pfFileHandle, pageNum, pData);
 	if (rc != OK_RC)
 		return rc;
 
@@ -484,5 +484,24 @@ RC IX_IndexScan::GetNextPage(PageNum pageNum, PageNum &resultPage)
 	}
 
 	resultPage = nextPage;
+	return OK_RC;
+}
+
+
+RC IX_IndexScan::GetPage(PF_FileHandle fileHandle, PageNum pageNum, char* pData) const{
+	PF_PageHandle pfPageHandle = PF_PageHandle();
+	RC rc = fileHandle.GetThisPage(pageNum, pfPageHandle);
+	if (rc != OK_RC){
+		PrintError(rc);
+		return rc;
+	}
+
+	rc = pfPageHandle.GetData(pData);
+	if (rc != OK_RC){
+		fileHandle.UnpinPage(pageNum);
+		PrintError(rc);
+		return rc;
+	}
+
 	return OK_RC;
 }
