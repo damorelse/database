@@ -136,7 +136,8 @@ private:
 	PageNum rightLeaf;
 	bool inBucket;
 	bool finished;
-	string lastEntry;
+	int entrySize;
+	char* lastEntry;
 
 	RC FindLeafNode(void* attribute, PageNum &resultPage) const;
 	RC FindMinLeafNode(PageNum &resultPage) const;

@@ -4,7 +4,7 @@
 
 using namespace std;
 
-IX_IndexScan::IX_IndexScan(): ixIndexHandle(NULL), compOp(NO_OP), value(NULL), open(false), pageNum(-1), entryNum(-1), rightLeaf(-1), inBucket(false), finished(false), lastEntry("")
+IX_IndexScan::IX_IndexScan(): ixIndexHandle(NULL), compOp(NO_OP), value(NULL), open(false), pageNum(-1), entryNum(-1), rightLeaf(-1), inBucket(false), finished(false), entrySize(0), lastEntry(NULL)
 {}
 IX_IndexScan::~IX_IndexScan()
 {
@@ -57,7 +57,8 @@ RC IX_IndexScan::OpenScan(const IX_IndexHandle &indexHandle,
 	rightLeaf = IX_NO_PAGE;
 	inBucket = false;
 	finished = false;
-	lastEntry = "";
+	entrySize = ixIndexHandle->ixIndexHeader.attrLength + sizeof(PageNum) + sizeof(SlotNum);
+	lastEntry = new char[entrySize];
 
 	return OK_RC;
 }
@@ -86,15 +87,14 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 	// Read previous entry if entry still filled
 	string strTmp = "";
 	if (ixIndexHandle->GetSlotBitValue(pData, entryNum)){
-		int entrySize = ixIndexHandle->ixIndexHeader.attrLength + sizeof(PageNum) + sizeof(SlotNum);
 		char* charArrTmp = new char[entrySize];
 		memcpy(charArrTmp, ixIndexHandle->GetEntryPtr(pData, entryNum), entrySize);
 		strTmp = string(charArrTmp);
-		delete charArrTmp;
+		delete [] charArrTmp;
 	}
 
 	// If previous entry is the same, increment entry iterator
-	if (lastEntry == strTmp && strTmp.length > 0){
+	if (string(lastEntry) == strTmp && strTmp.length > 0){
 		// Increment entry num
 		entryNum += 1;
 		if (entryNum > ixIndexHandle->ixIndexHeader.maxEntryIndex){
@@ -307,11 +307,7 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 	memcpy(&rid.slotNum, ptr, sizeof(SlotNum));
 
 	// Set lastEntry
-	int entrySize = ixIndexHandle->ixIndexHeader.attrLength + sizeof(PageNum) + sizeof(SlotNum);
-	char* charArrTmp = new char[entrySize];
-	memcpy(charArrTmp, ixIndexHandle->GetEntryPtr(pData, entryNum), entrySize);
-	lastEntry = string(charArrTmp);
-	delete charArrTmp;
+	memcpy(lastEntry, ixIndexHandle->GetEntryPtr(pData, entryNum), entrySize);
 
 	// Clean up.
 	pData = NULL;
@@ -330,6 +326,7 @@ RC IX_IndexScan::CloseScan()
 {
 	// Set state
 	open = false;
+	delete [] lastEntry;
 	ixIndexHandle = NULL;
 
 	return OK_RC;

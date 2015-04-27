@@ -944,12 +944,13 @@ RC IX_IndexHandle::DeleteEntryHelper(PageNum parentPage, PageNum currPage, int h
 				oldPage = IX_NO_PAGE;
 			}
 			else {
+				// TODO
 			}
 		}
 	}
 	// Leaf node
 	else {
-
+		// TODO
 
 	}
 
