@@ -48,7 +48,7 @@ RC IX_IndexScan::OpenScan(const IX_IndexHandle &indexHandle,
 	RC rc;
 	if (compOp == NO_OP || compOp == LT_OP || compOp == LE_OP)
 		rc = FindMinLeafNode(pageNum);
-	else if (compOp == EQ_OP || compOp == GE_OP || compOp == GT_OP)
+	else //(compOp == EQ_OP || compOp == GE_OP || compOp == GT_OP)
 		rc = FindLeafNode(value, pageNum);
 	if (rc != OK_RC)
 		return rc;
@@ -82,7 +82,7 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 	// CHANGES TO ACCOMODATE DELETES DURING INDEXSCAN
 	// Initialize page handle and page data
 	//rc = GetPage(ixIndexHandle->pfFileHandle, pageNum, pData);
-	PF_PageHandle pfPageHandle = PF_PageHandle();
+	pfPageHandle = PF_PageHandle();
 	rc = ixIndexHandle->pfFileHandle.GetThisPage(pageNum, pfPageHandle);
 	if (rc != OK_RC){
 		PrintError(rc);
