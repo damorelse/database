@@ -50,8 +50,22 @@ RC IX_IndexHandle::InsertEntry(void *attribute, const RID &rid)
 		// Create new root
 		PageNum pageNum;
 		char *pData;
-		RC rc = CreatePage(pfFileHandle, pageNum, pData);
+		//RC rc = CreatePage(pfFileHandle, pageNum, pData);
+		PF_PageHandle pfPageHandle;
+		RC rc = pfFileHandle.AllocatePage(pfPageHandle);
 		if (rc != OK_RC){
+			PrintError(rc);
+			return rc;
+		}
+		rc = pfPageHandle.GetPageNum(pageNum);
+		if (rc != OK_RC){
+			PrintError(rc);
+			return rc;
+		}
+		rc = pfPageHandle.GetData(pData);
+		if (rc != OK_RC){
+			pfFileHandle.UnpinPage(pageNum);
+			PrintError(rc);
 			return rc;
 		}
 
@@ -273,9 +287,25 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 			// Create N2
 			PageNum newPage;
 			char* newPData;
-			rc = CreatePage(pfFileHandle, newPage, newPData);
+			//rc = CreatePage(pfFileHandle, newPage, newPData);
+			PF_PageHandle pfPageHandle;
+			RC rc = pfFileHandle.AllocatePage(pfPageHandle);
 			if (rc != OK_RC){
 				rc = pfFileHandle.UnpinPage(currPage);
+				PrintError(rc);
+				return rc;
+			}
+			rc = pfPageHandle.GetPageNum(newPage);
+			if (rc != OK_RC){
+				rc = pfFileHandle.UnpinPage(currPage);
+				PrintError(rc);
+				return rc;
+			}
+			rc = pfPageHandle.GetData(newPData);
+			if (rc != OK_RC){
+				pfFileHandle.UnpinPage(newPage);
+				rc = pfFileHandle.UnpinPage(currPage);
+				PrintError(rc);
 				return rc;
 			}
 
@@ -379,8 +409,23 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 				// Create new bucket page
 				PageNum newBucket;
 				char *newBucketData;
-				RC rc = CreatePage(pfFileHandle, newBucket, newBucketData);
+				//RC rc = CreatePage(pfFileHandle, newBucket, newBucketData);
+				PF_PageHandle pfPageHandle;
+				RC rc = pfFileHandle.AllocatePage(pfPageHandle);
 				if (rc != OK_RC){
+					PrintError(rc);
+					return rc;
+				}
+				rc = pfPageHandle.GetPageNum(newBucket);
+				if (rc != OK_RC){
+					PrintError(rc);
+					return rc;
+				}
+				// Get page data
+				rc = pfPageHandle.GetData(newBucketData);
+				if (rc != OK_RC){
+					pfFileHandle.UnpinPage(newBucket);
+					PrintError(rc);
 					return rc;
 				}
 
@@ -460,9 +505,23 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 			// Split L
 			// Make L2 page, set newChildPage
 			char *newPData;
-			rc = CreatePage(pfFileHandle, newChildPage, newPData);
+			//rc = CreatePage(pfFileHandle, newChildPage, newPData);
+			PF_PageHandle pfPageHandle;
+			RC rc = pfFileHandle.AllocatePage(pfPageHandle);
 			if (rc != OK_RC){
-				pfFileHandle.UnpinPage(currPage);
+				PrintError(rc);
+				return rc;
+			}
+			rc = pfPageHandle.GetPageNum(newChildPage);
+			if (rc != OK_RC){
+				PrintError(rc);
+				return rc;
+			}
+			// Get page data
+			rc = pfPageHandle.GetData(newPData);
+			if (rc != OK_RC){
+				pfFileHandle.UnpinPage(newChildPage);
+				PrintError(rc);
 				return rc;
 			}
 
@@ -1430,6 +1489,7 @@ bool IX_IndexHandle::AttributeEqualEntry(char* one, char* two){
 	return equal;
 }
 
+/*
 RC IX_IndexHandle::CreatePage(PF_FileHandle fileHandle, PageNum &pageNum, char* pData){
 	PF_PageHandle pfPageHandle;
 	RC rc = fileHandle.AllocatePage(pfPageHandle);
@@ -1472,3 +1532,4 @@ RC IX_IndexHandle::GetPage(PF_FileHandle fileHandle, PageNum pageNum, char* pDat
 
 	return OK_RC;
 }
+*/

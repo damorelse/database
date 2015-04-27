@@ -106,8 +106,8 @@ private:
 	bool AttributeEqualEntry(char* one, char* two);
 
 	// TODO: temp
-	RC CreatePage(PF_FileHandle fileHandle, PageNum &pageNum, char* pData);
-    RC GetPage(PF_FileHandle fileHandle, PageNum pageNum, char* pData) const;
+	//RC CreatePage(PF_FileHandle fileHandle, PageNum &pageNum, char* pData);
+    //RC GetPage(PF_FileHandle fileHandle, PageNum pageNum, char* pData) const;
 };
 
 //
