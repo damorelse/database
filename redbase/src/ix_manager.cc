@@ -331,7 +331,7 @@ RC IX_Manager::CreateNewLeaf(PF_FileHandle pfFileHandle, SlotNum maxEntry, PageN
 }
 
 
-RC IX_Manager::CreatePage(PF_FileHandle fileHandle, PageNum &pageNum, char* pData){
+RC IX_Manager::CreatePage(PF_FileHandle fileHandle, PageNum &pageNum, char* &pData){
 	PF_PageHandle pfPageHandle;
 	RC rc = fileHandle.AllocatePage(pfPageHandle);
 	if (rc != OK_RC){
@@ -356,7 +356,7 @@ RC IX_Manager::CreatePage(PF_FileHandle fileHandle, PageNum &pageNum, char* pDat
 	return OK_RC;
 }
 
-RC IX_Manager::GetPage(PF_FileHandle fileHandle, PageNum pageNum, char* pData) const{
+RC IX_Manager::GetPage(PF_FileHandle fileHandle, PageNum pageNum, char* &pData) const{
 	PF_PageHandle pfPageHandle = PF_PageHandle();
 	RC rc = fileHandle.GetThisPage(pageNum, pfPageHandle);
 	if (rc != OK_RC){

@@ -1430,7 +1430,7 @@ bool IX_IndexHandle::AttributeEqualEntry(char* one, char* two){
 	return equal;
 }
 
-RC IX_IndexHandle::CreatePage(PF_FileHandle fileHandle, PageNum &pageNum, char* pData){
+RC IX_IndexHandle::CreatePage(PF_FileHandle fileHandle, PageNum &pageNum, char* &pData){
 	PF_PageHandle pfPageHandle;
 	RC rc = fileHandle.AllocatePage(pfPageHandle);
 	if (rc != OK_RC){
@@ -1455,7 +1455,7 @@ RC IX_IndexHandle::CreatePage(PF_FileHandle fileHandle, PageNum &pageNum, char* 
 	return OK_RC;
 }
 
-RC IX_IndexHandle::GetPage(PF_FileHandle fileHandle, PageNum pageNum, char* pData) const{
+RC IX_IndexHandle::GetPage(PF_FileHandle fileHandle, PageNum pageNum, char* &pData) const{
 	PF_PageHandle pfPageHandle = PF_PageHandle();
 	RC rc = fileHandle.GetThisPage(pageNum, pfPageHandle);
 	if (rc != OK_RC){

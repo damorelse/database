@@ -488,7 +488,7 @@ RC IX_IndexScan::GetNextPage(PageNum pageNum, PageNum &resultPage)
 }
 
 
-RC IX_IndexScan::GetPage(PF_FileHandle fileHandle, PageNum pageNum, char* pData) const{
+RC IX_IndexScan::GetPage(PF_FileHandle fileHandle, PageNum pageNum, char* &pData) const{
 	PF_PageHandle pfPageHandle = PF_PageHandle();
 	RC rc = fileHandle.GetThisPage(pageNum, pfPageHandle);
 	if (rc != OK_RC){
