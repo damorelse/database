@@ -1320,7 +1320,7 @@ RC IX_IndexHandle::LeafDelete(PageNum currPage, char* pData, void* attribute, co
 
 	memcpy(&lastPage, notLastData + sizeof(int), sizeof(PageNum));
 	//rc = GetPage(pfFileHandle, lastPage, lastData);
-	PF_PageHandle pfPageHandle = PF_PageHandle();
+	pfPageHandle = PF_PageHandle();
 	rc = pfFileHandle.GetThisPage(lastPage, pfPageHandle);
 	if (rc != OK_RC){
 		PrintError(rc);
