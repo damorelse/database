@@ -39,11 +39,12 @@ RC IX_IndexHandle::InsertEntry(void *attribute, const RID &rid)
 	
 	// Recursive call
 	PageNum newChildPage = IX_NO_PAGE;
-	void* newAttribute = NULL;
+	void* newAttribute = new char[ixIndexHeader.attrLength];
 	rc = InsertEntryHelper(ixIndexHeader.rootPage, ixIndexHeader.height, attribute, rid, newChildPage, newAttribute);
 	if (rc != OK_RC)
 		return rc;
 
+	// TODO: CHECK THIS
 	// Root node was split, need to add level to index
 	if (newChildPage != IX_NO_PAGE){
 		// Create new root
@@ -90,6 +91,9 @@ RC IX_IndexHandle::InsertEntry(void *attribute, const RID &rid)
 		ixIndexHeader.height += 1;
 	}
 
+	// Clean up
+	delete [] newAttribute;
+
 	return OK_RC;
 }
 
@@ -119,7 +123,11 @@ RC IX_IndexHandle::DeleteEntry(void *attribute, const RID &rid)
 		return rc;
 	// End check input
 
-	// Find correct leaf node
+	void* oldAttribute;
+	rc = DeleteEntryHelper(IX_NULLINPUT, ixIndexHeader.rootPage, ixIndexHeader.height, attribute, rid, oldAttribute);
+	if (rc != OK_RC)
+		return rc;
+
 	// TODO: check page and bucket pages for {attribute, rid}. Delete if find. Return error if not.
 
 	return OK_RC;
@@ -214,74 +222,10 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 
 	// If at an internal node...
 	if (height != 0){
-		// Choose subtree
-		char* ptr;
 		PageNum nextPage;
-
-		// Convert attribute to correct type
-		int a_i;
-		float a_f;
-		string a_s;
-		switch(ixIndexHeader.attrType) {
-		case INT:
-			memcpy(&a_i, attribute, ixIndexHeader.attrLength);
-			break;
-		case FLOAT:
-			memcpy(&a_f, attribute, ixIndexHeader.attrLength);
-			break;
-		case STRING:
-			char* tmp = new char[ixIndexHeader.attrLength];
-			memcpy(tmp, attribute, ixIndexHeader.attrLength);
-			a_s = string(tmp);
-			delete [] tmp;
-			break;
-		}
-
-		// Get number of keys
 		int numKeys;
-		memcpy(&numKeys, pData, sizeof(int));
-
-		// Iterate through keys until find first key greater than attribute.
-		bool greaterThan = false;
-		SlotNum keyNum = 0;
-		for (; !greaterThan && keyNum < numKeys; ++keyNum){
-			ptr = GetKeyPtr(pData, keyNum);
-
-			// Convert key into correct form, check if greater than
-			int k_i;
-			float k_f;
-			string k_s;
-			switch(ixIndexHeader.attrType) {
-			case INT:
-				memcpy(&k_i, ptr, ixIndexHeader.attrLength);
-				greaterThan = a_i < k_i;
-				break;
-			case FLOAT:
-				memcpy(&k_f, ptr, ixIndexHeader.attrLength);
-				greaterThan = a_f < k_f;
-				break;
-			case STRING:
-				char* tmp = new char[ixIndexHeader.attrLength];
-				memcpy(tmp, ptr, ixIndexHeader.attrLength);
-				k_s = string(tmp);
-				delete [] tmp;
-				greaterThan = a_s < k_s;
-				break;
-			}
-
-			// Found first greaterthan key, copy preceding page pointer
-			if (greaterThan){
-				ptr -= sizeof(PageNum);
-				memcpy(&nextPage, ptr, sizeof(PageNum));
-			}
-		}
-
-		// Did not find a greaterThan key, copy last page pointer
-		if (!greaterThan){
-			ptr += ixIndexHeader.attrLength;
-			memcpy(&nextPage, ptr, sizeof(PageNum));
-		}
-		// End choose subtree.
+		SlotNum keyNum;
+		ChooseSubtree(pData, attribute, nextPage, numKeys, keyNum);
 
 		// Recursively insert entry
 		newChildPage = IX_NO_PAGE;
@@ -314,7 +258,6 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 
 			// Set newChildPage and newAttribute to null
 			newChildPage = IX_NO_PAGE;
-			newAttribute = NULL;
 
 			pData = NULL;
 			rc = pfFileHandle.UnpinPage(currPage);
@@ -328,6 +271,7 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 		// note difference wrt splitting of leaf page!
 		else {
 			// Split N
+
 			// TODO
 		}
 	}
@@ -347,7 +291,6 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 
 			// Set newChildPage and newAttribute to null
 			newChildPage = IX_NO_PAGE;
-			newAttribute = NULL;
 
 			pData = NULL;
 			rc = pfFileHandle.UnpinPage(currPage);
@@ -464,7 +407,6 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 
 			// Set newChildPage and newAttribute to null
 			newChildPage = IX_NO_PAGE;
-			newAttribute = NULL;
 
 			pData = NULL;
 			lastData = NULL;
@@ -520,7 +462,6 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 				PrintError(rc);
 				return rc;
 			}
-			newAttribute = new char[ixIndexHeader.attrLength];
 			memcpy(newAttribute, ptr, ixIndexHeader.attrLength);
 
 			// Set sibling pointers
@@ -974,4 +915,74 @@ bool IX_IndexHandle::ShouldBucket(void* attribute, char* pData){
 	}
 	
 	return bucket;
+}
+
+
+
+void IX_IndexHandle::ChooseSubtree(char* pData, void* attribute, PageNum &nextPage, int &numKeys, SlotNum &keyNum)
+{
+	char* ptr;
+
+	// Convert attribute to correct type
+	int a_i;
+	float a_f;
+	string a_s;
+	switch(ixIndexHeader.attrType) {
+	case INT:
+		memcpy(&a_i, attribute, ixIndexHeader.attrLength);
+		break;
+	case FLOAT:
+		memcpy(&a_f, attribute, ixIndexHeader.attrLength);
+		break;
+	case STRING:
+		char* tmp = new char[ixIndexHeader.attrLength];
+		memcpy(tmp, attribute, ixIndexHeader.attrLength);
+		a_s = string(tmp);
+		delete [] tmp;
+		break;
+	}
+
+	// Get number of keys
+	memcpy(&numKeys, pData, sizeof(int));
+
+	// Iterate through keys until find first key greater than attribute.
+	bool greaterThan = false;
+	keyNum = 0;
+	for (; !greaterThan && keyNum < numKeys; ++keyNum){
+		ptr = GetKeyPtr(pData, keyNum);
+
+		// Convert key into correct form, check if greater than
+		int k_i;
+		float k_f;
+		string k_s;
+		switch(ixIndexHeader.attrType) {
+		case INT:
+			memcpy(&k_i, ptr, ixIndexHeader.attrLength);
+			greaterThan = a_i < k_i;
+			break;
+		case FLOAT:
+			memcpy(&k_f, ptr, ixIndexHeader.attrLength);
+			greaterThan = a_f < k_f;
+			break;
+		case STRING:
+			char* tmp = new char[ixIndexHeader.attrLength];
+			memcpy(tmp, ptr, ixIndexHeader.attrLength);
+			k_s = string(tmp);
+			delete [] tmp;
+			greaterThan = a_s < k_s;
+			break;
+		}
+
+		// Found first greaterthan key, copy preceding page pointer
+		if (greaterThan){
+			ptr -= sizeof(PageNum);
+			memcpy(&nextPage, ptr, sizeof(PageNum));
+		}
+	}
+
+	// Did not find a greaterThan key, copy last page pointer
+	if (!greaterThan){
+		ptr += ixIndexHeader.attrLength;
+		memcpy(&nextPage, ptr, sizeof(PageNum));
+	}
 }

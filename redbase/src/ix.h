@@ -81,22 +81,23 @@ private:
 	bool GetSlotBitValue(char* pData, const SlotNum slotNum) const;   // Read a specific entry's bit value in page header
 	void SetSlotBitValue(char* pData, const SlotNum slotNum, bool b); // Write a specific entry's bit value in page header
 
+	// Both Insert/Delete helper functions
+	void ChooseSubtree(char* pData, void* attribute, PageNum &nextPage, int &numKeys, SlotNum &keyNum);
+
 	// Insert helper functions
 	RC InsertEntryHelper(PageNum currPage, int height, void* attribute, const RID &rid, PageNum &newChildPage, void* newAttribute);
-
 	// Internal insert
 	RC InternalInsert(PageNum pageNum, PageNum &newChildPage, void* newAttribute, SlotNum keyNum);
-
 	// Leaf insert
 	RC LeafInsert(PageNum pageNum, void* attribute, const RID &rid);
 	void MakeEntryCopyBack(char* pData, void* attribute, const RID &rid, char* copyBack, int &copyBackSize, int &numEntries);
 	void WriteLeafFromEntryCopyBack(char* pData, char* copyBack, int copyBackSize, int numEntries);
 	RC SetSiblingPointers(PageNum L1Page, PageNum L2Page, char* L1, char* L2);
-
 	// Bucket insert
 	bool IX_IndexHandle::ShouldBucket(void* attribute, char* pData);
 
-	// End insert helper functions
+	// Delete helper functions
+	RC DeleteEntryHelper(PageNum parentPage, PageNum currPage, int height, void* attribute, const RID &rid, void* oldAttribute);
 };
 
 //
