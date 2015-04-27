@@ -1151,7 +1151,7 @@ RC IX_IndexHandle::LeafDelete(PageNum currPage, char* pData, void* attribute, co
 	memcpy(&pageTmp, deleteData + sizeof(int), sizeof(PageNum));
 	if (pageTmp == IX_NO_PAGE){
 		numEntries -= 1;
-		memcpy(deleteData, @numEntries, sizeof(int));
+		memcpy(deleteData, &numEntries, sizeof(int));
 
 		rc = pfFileHandle.MarkDirty(deletePage);
 		if (rc != OK_RC){
