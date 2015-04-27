@@ -44,7 +44,6 @@ RC IX_IndexHandle::InsertEntry(void *attribute, const RID &rid)
 	if (rc != OK_RC)
 		return rc;
 
-	// TODO: CHECK THIS
 	// Root node was split, need to add level to index
 	if (newChildPage != IX_NO_PAGE){
 		// Create new root
@@ -123,13 +122,18 @@ RC IX_IndexHandle::DeleteEntry(void *attribute, const RID &rid)
 		return rc;
 	// End check input
 
-	void* oldAttribute;
-	rc = DeleteEntryHelper(IX_NULLINPUT, ixIndexHeader.rootPage, ixIndexHeader.height, attribute, rid, oldAttribute);
+	PageNum oldPage = IX_NO_PAGE;
+	void* oldAttribute = new char[ixIndexHeader.attrLength];
+	rc = DeleteEntryHelper(IX_NO_PAGE, ixIndexHeader.rootPage, ixIndexHeader.height, attribute, rid, oldPage, oldAttribute);
 	if (rc != OK_RC)
 		return rc;
 
-	// TODO: check page and bucket pages for {attribute, rid}. Delete if find. Return error if not.
+	if (oldPage != IX_NO_PAGE){
+		// TODO: check page and bucket pages for {attribute, rid}. Delete if find. Return error if not.
 
+	}
+
+	delete [] oldAttribute;
 	return OK_RC;
 }
 
@@ -224,8 +228,8 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 	if (height != 0){
 		PageNum nextPage;
 		int numKeys;
-		SlotNum keyNum;
-		ChooseSubtree(pData, attribute, nextPage, numKeys, keyNum);
+		SlotNum insertKeyIndex;
+		ChooseSubtree(pData, attribute, nextPage, numKeys, insertKeyIndex);
 
 		// Recursively insert entry
 		newChildPage = IX_NO_PAGE;
@@ -250,7 +254,7 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 		// We split child, must insert newChildEntry in N
 		// If N has space... usual case
 		if (numKeys - 1 < ixIndexHeader.maxKeyIndex){
-			rc = InternalInsert(currPage, newChildPage, newAttribute, keyNum);
+			rc = InternalInsert(currPage, newChildPage, newAttribute, insertKeyIndex);
 			if (rc != OK_RC){
 				pfFileHandle.UnpinPage(currPage);
 				return rc;
@@ -271,8 +275,72 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 		// note difference wrt splitting of leaf page!
 		else {
 			// Split N
+			// Create N2
+			PageNum newPage;
+			char* newPData;
+			rc = pfFileHandle.CreatePage(newPage, newPData);
+			if (rc != OK_RC){
+				rc = pfFileHandle.UnpinPage(currPage);
+				return rc;
+			}
 
-			// TODO
+			// Initialize state
+			char* copyBack;
+			int copyBackSize;
+			MakeKeyCopyBack(pData, insertKeyIndex, newChildPage, newAttribute, copyBack, copyBackSize, numKeys);
+			SlotNum middleKeyIndex = numKeys / 2;
+			
+			// Store first half of keys in N
+			int keySize = ixIndexHeader.attrLength + sizeof(PageNum);
+			int newNumKeys = middleKeyIndex;
+			int newCopyBackSize = sizeof(PageNum) + newNumKeys * keySize;
+			WriteInternalFromKeyCopyBack(pData, copyBack, newCopyBackSize, newNumKeys);
+
+			// Copy middle attribute, updating newChildPage and newAttribute
+			char* ptr = copyBack + newCopyBackSize;
+			memcpy(newAttribute, ptr, ixIndexHeader.attrLength);
+			newChildPage = newPage;
+
+			// Write rest of entries to new node N2
+			ptr += ixIndexHeader.attrLength;
+			newNumKeys = numKeys - newNumKeys - 1;
+			newCopyBackSize = (ixIndexHeader.attrLength + sizeof(PageNum) + sizeof(SlotNum)) * (newNumEntries);
+			WriteLeafFromEntryCopyBack(newPData, ptr, newCopyBackSize, newNumKeys);
+
+			
+			// Mark N and N2 pages as dirty
+			rc = pfFileHandle.MarkDirty(currPage);
+			if (rc != OK_RC){
+				pfFileHandle.UnpinPage(currPage);
+				pfFileHandle.UnpinPage(newChildPage);
+				PrintError(rc);
+				return rc;
+			}
+			rc = pfFileHandle.MarkDirty(newChildPage);
+			if (rc != OK_RC){
+				pfFileHandle.UnpinPage(currPage);
+				pfFileHandle.UnpinPage(newChildPage);
+				PrintError(rc);
+				return rc;
+			}
+
+			// Clean up
+			pData = NULL;
+			newPData = NULL;
+			delete [] copyBack;
+			rc = pfFileHandle.UnpinPage(currPage);
+			if (rc != OK_RC){
+				pfFileHandle.UnpinPage(newChildPage);
+				PrintError(rc);
+				return rc;
+			}
+			pfFileHandle.UnpinPage(newChildPage);
+			if (rc != OK_RC){
+				PrintError(rc);
+				return rc;
+			}
+
+			return OK_RC;
 		}
 	}
 	// If at a leaf node...
@@ -422,26 +490,18 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 		else
 		{
 			// Split L
-			// Make L2 page
-			PF_PageHandle newPageHandle = PF_PageHandle();
-			rc = pfFileHandle.AllocatePage(newPageHandle);
-			if (rc != OK_RC){
-				pfFileHandle.UnpinPage(currPage);
-				PrintError(rc);
-				return rc;
-			}
-
+			// Make L2 page, set newChildPage
 			char *newPData;
-			rc = newPageHandle.GetData(newPData);
+			rc = pfFileHandle.CreatePage(newChildPage, newPData);
 			if (rc != OK_RC){
 				pfFileHandle.UnpinPage(currPage);
-				PrintError(rc);
 				return rc;
 			}
 
 			// Initialize state
 			char* copyBack;
 			int copyBackSize;
+			int numEntries;
 			MakeEntryCopyBack(pData, attribute, rid, copyBack, copyBackSize, numEntries);
 
 			// Write first d entries to L
@@ -453,15 +513,9 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 			char* ptr = copyBack + newSize;
 			newNumEntries = numEntries - newNumEntries;
 			newSize = (ixIndexHeader.attrLength + sizeof(PageNum) + sizeof(SlotNum)) * (newNumEntries);
-			WriteLeafFromEntryCopyBack(pData, ptr, newSize, newNumEntries);
+			WriteLeafFromEntryCopyBack(newPData, ptr, newSize, newNumEntries);
 
-			// Set newChildPage and newAttribute
-			rc = newPageHandle.GetPageNum(newChildPage);
-			if (rc != OK_RC){
-				pfFileHandle.UnpinPage(currPage);
-				PrintError(rc);
-				return rc;
-			}
+			// Set newAttribute
 			memcpy(newAttribute, ptr, ixIndexHeader.attrLength);
 
 			// Set sibling pointers
@@ -565,128 +619,58 @@ RC IX_IndexHandle::InternalInsert(PageNum pageNum, PageNum &newChildPage, void* 
 	return OK_RC;
 }
 
-//// Assume there is free space in internal
-//RC IX_IndexHandle::InternalInsert(PageNum pageNum, PageNum &newChildPage, void* newAttribute, SlotNum keyNum)
-//{
-//	// Read in attribute, covert attribute to correct type
-//	int a_i;
-//	float a_f;
-//	string a_s;
-//	switch(ixIndexHeader.attrType) {
-//	case INT:
-//		memcpy(&a_i, newAttribute, ixIndexHeader.attrLength);
-//        break;
-//	case FLOAT:
-//		memcpy(&a_f, newAttribute, ixIndexHeader.attrLength);
-//        break;
-//	case STRING:
-//		char* tmp = new char[ixIndexHeader.attrLength];
-//		memcpy(tmp, newAttribute, ixIndexHeader.attrLength);
-//		a_s = string(tmp);
-//		delete [] tmp;
-//        break;
-//	}
-//
-//	// Get page handle
-//	PF_PageHandle pfPageHandle = PF_PageHandle();
-//	RC rc = pfFileHandle.GetThisPage(pageNum, pfPageHandle);
-//	if (rc != OK_RC){
-//		PrintError(rc);
-//		return rc;
-//	}
-//
-//	// Get page data
-//	char *pData;
-//	rc = pfPageHandle.GetData(pData);
-//	if (rc != OK_RC){
-//		pfFileHandle.UnpinPage(pageNum);
-//		PrintError(rc);
-//		return rc;
-//	}
-//
-//	// Get number of keys
-//	int numKeys;
-//	memcpy(&numKeys, pData, sizeof(int));
-//
-//	// Determine where to insert entry
-//	int keySize = ixIndexHeader.attrLength + sizeof(PageNum);
-//	char* ptr = pData + ixIndexHeader.internalHeaderSize + sizeof(PageNum);
-//	bool insert = false;
-//
-//	for (int i = 0; !insert && i < numKeys; ++i){
-//		// Read in value, covert value to correct type
-//		int v_i;
-//		float v_f;
-//		string v_s;
-//		switch(ixIndexHeader.attrType) {
-//		case INT:
-//			memcpy(&v_i, ptr, ixIndexHeader.attrLength);
-//			insert = (a_i < v_i);
-//			break;
-//		case FLOAT:
-//			memcpy(&v_f, ptr, ixIndexHeader.attrLength);
-//			insert = (a_f < v_f);
-//			break;
-//		case STRING:
-//			char* tmp = new char[ixIndexHeader.attrLength];
-//			memcpy(tmp, ptr, ixIndexHeader.attrLength);
-//			v_s = string(tmp);
-//			delete [] tmp;
-//			insert = (a_s < v_s);
-//			break;
-//		}
-//
-//		// Do not insert
-//		if (!insert){
-//			// Go to next entry
-//			ptr += keySize;
-//		}
-//		// Insert
-//		else {
-//			// Copy data that needs to be shifted
-//			int copyBackSize = keySize * (numKeys - i);
-//			char* copyBack = new char[copyBackSize];
-//			memcpy(copyBack, ptr, copyBackSize);
-//
-//			// Write back new entry
-//			memcpy(ptr, attribute, ixIndexHeader.attrLength);
-//			ptr += ixIndexHeader.attrLength;
-//			memcpy(ptr, &rid.pageNum, sizeof(PageNum));
-//			ptr += sizeof(PageNum);
-//			memcpy(ptr, &rid.slotNum, sizeof(SlotNum));
-//			
-//			// Write back shifted data
-//			ptr += sizeof(SlotNum);
-//			memcpy(ptr, copyBack, copyBackSize);
-//
-//			// Clean up
-//			delete copyBack;
-//		}
-//	}
-//
-//	// Write back header, increase number of entries
-//	numEntries += 1;
-//	memcpy(pData, &numEntries, sizeof(int));
-//
-//	// Mark page as dirty
-//	rc = pfFileHandle.MarkDirty(pageNum);
-//	if (rc != OK_RC){
-//		pfFileHandle.UnpinPage(pageNum);
-//		PrintError(rc);
-//		return rc;
-//	}
-//
-//	// Clean up
-//	pData = NULL;
-//	ptr = NULL;
-//	rc = pfFileHandle.UnpinPage(pageNum);
-//	if (rc != OK_RC){
-//		PrintError(rc);
-//		return rc;
-//	}
-//
-//	return OK_RC;
-//}
+void IX_IndexHandle::MakeKeyCopyBack(char* pData, SlotNum insertIndex, PageNum &newChildPage, void* newAttribute, char* copyBack, int &copyBackSize, int &numKeys)
+{
+	// Initialize state
+	memcpy(&numKeys, pData, sizeof(int));
+
+	int keySize = ixIndexHeader.attrLength + sizeof(PageNum);
+	copyBackSize = sizeof(PageNum) + numKeys * (keySize);
+	copyBack = new char[copyBackSize];
+	char* ptr = copyBack;
+
+	// Copy over keys to copyBack
+	memcpy(ptr, pData + sizeof(int), sizeof(PageNum));
+	ptr += sizeof(PageNum);
+	for (SlotNum i = 0; i < numKeys; ++i){
+		// Check if should insert new key first
+		if (insertIndex == i){
+			memcpy(ptr, newAttribute, ixIndexHeader.attrLength);
+			ptr += ixIndexHeader.attrLength;
+			memcpy(ptr, &newChildPage, sizeof(PageNum));
+			ptr += sizeof(PageNum);
+		}
+		memcpy(ptr, GetKeyPtr(pData, i), keySize);
+		ptr += keySize;
+	}
+	// Check if new key has been inserted
+	if (insertIndex == numKeys){
+		memcpy(ptr, newAttribute, ixIndexHeader.attrLength);
+		ptr += ixIndexHeader.attrLength;
+		memcpy(ptr, &newChildPage, sizeof(PageNum));
+		ptr += sizeof(PageNum);
+	}
+
+	// Increment numKeys
+	numKeys += 1;
+}
+
+void IX_IndexHandle::WriteInternalFromKeyCopyBack(char* pData, char* copyBack, int copyBackSize, int numKeys)
+{
+	// Write copyBack back
+	char* ptr = pData + ixIndexHeader.internalHeaderSize;
+	memcpy(ptr, copyBack, copyBackSize);
+
+	// Write back header
+	// numEntries
+	memcpy(pData, &numKeys, sizeof(int));
+
+	// Clean up
+	ptr = NULL;
+}
+
+
+
 
 // Assume there is free space in leaf
 // Assumes leaf header is already set up
@@ -916,6 +900,71 @@ bool IX_IndexHandle::ShouldBucket(void* attribute, char* pData){
 	
 	return bucket;
 }
+
+
+
+
+
+RC IX_IndexHandle::DeleteEntryHelper(PageNum parentPage, PageNum currPage, int height, void* attribute, const RID &rid, PageNum &oldPage, void* oldAttribute)
+{
+	// Get page data
+	char *pData;
+	RC rc = pfFileHandle.GetPage(currPage, pData);
+	if (rc != OK_RC)
+		return rc;
+
+	// If at an internal node...
+	if (height != 0){
+		// Choose subtree
+		PageNum nextPage;
+		int numKeys;
+		SlotNum insertKeyIndex;
+		ChooseSubtree(pData, attribute, nextPage, numKeys, insertKeyIndex);
+
+		// Recursive delete
+		DeleteEntryHelper(currPage, nextPage, height-1, attribute, rid, oldPage, oldAttribute);
+
+		// Usual case, child not deleted
+		if (oldPage == IX_NO_PAGE){
+			rc = pfFileHandle.UnpinPage(currPage);
+			if (rc != OK_RC){
+				PrintError(rc);
+				return rc;
+			}
+			return OK_RC;
+		}
+		// We discarded child node
+		else{
+			int numKeys;
+			rc = InternalDelete(pData, oldPage, oldAttribute, numKeys);
+
+			// Node not empty, usual case
+			if (numKeys != 0){
+				// Delete doesn't go further
+				oldPage = IX_NO_PAGE;
+			}
+			else {
+			}
+		}
+	}
+	// Leaf node
+	else {
+
+
+	}
+
+	return OK_RC;
+}
+
+RC IX_IndexHandle::InternalDelete(char* pData, PageNum oldPage, void* oldAttribute, int &numKeys)
+{
+
+}
+RC IX_IndexHandle::LeafDelete(char* pData, void* attribute, const RID &rid, int &numEntries)
+{
+
+}
+
 
 
 
