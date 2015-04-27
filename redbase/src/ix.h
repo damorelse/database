@@ -184,7 +184,7 @@ private:
 	int CalculateMaxKeys(int attrLength);  //Calculate max number of entries that will fit in one page
 	int CalculateMaxEntries(int attrLength);  //Calculate max number of entries that will fit in one page
 
-	RC CreateNewLeaf(PF_FileHandle pfFileHandle, SlotNum maxEntry, PageNum leftLeaf, PageNum rightLeaf, PageNum &resultPage);
+	RC CreateEmptyRoot(PF_FileHandle pfFileHandle, int attrLength, PageNum &resultPage);
 
 	// TODO: temp
 	//RC CreatePage(PF_FileHandle fileHandle, PageNum &pageNum, char* pData);

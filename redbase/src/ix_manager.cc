@@ -78,13 +78,10 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
 		PrintError(rc);
 		return rc;
 	}
-	if (rc != OK_RC){
-		return rc;
-	}
 
 	//Create root leaf page
 	PageNum rootPage;
-	rc = CreateNewLeaf(fileHandle, CalculateMaxEntries(attrLength), IX_NO_PAGE, IX_NO_PAGE, rootPage);
+	rc = CreateEmptyRoot(fileHandle, attrLength, rootPage);
 	if (rc != OK_RC){
 		fileHandle.UnpinPage(0);
 		return rc;
@@ -132,13 +129,13 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
 	// Clean up
 	pData = NULL;
 	ptr = NULL;
-
 	rc = fileHandle.UnpinPage(0);
 	if (rc != OK_RC){
 		PrintError(rc);
 		return rc;
 	}
 
+	// Close file
 	rc = pfManager->CloseFile(fileHandle);
 	if (rc != OK_RC){
 		PrintError(rc);
@@ -207,18 +204,17 @@ RC IX_Manager::OpenIndex(const char *fileName, int indexNo,
 	indexHandle.modified = false;
 
 	// Get header page info
-	PageNum pageNum = 0;
 	char *pData;
 	//rc = GetPage(indexHandle.pfFileHandle, pageNum, pData);
 	PF_PageHandle pfPageHandle = PF_PageHandle();
-	rc = indexHandle.pfFileHandle.GetThisPage(pageNum, pfPageHandle);
+	rc = indexHandle.pfFileHandle.GetThisPage(0, pfPageHandle);
 	if (rc != OK_RC){
 		PrintError(rc);
 		return rc;
 	}
 	rc = pfPageHandle.GetData(pData);
 	if (rc != OK_RC){
-		indexHandle.pfFileHandle.UnpinPage(pageNum);
+		indexHandle.pfFileHandle.UnpinPage(0);
 		PrintError(rc);
 		return rc;
 	}
@@ -295,11 +291,13 @@ int IX_Manager::CalculateMaxKeys(int attrLength)
 }
 int IX_Manager::CalculateMaxEntries(int attrLength)
 {
-	return floor((PF_PAGE_SIZE - sizeof(int) - 4*sizeof(PageNum)) / (attrLength + sizeof(PageNum) + sizeof(SlotNum) + 1/8.0));
+	return floor((PF_PAGE_SIZE - sizeof(int) - 3*sizeof(PageNum)) / (attrLength + sizeof(PageNum) + sizeof(SlotNum) + 1/8.0));
 }
 
-RC IX_Manager::CreateNewLeaf(PF_FileHandle fileHandle, SlotNum maxEntry, PageNum leftLeaf, PageNum rightLeaf, PageNum &pageNum)
+RC IX_Manager::CreateEmptyRoot(PF_FileHandle fileHandle, int attrLength, PageNum &pageNum)
 {
+	SlotNum maxEntry = CalculateMaxEntries(attrLength);
+
 	// Create page
 	char *pData;
 	//RC rc = CreatePage(pfFileHandle, pageNum, pData);
@@ -314,7 +312,6 @@ RC IX_Manager::CreateNewLeaf(PF_FileHandle fileHandle, SlotNum maxEntry, PageNum
 		PrintError(rc);
 		return rc;
 	}
-	// Get page data
 	rc = pfPageHandle.GetData(pData);
 	if (rc != OK_RC){
 		fileHandle.UnpinPage(pageNum);
@@ -332,10 +329,10 @@ RC IX_Manager::CreateNewLeaf(PF_FileHandle fileHandle, SlotNum maxEntry, PageNum
 	memcpy(ptr, &pageNumTmp, sizeof(PageNum)); // nextBucketPage
 
 	ptr += sizeof(PageNum);
-	memcpy(ptr, &leftLeaf, sizeof(PageNum)); // leftLeaf
+	memcpy(ptr, &pageNumTmp, sizeof(PageNum)); // leftLeaf
 
 	ptr += sizeof(PageNum);
-	memcpy(ptr, &rightLeaf, sizeof(PageNum)); // rightLeaf
+	memcpy(ptr, &pageNumTmp, sizeof(PageNum)); // rightLeaf
 
 	ptr += sizeof(PageNum);
 	char charTmp = 0;
