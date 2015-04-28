@@ -9,7 +9,7 @@ IX_IndexScan::IX_IndexScan(): ixIndexHandle(NULL), compOp(NO_OP), value(NULL), o
 {}
 IX_IndexScan::~IX_IndexScan()
 {
-	ixIndexHandle = NULL;
+	// Nothing, assume will call CloseScan
 }
 
 // Open index scan
@@ -357,9 +357,10 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 RC IX_IndexScan::CloseScan()
 {
 	// Set state
+	ixIndexHandle = NULL;
 	open = false;
 	delete [] lastEntry;
-	ixIndexHandle = NULL;
+	lastEntry = NULL;
 
 	return OK_RC;
 }
@@ -396,8 +397,6 @@ RC IX_IndexScan::FindLeafNodeHelper(PageNum currPage, int currHeight, bool findM
 		PrintError(rc);
 		return rc;
 	}
-	if (rc != OK_RC)
-		return rc;
 
 	char* ptr;
 	PageNum nextPage;
@@ -410,25 +409,6 @@ RC IX_IndexScan::FindLeafNodeHelper(PageNum currPage, int currHeight, bool findM
 	}
 	// Not finding min leaf page
 	else {
-		// Convert attribute to correct type
-		int a_i, k_i;
-		float a_f, k_f;
-		string a_s, k_s;
-		switch(ixIndexHandle->ixIndexHeader.attrType) {
-		case INT:
-			memcpy(&a_i, attribute, ixIndexHandle->ixIndexHeader.attrLength);
-			break;
-		case FLOAT:
-			memcpy(&a_f, attribute, ixIndexHandle->ixIndexHeader.attrLength);
-			break;
-		case STRING:
-			char* tmp = new char[ixIndexHandle->ixIndexHeader.attrLength];
-			memcpy(tmp, attribute, ixIndexHandle->ixIndexHeader.attrLength);
-			a_s = string(tmp);
-			delete [] tmp;
-			break;
-		}
-
 		// Get number of keys
 		int numKeys;
 		memcpy(&numKeys, pData, sizeof(int));
@@ -436,26 +416,11 @@ RC IX_IndexScan::FindLeafNodeHelper(PageNum currPage, int currHeight, bool findM
 		// Iterate through keys until find first key greater than attribute.
 		bool greaterThan = false;
 		for (SlotNum keyNum = 0; keyNum < numKeys; ++keyNum){
+			// Get key pointer
 			ptr = ixIndexHandle->GetKeyPtr(pData, keyNum);
 
-			// Convert key into correct form, check if greater than
-			switch(ixIndexHandle->ixIndexHeader.attrType) {
-			case INT:
-				memcpy(&k_i, ptr, ixIndexHandle->ixIndexHeader.attrLength);
-				greaterThan = a_i < k_i;
-				break;
-			case FLOAT:
-				memcpy(&k_f, ptr, ixIndexHandle->ixIndexHeader.attrLength);
-				greaterThan = a_f < k_f;
-				break;
-			case STRING:
-				char* tmp = new char[ixIndexHandle->ixIndexHeader.attrLength];
-				memcpy(tmp, ptr, ixIndexHandle->ixIndexHeader.attrLength);
-				k_s = string(tmp);
-				delete [] tmp;
-				greaterThan = a_s < k_s;
-				break;
-			}
+			// Check if key is greater than attribute
+			greaterThan = ixIndexHandle->AttrSatisfiesCondition(attribute, LT_OP, ptr, ixIndexHandle->ixIndexHeader.attrType, ixIndexHandle->ixIndexHeader.attrLength);
 
 			// Found first greaterthan key, copy preceding page pointer
 			if (greaterThan){
@@ -467,7 +432,7 @@ RC IX_IndexScan::FindLeafNodeHelper(PageNum currPage, int currHeight, bool findM
 
 		// Did not find a greaterThan key, copy last page pointer
 		if (!greaterThan){
-			ptr += ixIndexHandle->ixIndexHeader.attrLength;
+			ptr = ixIndexHandle->GetKeyPtr(pData, numKeys) - sizeof(PageNum);
 			memcpy(&nextPage, ptr, sizeof(PageNum));
 		}
 	}
@@ -485,7 +450,7 @@ RC IX_IndexScan::FindLeafNodeHelper(PageNum currPage, int currHeight, bool findM
 	return FindLeafNodeHelper(nextPage, currHeight - 1, findMin, attribute, resultPage);
 }
 
-// Assumes at a leaf node
+// Assumes at a leaf or bucket node
 RC IX_IndexScan::GetNextPage(PageNum pageNum, PageNum &resultPage)
 {
 	// Get page data
@@ -505,10 +470,9 @@ RC IX_IndexScan::GetNextPage(PageNum pageNum, PageNum &resultPage)
 	}
 
 	PageNum nextPage;
-	char* ptr = pData;
 
 	// Set nextPage to bucket page first
-	ptr += sizeof(int);
+	char* ptr = pData + sizeof(int);
 	memcpy(&nextPage, ptr, sizeof(PageNum));
 
 	// if currently at leaf page, store right leaf
@@ -539,24 +503,3 @@ RC IX_IndexScan::GetNextPage(PageNum pageNum, PageNum &resultPage)
 	resultPage = nextPage;
 	return OK_RC;
 }
-
-
-/*
-RC IX_IndexScan::GetPage(PF_FileHandle fileHandle, PageNum pageNum, char* pData) const{
-	PF_PageHandle pfPageHandle = PF_PageHandle();
-	RC rc = fileHandle.GetThisPage(pageNum, pfPageHandle);
-	if (rc != OK_RC){
-		PrintError(rc);
-		return rc;
-	}
-
-	rc = pfPageHandle.GetData(pData);
-	if (rc != OK_RC){
-		fileHandle.UnpinPage(pageNum);
-		PrintError(rc);
-		return rc;
-	}
-
-	return OK_RC;
-}
-*/

@@ -1600,47 +1600,118 @@ bool IX_IndexHandle::AttributeEqualEntry(char* one, char* two){
 	return equal;
 }
 
-/*
-RC IX_IndexHandle::CreatePage(PF_FileHandle fileHandle, PageNum &pageNum, char* pData){
-	PF_PageHandle pfPageHandle;
-	RC rc = fileHandle.AllocatePage(pfPageHandle);
-	if (rc != OK_RC){
-		PrintError(rc);
-		return rc;
+// Assume one and two points directly to attributes
+bool IX_IndexHandle::AttrSatisfiesCondition(void* one, CompOp compOp, void* two, AttrType attrType, int attrLength) const
+{
+	// If no condition, true
+	if (compOp == NO_OP)
+		return true;
+
+	// Covert attribute and value to correct type
+	int o_i, t_i;
+	float o_f, t_f;
+	string o_s, t_s;
+	switch(attrType) {
+	case INT:
+		memcpy(&o_i, one, attrLength);
+		memcpy(&t_i, two, attrLength);
+        break;
+	case FLOAT:
+		memcpy(&o_f, one, attrLength);
+		memcpy(&t_f, two, attrLength);
+        break;
+	case STRING:
+		char* tmp = new char[attrLength];
+		memcpy(tmp, one, attrLength);
+		o_s = string(tmp);
+		memcpy(tmp, two, attrLength);
+		t_s = string(tmp);
+		delete [] tmp;
+        break;
 	}
 
-	rc = pfPageHandle.GetPageNum(pageNum);
-	if (rc != OK_RC){
-		PrintError(rc);
-		return rc;
+	// Check if fulfills condition
+	bool result = false;
+	switch(compOp) {
+	case EQ_OP:
+		switch(attrType) {
+		case INT:
+			result = (o_i == t_i);
+            break;
+		case FLOAT:
+			result = (o_f == t_f);
+            break;
+		case STRING:
+			result = (o_s == t_s);
+            break;
+		}
+        break;
+	case LT_OP:
+		switch(attrType) {
+		case INT:
+			result = (o_i < t_i);
+            break;
+		case FLOAT:
+			result = (o_f < t_f);
+            break;
+		case STRING:
+			result = (o_s < t_s);
+            break;
+		}
+        break;
+	case GT_OP:
+		switch(attrType) {
+		case INT:
+			result = (o_i > t_i);
+            break;
+		case FLOAT:
+			result = (o_f > t_f);
+            break;
+		case STRING:
+			result = (o_s > t_s);
+            break;
+		}
+        break;
+	case LE_OP:
+		switch(attrType) {
+		case INT:
+			result = (o_i <= t_i);
+            break;
+		case FLOAT:
+			result = (o_f <= t_f);
+            break;
+		case STRING:
+			result = (o_s <= t_s);
+            break;
+		}
+        break;
+	case GE_OP:
+		switch(attrType) {
+		case INT:
+			result = (o_i >= t_i);
+            break;
+		case FLOAT:
+			result = (o_f >= t_f);
+            break;
+		case STRING:
+			result = (o_s >= t_s);
+            break;
+		}
+        break;
+	case NE_OP:
+		switch(attrType) {
+		case INT:
+			result = (o_i != t_i);
+            break;
+		case FLOAT:
+			result = (o_f != t_f);
+            break;
+		case STRING:
+			result = (o_s != t_s);
+            break;
+		}
+        break;
 	}
 
-	// Get page data
-	rc = pfPageHandle.GetData(pData);
-	if (rc != OK_RC){
-		fileHandle.UnpinPage(pageNum);
-		PrintError(rc);
-		return rc;
-	}
-
-	return OK_RC;
+	return result;
 }
-
-RC IX_IndexHandle::GetPage(PF_FileHandle fileHandle, PageNum pageNum, char* pData) const{
-	PF_PageHandle pfPageHandle = PF_PageHandle();
-	RC rc = fileHandle.GetThisPage(pageNum, pfPageHandle);
-	if (rc != OK_RC){
-		PrintError(rc);
-		return rc;
-	}
-
-	rc = pfPageHandle.GetData(pData);
-	if (rc != OK_RC){
-		fileHandle.UnpinPage(pageNum);
-		PrintError(rc);
-		return rc;
-	}
-
-	return OK_RC;
-}
-*/
