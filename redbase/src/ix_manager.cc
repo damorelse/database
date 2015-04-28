@@ -52,7 +52,7 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
 	// Create file
 	stringstream ss;
 	ss << fileName << '.' << indexNo;
-	const char* indexName = ss.str().c_str();
+	const char* indexName = {ss.str().c_str()};
 
 	RC rc = pfManager->CreateFile(indexName);
 	if (rc != OK_RC){
@@ -170,7 +170,7 @@ RC IX_Manager::DestroyIndex(const char *fileName, int indexNo)
 	// Delete file
 	stringstream ss;
 	ss << fileName << '.' << indexNo;
-	const char* indexName = ss.str().c_str();
+	const char* indexName = {ss.str().c_str()};
 
 	RC rc = pfManager->DestroyFile(indexName);
 	if (rc != OK_RC){
@@ -203,7 +203,7 @@ RC IX_Manager::OpenIndex(const char *fileName, int indexNo,
 	// Open file handle
 	stringstream ss;
 	ss << fileName << '.' << indexNo;
-	const char* indexName = ss.str().c_str();
+	const char* indexName = {ss.str().c_str()};
 
 	RC rc = pfManager->OpenFile(indexName, indexHandle.pfFileHandle);
 	if (rc != OK_RC){
