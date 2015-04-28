@@ -1,6 +1,7 @@
 #include <cstring>
 #include <sstream>
 #include <cmath>
+#include <string>
 #include "ix.h"
 
 using namespace std;
@@ -56,16 +57,18 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
 	// Create file
 	stringstream ss;
 	ss << fileName << '.' << indexNo;
+	string buff= ss.str();
+
 	const char* indexName = {ss.str().c_str()};
 
-	RC rc = pfManager->CreateFile(indexName);
+	RC rc = pfManager->CreateFile(buff.c_str());
 	if (rc != OK_RC){
 		PrintError(rc);
 		return rc;
 	}
 
 	PF_FileHandle fileHandle = PF_FileHandle();
-	rc = pfManager->OpenFile(indexName, fileHandle);
+	rc = pfManager->OpenFile(buff.c_str(), fileHandle);
 	if (rc != OK_RC){
 		PrintError(rc);
 		return rc;
