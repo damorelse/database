@@ -235,7 +235,7 @@ void IX_IndexHandle::SetSlotBitValue(char* pData, const SlotNum slotNum, bool b)
 		pData[IX_BIT_START + slotNum / 8] &= ~( 1 << slotNum % 8);
 }
 
-RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribute, const RID &rid, PageNum &newChildPage, void* newAttribute)
+RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribute, const RID &rid, PageNum &newChildPage, void* &newAttribute)
 {
 	// Get page data
 	char *pData;
@@ -710,7 +710,7 @@ RC IX_IndexHandle::InternalInsert(PageNum pageNum, PageNum newChildPage, void* n
 	return OK_RC;
 }
 
-void IX_IndexHandle::MakeKeyCopyBack(char* pData, SlotNum insertIndex, PageNum &newChildPage, void* newAttribute, char* copyBack, int &copyBackSize, int &numKeys)
+void IX_IndexHandle::MakeKeyCopyBack(char* pData, SlotNum insertIndex, PageNum newChildPage, void* newAttribute, char* &copyBack, int &copyBackSize, int &numKeys)
 {
 	// Initialize state
 	memcpy(&numKeys, pData, sizeof(int));
@@ -809,7 +809,7 @@ RC IX_IndexHandle::LeafInsert(PageNum pageNum, void* attribute, const RID &rid)
 	return OK_RC;
 }
 
-void IX_IndexHandle::MakeEntryCopyBack(char* pData, void* attribute, const RID &rid, char* copyBack, int &copyBackSize, int &numEntries){
+void IX_IndexHandle::MakeEntryCopyBack(char* pData, void* attribute, const RID &rid, char*& copyBack, int &copyBackSize, int &numEntries){
 	// Read in attribute, covert attribute to correct type
 	int a_i;
 	float a_f;
@@ -1521,7 +1521,7 @@ void IX_IndexHandle::ChooseSubtree(char* pData, void* attribute, PageNum &nextPa
 	}
 }
 
-RC IX_IndexHandle::GetLastPageInBucketChain(PageNum &lastPage, char* lastData)
+RC IX_IndexHandle::GetLastPageInBucketChain(PageNum &lastPage, char*& lastData)
 {
 	PageNum firstPage = lastPage;
 	int bucketOffset = sizeof(int);
