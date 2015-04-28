@@ -5,8 +5,8 @@
 
 using namespace std;
 
-IX_IndexHandle::IX_IndexHandle(): open(false), modified(false), pfFileHandle(PF_FileHandle()), ixIndexHeader(IX_IndexHeader())
-{}
+IX_IndexHandle::IX_IndexHandle(): open(false), modified(false), pfFileHandle(PF_FileHandle()), ixIndexHeader(IX_IndexHeader()){}
+
 IX_IndexHandle::~IX_IndexHandle()
 {
 	// Assumes CloseIndex will be called before being deleted
@@ -760,9 +760,6 @@ void IX_IndexHandle::WriteInternalFromKeyCopyBack(char* pData, char* copyBack, i
 	ptr = NULL;
 }
 
-
-
-
 // Assume there is free space in leaf
 // Assumes leaf header is already set up
 RC IX_IndexHandle::LeafInsert(PageNum pageNum, void* attribute, const RID &rid)
@@ -810,25 +807,6 @@ RC IX_IndexHandle::LeafInsert(PageNum pageNum, void* attribute, const RID &rid)
 }
 
 void IX_IndexHandle::MakeEntryCopyBack(char* pData, void* attribute, const RID &rid, char*& copyBack, int &copyBackSize, int &numEntries){
-	// Read in attribute, covert attribute to correct type
-	int a_i;
-	float a_f;
-	string a_s;
-	switch(ixIndexHeader.attrType) {
-	case INT:
-		memcpy(&a_i, attribute, ixIndexHeader.attrLength);
-        break;
-	case FLOAT:
-		memcpy(&a_f, attribute, ixIndexHeader.attrLength);
-        break;
-	case STRING:
-		char* tmp = new char[ixIndexHeader.attrLength];
-		memcpy(tmp, attribute, ixIndexHeader.attrLength);
-		a_s = string(tmp);
-		delete [] tmp;
-        break;
-	}
-
 	// Initialize state
 	memcpy(&numEntries, pData, sizeof(int));
 	numEntries += 1;
@@ -848,27 +826,8 @@ void IX_IndexHandle::MakeEntryCopyBack(char* pData, void* attribute, const RID &
 			if(!inserted){
 				bool insertNow = false;
 
-				// Read in value, covert value to correct type
-				int v_i;
-				float v_f;
-				string v_s;
-				switch(ixIndexHeader.attrType) {
-				case INT:
-					memcpy(&v_i, ptr, ixIndexHeader.attrLength);
-					insertNow = (a_i < v_i);
-					break;
-				case FLOAT:
-					memcpy(&v_f, ptr, ixIndexHeader.attrLength);
-					insertNow = (a_f < v_f);
-					break;
-				case STRING:
-					char* tmp = new char[ixIndexHeader.attrLength];
-					memcpy(tmp, ptr, ixIndexHeader.attrLength);
-					v_s = string(tmp);
-					delete [] tmp;
-					insertNow = (a_s < v_s);
-					break;
-				}
+				// Check if attribute < attribute
+				insertNow = AttrSatisfiesCondition(attribute, LT_OP, ptr, ixIndexHeader.attrType, ixIndexHeader.attrLength);
 
 				if (insertNow){
 					// Write new entry to copyBack
@@ -974,42 +933,11 @@ RC IX_IndexHandle::SetSiblingPointers(PageNum L1Page, PageNum L2Page, char* L1, 
 bool IX_IndexHandle::ShouldBucket(void* attribute, char* pData){
 	char* first = GetEntryPtr(pData, 0);
 	char* last = GetEntryPtr(pData, ixIndexHeader.maxEntryIndex);
-	bool bucket = false;
-
-	int a_i, f_i, l_i;
-	float a_f, f_f, l_f;
-	string a_s, f_s, l_s;
-	switch(ixIndexHeader.attrType) {
-	case INT:
-		memcpy(&a_i, attribute, ixIndexHeader.attrLength);
-		memcpy(&f_i, first, ixIndexHeader.attrLength);
-		memcpy(&l_i, last, ixIndexHeader.attrLength);
-		bucket = (a_i == f_i && a_i == l_i);
-        break;
-	case FLOAT:
-		memcpy(&a_f, attribute, ixIndexHeader.attrLength);
-		memcpy(&f_f, first, ixIndexHeader.attrLength);
-		memcpy(&l_f, last, ixIndexHeader.attrLength);
-		bucket = (a_f == f_f && a_f == l_f);
-        break;
-	case STRING:
-		a_s = string((char*)attribute);
-		char* tmp = new char[ixIndexHeader.attrLength];
-		memcpy(tmp, first, ixIndexHeader.attrLength);
-		f_s = string(tmp);
-		memcpy(tmp, last, ixIndexHeader.attrLength);
-		l_s = string(tmp);
-		delete [] tmp;
-		bucket = (a_s == f_s && a_s == l_s);
-        break;
-	}
-	
-	return bucket;
+	bool equal = AttributeEqualEntry(first, last);
+	if (!equal)
+		return false;
+	return AttributeEqualEntry((char*)attribute, first);
 }
-
-
-
-
 
 RC IX_IndexHandle::DeleteEntryHelper(PageNum parentPage, PageNum currPage, int height, void* attribute, const RID &rid, PageNum &oldPage)
 {
@@ -1181,6 +1109,7 @@ RC IX_IndexHandle::InternalDelete(char* pData, SlotNum deleteKeyIndex, int &numK
 
 	return OK_RC;
 }
+
 RC IX_IndexHandle::LeafDelete(PageNum currPage, char* pData, void* attribute, const RID &rid, int &numEntries)
 {
 	PageNum deletePage = currPage;
@@ -1199,29 +1128,7 @@ RC IX_IndexHandle::LeafDelete(PageNum currPage, char* pData, void* attribute, co
 			SlotNum v_slot;
 			memcpy(&v_slot, ptr + attrLength + sizeof(PageNum), sizeof(SlotNum));
 			
-			int a_i, v_i;
-			float a_f, v_f;
-			string a_s, v_s;
-			switch(ixIndexHeader.attrType) {
-			case INT:
-				memcpy(&a_i, ptr, attrLength);
-				memcpy(&v_i, attribute, attrLength);
-				found = (a_i == v_i && rid.pageNum == v_page && rid.slotNum == v_slot);
-                break;
-			case FLOAT:
-				memcpy(&a_f, ptr, attrLength);
-				memcpy(&v_f, attribute, attrLength);
-				found = (a_f == v_f && rid.pageNum == v_page && rid.slotNum == v_slot);
-                break;
-			case STRING:
-				char* tmp = new char[attrLength];
-				memcpy(tmp, ptr, attrLength);
-				a_s = string(tmp);
-				v_s = string((char*)attribute);
-				delete [] tmp;
-				found = (a_s == v_s && rid.pageNum == v_page && rid.slotNum == v_slot);
-                break;
-			}
+			found = (rid.pageNum == v_page && rid.slotNum == v_slot && AttributeEqualEntry((char*)attribute, ptr));
 		}
 
 		// If not found, increment slot
@@ -1450,31 +1357,9 @@ RC IX_IndexHandle::LeafDelete(PageNum currPage, char* pData, void* attribute, co
 	return OK_RC;
 }
 
-
-
-
 void IX_IndexHandle::ChooseSubtree(char* pData, void* attribute, PageNum &nextPage, int &numKeys, SlotNum &keyNum)
 {
 	char* ptr;
-
-	// Convert attribute to correct type
-	int a_i;
-	float a_f;
-	string a_s;
-	switch(ixIndexHeader.attrType) {
-	case INT:
-		memcpy(&a_i, attribute, ixIndexHeader.attrLength);
-		break;
-	case FLOAT:
-		memcpy(&a_f, attribute, ixIndexHeader.attrLength);
-		break;
-	case STRING:
-		char* tmp = new char[ixIndexHeader.attrLength];
-		memcpy(tmp, attribute, ixIndexHeader.attrLength);
-		a_s = string(tmp);
-		delete [] tmp;
-		break;
-	}
 
 	// Get number of keys
 	memcpy(&numKeys, pData, sizeof(int));
@@ -1485,28 +1370,9 @@ void IX_IndexHandle::ChooseSubtree(char* pData, void* attribute, PageNum &nextPa
 	for (; !greaterThan && keyNum < numKeys; ++keyNum){
 		ptr = GetKeyPtr(pData, keyNum);
 
-		// Convert key into correct form, check if greater than
-		int k_i;
-		float k_f;
-		string k_s;
-		switch(ixIndexHeader.attrType) {
-		case INT:
-			memcpy(&k_i, ptr, ixIndexHeader.attrLength);
-			greaterThan = a_i < k_i;
-			break;
-		case FLOAT:
-			memcpy(&k_f, ptr, ixIndexHeader.attrLength);
-			greaterThan = a_f < k_f;
-			break;
-		case STRING:
-			char* tmp = new char[ixIndexHeader.attrLength];
-			memcpy(tmp, ptr, ixIndexHeader.attrLength);
-			k_s = string(tmp);
-			delete [] tmp;
-			greaterThan = a_s < k_s;
-			break;
-		}
-
+		// Check if greater than
+		greaterThan = AttrSatisfiesCondition(attribute, LT_OP, ptr, ixIndexHeader.attrType, ixIndexHeader.attrLength);
+		
 		// Found first greaterthan key, copy preceding page pointer
 		if (greaterThan){
 			ptr -= sizeof(PageNum);
@@ -1569,35 +1435,7 @@ RC IX_IndexHandle::GetLastPageInBucketChain(PageNum &lastPage, char*& lastData)
 }
 
 bool IX_IndexHandle::AttributeEqualEntry(char* one, char* two){
-	bool equal = false;
-	int attrLength = ixIndexHeader.attrLength;
-
-	int a_i, v_i;
-	float a_f, v_f;
-	string a_s, v_s;
-	switch(ixIndexHeader.attrType) {
-	case INT:
-		memcpy(&a_i, one, attrLength);
-		memcpy(&v_i, two, attrLength);
-		equal = (a_i == v_i);
-        break;
-	case FLOAT:
-		memcpy(&a_f, one, attrLength);
-		memcpy(&v_f, two, attrLength);
-		equal = (a_f == v_f);
-        break;
-	case STRING:
-		char* tmp = new char[attrLength];
-		memcpy(tmp, one, attrLength);
-		a_s = string(tmp);
-		memcpy(tmp, two, attrLength);
-		v_s = string(tmp);
-		delete [] tmp;
-		equal = (a_s == v_s);
-        break;
-	}
-
-	return equal;
+	return AttrSatisfiesCondition(one, EQ_OP, two, ixIndexHeader.attrType, ixIndexHeader.attrLength);
 }
 
 // Assume one and two points directly to attributes

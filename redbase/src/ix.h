@@ -62,10 +62,10 @@ public:
     ~IX_IndexHandle();
 
     // Insert a new index entry
-    RC InsertEntry(void *attribute, const RID &rid); //TODO
+    RC InsertEntry(void *attribute, const RID &rid); //TODO: hesitantly
 
     // Delete a new index entry
-    RC DeleteEntry(void *attribute, const RID &rid); //TODO
+    RC DeleteEntry(void *attribute, const RID &rid); //TODO: hesitantly
 
     // Force index files to disk
     RC ForcePages();
@@ -103,7 +103,7 @@ private:
 
 	// Both Insert/Delete helper functions
 	void ChooseSubtree(char* pData, void* attribute, PageNum &nextPage, int &numKeys, SlotNum &keyNum);
-	RC GetLastPageInBucketChain(PageNum &lastPage, char*& lastData);
+	RC GetLastPageInBucketChain(PageNum &lastPage, char*& lastData); //TODO
 	bool AttributeEqualEntry(char* one, char* two);
 	bool AttrSatisfiesCondition(void* one, CompOp compOp, void* two, AttrType attrType, int attrLength) const;
 };
