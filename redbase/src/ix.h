@@ -70,7 +70,6 @@ public:
     // Force index files to disk
     RC ForcePages();
 
-private:
 	bool open;
 	bool modified;
 	PF_FileHandle pfFileHandle;
@@ -81,6 +80,7 @@ private:
 	bool GetSlotBitValue(char* pData, const SlotNum slotNum) const;   // Read a specific entry's bit value in page header
 	void SetSlotBitValue(char* pData, const SlotNum slotNum, bool b); // Write a specific entry's bit value in page header
 
+private:
 	// Insert helper functions
 	RC InsertEntryHelper(PageNum currPage, int height, void* attribute, const RID &rid, PageNum &newChildPage, char* &newAttribute);
 	// Internal insert
