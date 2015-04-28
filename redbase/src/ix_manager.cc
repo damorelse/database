@@ -50,14 +50,15 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
 	// End check input
 
 	// Create file
-	RC rc = pfManager->CreateFile(GetIndexFileName(fileName, indexNo));
+	const char* filename = GetIndexFileName(fileName, indexNo);
+	RC rc = pfManager->CreateFile(filename);
 	if (rc != OK_RC){
 		PrintError(rc);
 		return rc;
 	}
 
 	PF_FileHandle fileHandle = PF_FileHandle();
-	rc = pfManager->OpenFile(GetIndexFileName(fileName, indexNo), fileHandle);
+	rc = pfManager->OpenFile(filename, fileHandle);
 	if (rc != OK_RC){
 		PrintError(rc);
 		return rc;
