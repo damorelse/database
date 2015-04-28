@@ -361,6 +361,11 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 // Close index scan
 RC IX_IndexScan::CloseScan()
 {
+	if (!finished){
+		PrintError(IX_SCANNOTFINISHED);
+		return IX_SCANNOTFINISHED;
+	}
+
 	// Set state
 	ixIndexHandle = NULL;
 	open = false;

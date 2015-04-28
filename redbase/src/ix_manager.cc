@@ -31,6 +31,10 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
 	}
 
 	// Given can assume indexNo is unique and positive.
+	if (indexNo < 1){
+		PrintError(IX_INVALIDNUM);
+		return IX_INVALIDNUM;
+	}
 
 	// Check attribute type is one of the three allowed
 	if (attrType != INT && attrType != FLOAT && attrType != STRING){

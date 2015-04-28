@@ -1472,8 +1472,6 @@ bool IX_IndexHandle::AttrSatisfiesCondition(void* one, CompOp compOp, void* two,
 		switch(attrType) {
 		case INT:
 			result = (o_i < t_i);
-            if (result)
-                cerr << "\n" << o_i << " < " << t_i << endl;
             break;
 		case FLOAT:
 			result = (o_f < t_f);

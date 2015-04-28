@@ -180,7 +180,7 @@ public:
 private:
 	PF_Manager* pfManager;
 
-	string GetIndexFileName(const char *fileName, int indexNo);
+	const char* GetIndexFileName(const char *fileName, int indexNo);
 
 	int CalculateMaxKeys(int attrLength);  //Calculate max number of entries that will fit in one page
 	int CalculateMaxEntries(int attrLength);  //Calculate max number of entries that will fit in one page
@@ -200,6 +200,7 @@ void IX_PrintError(RC rc);
 #define IX_ENTRYDNE				 (START_IX_WARN + 1)
 #define IX_FILESCANREOPEN		 (START_IX_WARN + 2)
 #define IX_EOF					 (START_IX_WARN + 3)
+#define IX_SCANNOTFINISHED       (START_IX_WARN + 4)
 #define IX_LASTWARN		END_IX_WARN                  //TODO: set
 
 #define IX_INVALIDENUM           (START_IX_ERR - 0)
@@ -208,6 +209,7 @@ void IX_PrintError(RC rc);
 #define IX_NUMLEN				 (START_IX_ERR - 3)
 #define IX_FILENAMELEN			 (START_IX_ERR - 4)
 #define IX_INVALIDSCANCOMBO      (START_IX_ERR - 5)
+#define IX_INVALIDNUM            (START_IX_ERR - 6)
 #define IX_LASTERROR	END_IX_ERR                   //TODO: set
 
 
