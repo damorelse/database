@@ -78,7 +78,7 @@ RC IX_IndexHandle::InsertEntry(void *attribute, const RID &rid)
 		ptr += sizeof(int);
 		memcpy(ptr, &ixIndexHeader.rootPage, sizeof(PageNum));
 		ptr += sizeof(PageNum);
-		memcpy(ptr, &newAttribute, ixIndexHeader.attrLength);
+		memcpy(ptr, newAttribute, ixIndexHeader.attrLength);
 		ptr += ixIndexHeader.attrLength;
 		memcpy(ptr, &newChildPage, sizeof(PageNum));
 
@@ -139,7 +139,7 @@ RC IX_IndexHandle::DeleteEntry(void *attribute, const RID &rid)
 
 	// Recursive delete call
 	PageNum oldPage = IX_NO_PAGE;
-	rc = DeleteEntryHelper(IX_NO_PAGE, ixIndexHeader.rootPage, ixIndexHeader.height, attribute, rid, oldPage);
+	rc = DeleteEntryHelper(ixIndexHeader.rootPage, ixIndexHeader.height, attribute, rid, oldPage);
 	if (rc != OK_RC)
 		return rc;
 
@@ -416,13 +416,14 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 		}
 		// Leaf is full, special case for bucket chaining
 		else if (ShouldBucket(attribute, pData)){
-			PageNum lastPage = currPage;
-			char* lastData = pData;
-			GetLastPageInBucketChain(lastPage, lastData); // TODO: unpinning currPage pages
+			// Update pinned pages to last page in bucket chain
+			rc = GetLastPageInBucketChain(currPage, pData);
+			if (rc != OK_RC)
+				return rc;
 
 			// Get number of entries in last bucket page
 			int lastEntries;
-			memcpy(&lastEntries, lastData, sizeof(int));
+			memcpy(&lastEntries, pData, sizeof(int));
 
 			// Bucket page full
 			if (lastEntries - 1 == ixIndexHeader.maxEntryIndex){
@@ -472,12 +473,12 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 				LeafInsert(newBucket, attribute, rid);
 
 				// Change lastPage's header nextBucketPage
-				memcpy(lastData + sizeof(int), &newBucket, sizeof(PageNum));
+				memcpy(pData + sizeof(int), &newBucket, sizeof(PageNum));
 
 				// Mark pages as dirty
-				rc = pfFileHandle.MarkDirty(lastPage);
+				rc = pfFileHandle.MarkDirty(currPage);
 				if (rc != OK_RC){
-					pfFileHandle.UnpinPage(lastPage);
+					pfFileHandle.UnpinPage(currPage);
 					pfFileHandle.UnpinPage(newBucket);
 					PrintError(rc);
 					return rc;
@@ -493,23 +494,22 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 				newBucketData = NULL;
 				rc = pfFileHandle.UnpinPage(newBucket);
 				if (rc != OK_RC){
-					pfFileHandle.UnpinPage(lastPage);
+					pfFileHandle.UnpinPage(currPage);
 					PrintError(rc);
 					return rc;
 				}
 			}
 			// Bucket page not full
 			else {
-				rc = LeafInsert(lastPage, attribute, rid);
+				rc = LeafInsert(currPage, attribute, rid);
 				if (rc != OK_RC){
-					pfFileHandle.UnpinPage(lastPage);
+					pfFileHandle.UnpinPage(currPage);
 					return rc;
 				}
 			}
 
 			pData = NULL;
-			lastData = NULL;
-			rc = pfFileHandle.UnpinPage(lastPage);
+			rc = pfFileHandle.UnpinPage(currPage);
 			if (rc != OK_RC){
 				PrintError(rc);
 				return rc;
@@ -939,7 +939,7 @@ bool IX_IndexHandle::ShouldBucket(void* attribute, char* pData){
 	return AttributeEqualEntry((char*)attribute, first);
 }
 
-RC IX_IndexHandle::DeleteEntryHelper(PageNum parentPage, PageNum currPage, int height, void* attribute, const RID &rid, PageNum &oldPage)
+RC IX_IndexHandle::DeleteEntryHelper(PageNum currPage, int height, void* attribute, const RID &rid, PageNum &oldPage)
 {
 	// Get page data
 	char *pData;
@@ -966,7 +966,7 @@ RC IX_IndexHandle::DeleteEntryHelper(PageNum parentPage, PageNum currPage, int h
 		ChooseSubtree(pData, attribute, nextPage, numKeys, deleteKeyIndex);
 
 		// Recursive delete
-		DeleteEntryHelper(currPage, nextPage, height-1, attribute, rid, oldPage);
+		DeleteEntryHelper(nextPage, height-1, attribute, rid, oldPage);
 
 		// Usual case, child not deleted
 		if (oldPage == IX_NO_PAGE){
@@ -979,7 +979,7 @@ RC IX_IndexHandle::DeleteEntryHelper(PageNum parentPage, PageNum currPage, int h
 		}
 		// We discarded child node
 		else{
-			rc = InternalDelete(pData, deleteKeyIndex, numKeys);
+			InternalDelete(pData, deleteKeyIndex, numKeys);
 
 			// Node not empty, usual case
 			if (numKeys != 0){
@@ -1082,7 +1082,8 @@ RC IX_IndexHandle::DeleteEntryHelper(PageNum parentPage, PageNum currPage, int h
 	return OK_RC;
 }
 
-RC IX_IndexHandle::InternalDelete(char* pData, SlotNum deleteKeyIndex, int &numKeys)
+// Does not mark page dirty
+void IX_IndexHandle::InternalDelete(char* pData, SlotNum deleteKeyIndex, int &numKeys)
 {
 	// Move pointer to page pointer before key
 	int keySize = ixIndexHeader.attrLength + sizeof(PageNum);
@@ -1097,17 +1098,15 @@ RC IX_IndexHandle::InternalDelete(char* pData, SlotNum deleteKeyIndex, int &numK
 
 	// Delete page pointer and an entry
 	char* destPtr = pData + skipOffset;
-	char* srcPtr = pData + skipOffset + ixIndexHeader.attrLength + sizeof(PageNum);
+	char* srcPtr = pData + skipOffset + keySize;
 
-	int difference = skipOffset + ixIndexHeader.attrLength + sizeof(PageNum);
+	int difference = skipOffset + keySize;
 	int size = totalSize - difference;
 	memcpy(destPtr, srcPtr, size);
 
 	// Update numKeys in header
 	numKeys -= 1;
 	memcpy(pData, &numKeys, sizeof(int));
-
-	return OK_RC;
 }
 
 RC IX_IndexHandle::LeafDelete(PageNum currPage, char* pData, void* attribute, const RID &rid, int &numEntries)
@@ -1366,8 +1365,7 @@ void IX_IndexHandle::ChooseSubtree(char* pData, void* attribute, PageNum &nextPa
 
 	// Iterate through keys until find first key greater than attribute.
 	bool greaterThan = false;
-	keyNum = 0;
-	for (; !greaterThan && keyNum < numKeys; ++keyNum){
+	for (keyNum = 0; keyNum < numKeys; ++keyNum){
 		ptr = GetKeyPtr(pData, keyNum);
 
 		// Check if greater than
@@ -1377,6 +1375,7 @@ void IX_IndexHandle::ChooseSubtree(char* pData, void* attribute, PageNum &nextPa
 		if (greaterThan){
 			ptr -= sizeof(PageNum);
 			memcpy(&nextPage, ptr, sizeof(PageNum));
+			break;
 		}
 	}
 
@@ -1387,44 +1386,36 @@ void IX_IndexHandle::ChooseSubtree(char* pData, void* attribute, PageNum &nextPa
 	}
 }
 
-RC IX_IndexHandle::GetLastPageInBucketChain(PageNum &lastPage, char*& lastData)
+RC IX_IndexHandle::GetLastPageInBucketChain(PageNum &currPage, char*& pData)
 {
-	PageNum firstPage = lastPage;
-	int bucketOffset = sizeof(int);
 	PageNum bucket;
-	RC rc;
-
-	// Find last page in bucket chain
 	do {
 		// Check if there is a next bucket page
-		memcpy(&bucket, lastData + bucketOffset, sizeof(PageNum));
+		memcpy(&bucket, pData + sizeof(int), sizeof(PageNum));
 
 		// Next bucket page exists
 		if (bucket != IX_NO_PAGE){
-			if (lastPage != firstPage){
-				// Unpin last page
-				rc = pfFileHandle.UnpinPage(lastPage);
-				if (rc != OK_RC){
-					PrintError(rc);
-					return rc;
-				}
-				lastData = NULL;
-			}
-
-			// Update lastPage
-			lastPage = bucket;
-
-			// Get new page data
-			//rc = GetPage(pfFileHandle, lastPage, lastData);
-			PF_PageHandle pfPageHandle = PF_PageHandle();
-			rc = pfFileHandle.GetThisPage(lastPage, pfPageHandle);
+			// Unpin last page
+			RC rc = pfFileHandle.UnpinPage(currPage);
 			if (rc != OK_RC){
 				PrintError(rc);
 				return rc;
 			}
-			rc = pfPageHandle.GetData(lastData);
+
+			// Update currPage
+			currPage = bucket;
+
+			// Get new page data
+			//rc = GetPage(pfFileHandle, lastPage, lastData);
+			PF_PageHandle pfPageHandle = PF_PageHandle();
+			RC rc = pfFileHandle.GetThisPage(currPage, pfPageHandle);
 			if (rc != OK_RC){
-				pfFileHandle.UnpinPage(lastPage);
+				PrintError(rc);
+				return rc;
+			}
+			rc = pfPageHandle.GetData(pData);
+			if (rc != OK_RC){
+				pfFileHandle.UnpinPage(currPage);
 				PrintError(rc);
 				return rc;
 			}

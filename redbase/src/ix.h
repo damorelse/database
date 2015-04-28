@@ -62,10 +62,10 @@ public:
     ~IX_IndexHandle();
 
     // Insert a new index entry
-    RC InsertEntry(void *attribute, const RID &rid); //TODO: hesitantly
+    RC InsertEntry(void *attribute, const RID &rid);
 
     // Delete a new index entry
-    RC DeleteEntry(void *attribute, const RID &rid); //TODO: hesitantly
+    RC DeleteEntry(void *attribute, const RID &rid);
 
     // Force index files to disk
     RC ForcePages();
@@ -97,13 +97,14 @@ private:
 	bool ShouldBucket(void* attribute, char* pData);
 
 	// Delete helper functions
-	RC DeleteEntryHelper(PageNum parentPage, PageNum currPage, int height, void* attribute, const RID &rid, PageNum &oldPage);
-	RC InternalDelete(char* pData, SlotNum deleteKeyIndex, int &numKeys);
-	RC LeafDelete(PageNum currPage, char* pData, void* attribute, const RID &rid, int &numEntries);
+	RC DeleteEntryHelper(PageNum currPage, int height, void* attribute, const RID &rid, PageNum &oldPage);
+	void InternalDelete(char* pData, SlotNum deleteKeyIndex, int &numKeys);
+	RC LeafDelete(PageNum currPage, char* pData, void* attribute, const RID &rid, int &numEntries); //TODO
+	// TODO: BEFORE THIS POINT
 
 	// Both Insert/Delete helper functions
 	void ChooseSubtree(char* pData, void* attribute, PageNum &nextPage, int &numKeys, SlotNum &keyNum);
-	RC GetLastPageInBucketChain(PageNum &lastPage, char*& lastData); //TODO
+	RC GetLastPageInBucketChain(PageNum &currPage, char*& pData);
 	bool AttributeEqualEntry(char* one, char* two);
 	bool AttrSatisfiesCondition(void* one, CompOp compOp, void* two, AttrType attrType, int attrLength) const;
 };
