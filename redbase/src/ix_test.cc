@@ -513,7 +513,7 @@ RC PrintIndex(IX_IndexHandle &ih){
 		myQueue.pop();
 
 		if (tmp.first != prevHeight){
-			cerr << "\n\nheight: " << tmp.first << endl;
+			cerr << "\n\n\nheight: " << tmp.first << endl;
 			prevHeight = tmp.first;
 		}
 		
@@ -539,7 +539,13 @@ RC PrintIndex(IX_IndexHandle &ih){
 				if (GetSlotBitValue(pData, slotNum)){
 					char* ptr = GetEntryPtr(ih.ixIndexHeader, pData, slotNum);
 					memcpy(array, ptr, entrySize);
-					cerr << "  " <<  array; // Print entry
+					ptr += ih.ixIndexHeader.attrLength;
+					PageNum p;
+					SlotNum s;
+					memcpy(&p, ptr, sizeof(PageNum));
+					ptr += sizeof(PageNum);
+					memcpy(&s, ptr, sizeof(SlotNum));
+					cerr << "  " <<  p << ":" << s; // Print entry
 				}
 			}
 
@@ -566,7 +572,13 @@ RC PrintIndex(IX_IndexHandle &ih){
 					if (GetSlotBitValue(bData, slotNum)){
 						char* ptr = GetEntryPtr(ih.ixIndexHeader, bData, slotNum);
 						memcpy(array, ptr, entrySize);
-						cerr << "  " <<  array; // Print entry
+						ptr += ih.ixIndexHeader.attrLength;
+						PageNum p;
+						SlotNum s;
+						memcpy(&p, ptr, sizeof(PageNum));
+						ptr += sizeof(PageNum);
+						memcpy(&s, ptr, sizeof(SlotNum));
+						cerr << "  " <<  p << ":" << s; // Print entry
 					}
 				}
 
@@ -589,8 +601,9 @@ RC PrintIndex(IX_IndexHandle &ih){
 			char* array = new char[keySize];
 			for (SlotNum slotNum = 0; slotNum < numKeys; ++slotNum){
 				char* ptr = GetKeyPtr(ih.ixIndexHeader, pData, slotNum);
-				memcpy(array, ptr, keySize);
-				cerr << " " << array; //Print key
+				int attr;
+				memcpy(&attr, ptr, sizeof(int));
+				cerr << " " << attr; //Print key
 				
 				ptr -= sizeof(PageNum);
 				PageNum pageTmp;
