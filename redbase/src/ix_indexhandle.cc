@@ -37,10 +37,10 @@ RC IX_IndexHandle::InsertEntry(void *attribute, const RID &rid)
 	if (rc != OK_RC)
 		return rc;
 	// End check input.
-	
+
 	// Recursive call
 	PageNum newChildPage = IX_NO_PAGE;
-	void* newAttribute = new char[ixIndexHeader.attrLength];
+	char* newAttribute = new char[ixIndexHeader.attrLength];
 	rc = InsertEntryHelper(ixIndexHeader.rootPage, ixIndexHeader.height, attribute, rid, newChildPage, newAttribute);
 	if (rc != OK_RC)
 		return rc;
@@ -235,7 +235,7 @@ void IX_IndexHandle::SetSlotBitValue(char* pData, const SlotNum slotNum, bool b)
 		pData[IX_BIT_START + slotNum / 8] &= ~( 1 << slotNum % 8);
 }
 
-RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribute, const RID &rid, PageNum &newChildPage, void* &newAttribute)
+RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribute, const RID &rid, PageNum &newChildPage, char* &newAttribute)
 {
 	// Get page data
 	char *pData;
@@ -252,7 +252,6 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 		PrintError(rc);
 		return rc;
 	}
-
 	// If at an internal node...
 	if (height != 0){
 		PageNum nextPage;

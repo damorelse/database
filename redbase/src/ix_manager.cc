@@ -294,7 +294,7 @@ int IX_Manager::CalculateMaxEntries(int attrLength)
 	return floor((PF_PAGE_SIZE - sizeof(int) - 3*sizeof(PageNum)) / (attrLength + sizeof(PageNum) + sizeof(SlotNum) + 1/8.0));
 }
 
-RC IX_Manager::CreateEmptyRoot(PF_FileHandle fileHandle, int attrLength, PageNum &pageNum)
+RC IX_Manager::CreateEmptyRoot(PF_FileHandle &fileHandle, int attrLength, PageNum &pageNum)
 {
 	SlotNum maxEntry = CalculateMaxEntries(attrLength);
 
