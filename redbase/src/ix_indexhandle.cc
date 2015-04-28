@@ -1408,7 +1408,7 @@ RC IX_IndexHandle::GetLastPageInBucketChain(PageNum &currPage, char*& pData)
 			// Get new page data
 			//rc = GetPage(pfFileHandle, lastPage, lastData);
 			PF_PageHandle pfPageHandle = PF_PageHandle();
-			RC rc = pfFileHandle.GetThisPage(currPage, pfPageHandle);
+			rc = pfFileHandle.GetThisPage(currPage, pfPageHandle);
 			if (rc != OK_RC){
 				PrintError(rc);
 				return rc;
