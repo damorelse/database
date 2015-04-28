@@ -482,6 +482,13 @@ RC VerifyIntIndex(IX_IndexHandle &ih, int nStart, int nEntries, int bExists)
    return (0);
 }
 
+RC PrintIndex(IX_IndexHandle &ih){
+   	
+
+
+	return 0;
+}
+
 /////////////////////////////////////////////////////////////////////
 // Sample test functions follow.                                   //
 /////////////////////////////////////////////////////////////////////
@@ -526,8 +533,12 @@ RC Test2(void)
          (rc = ixm.OpenIndex(FILENAME, index, ih)) ||
          (rc = InsertIntEntries(ih, FEW_ENTRIES)) ||
          (rc = ixm.CloseIndex(ih)) ||
-         (rc = ixm.OpenIndex(FILENAME, index, ih)) ||
-
+         (rc = ixm.OpenIndex(FILENAME, index, ih)))
+      return rc;
+   printf("opened index after insert\n");
+   PrintIndex(ih);
+   if (
+         
          // ensure inserted entries are all there
          (rc = VerifyIntIndex(ih, 0, FEW_ENTRIES, TRUE)) ||
 

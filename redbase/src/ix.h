@@ -100,12 +100,14 @@ private:
 	void InternalDelete(char* pData, SlotNum deleteKeyIndex, int &numKeys);
 	RC LeafDelete(PageNum currPage, char* pData, void* attribute, const RID &rid, int &numEntries);
 
-
 	// Both Insert/Delete helper functions
 	void ChooseSubtree(char* pData, void* attribute, PageNum &nextPage, int &numKeys, SlotNum &keyNum);
 	RC GetLastPageInBucketChain(PageNum &currPage, char*& pData);
 	bool AttributeEqualEntry(char* one, char* two);
 	bool AttrSatisfiesCondition(void* one, CompOp compOp, void* two, AttrType attrType, int attrLength) const;
+
+	//RC CreatePage(PF_FileHandle &fileHandle, PageNum &pageNum, char* pData);
+    //RC GetPage(PF_FileHandle &fileHandle, PageNum pageNum, char* pData) const;
 };
 
 //
@@ -148,6 +150,9 @@ private:
 	RC FindLeafNodeHelper(PageNum currPage, int currHeight, bool findMin, void* attribute, PageNum &resultPage) const;
 
 	RC GetNextPage(PageNum pageNum, PageNum &resultPage);
+
+    //RC GetPage(PF_FileHandle &fileHandle, PageNum pageNum, char* pData) const;
+
 };
 
 //
@@ -182,9 +187,8 @@ private:
 
 	RC CreateEmptyRoot(PF_FileHandle &pfFileHandle, int attrLength, PageNum &resultPage);
 
-	// TODO: temp
-	//RC CreatePage(PF_FileHandle fileHandle, PageNum &pageNum, char* pData);
-    //RC GetPage(PF_FileHandle fileHandle, PageNum pageNum, char* pData) const;
+	//RC CreatePage(PF_FileHandle &fileHandle, PageNum &pageNum, char* pData);
+    //RC GetPage(PF_FileHandle &fileHandle, PageNum pageNum, char* pData) const;
 };
 
 //
