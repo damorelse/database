@@ -32,7 +32,7 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
 	}
 
 	// Given can assume indexNo is unique and positive.
-	if (indexNo < 1){
+	if (indexNo < 0){
 		PrintError(IX_INVALIDNUM);
 		return IX_INVALIDNUM;
 	}
