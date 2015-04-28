@@ -94,30 +94,40 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 	PageNum prevPage = pageNum;
 	bool found = false;
 
-	// Read previous entry if entry still filled
-	if (ixIndexHandle->GetSlotBitValue(pData, entryNum)){
+	// Determine whether to increment entry iterator
+	bool increment = false;
+	// Entry now empty
+	if (!ixIndexHandle->GetSlotBitValue(pData, entryNum))
+		increment = true;
+	// Entry still filled
+	else {
+		// Read previous entry
 		char* charArrTmp = new char[entrySize];
 		memcpy(charArrTmp, ixIndexHandle->GetEntryPtr(pData, entryNum), entrySize);
 
-		// If previous entry is the same, increment entry iterator
-		if (memcmp(charArrTmp, lastEntry, entrySize) == 0){
-			// Increment entry num
-			entryNum += 1;
-			if (entryNum > ixIndexHandle->ixIndexHeader.maxEntryIndex){
-				rc = GetNextPage(prevPage, pageNum);
-				if (rc != OK_RC){
-					ixIndexHandle->pfFileHandle.UnpinPage(prevPage);
-					return rc;
-				}
-				entryNum = 0;
-			}
-		}
+		// If previous entry is unchanged, need to increment entry iterator
+		if (memcmp(charArrTmp, lastEntry, entrySize) == 0)
+			increment = true;
 
 		delete [] charArrTmp;
 	}
+	if (increment){
+		// Increment entry
+		entryNum += 1;
+		// If entry now out of range
+		if (entryNum > ixIndexHandle->ixIndexHeader.maxEntryIndex){
+			entryNum = 0;
+			// Find next page
+			rc = GetNextPage(prevPage, pageNum);
+			if (rc != OK_RC){
+				ixIndexHandle->pfFileHandle.UnpinPage(prevPage);
+				return rc;
+			}			
+		}
+	}
+	// End determine whether to increment entry iterator
 
-	// TODO: CHECK STARTING HERE
-	// If switched to new page...
+	// If switched to new page, clean up and update pData
 	if (prevPage != pageNum){
 		// Unpin last page
 		rc = ixIndexHandle->pfFileHandle.UnpinPage(prevPage);
@@ -156,6 +166,7 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 		return IX_EOF;
 	}
 
+	// TODO: CHECK STARTING HERE
 	// Iterate through pages and entries until find one that satisfies condition (or EOF)
 	while (!found && !finished){
 		// If record exists in slot
