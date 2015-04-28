@@ -11,6 +11,7 @@ static char *IX_WarnMsg[] = {
   (char*)"entry does not exist, cannot delete",
   (char*)"file scan already opened, do not re-open",
   (char*)"end of file",
+  (char*)"trying to close before scan finished",
 };
 
 static char *IX_ErrorMsg[] = {
@@ -20,6 +21,7 @@ static char *IX_ErrorMsg[] = {
 	(char*)"invalid number length, should be 4",
 	(char*)"invalid file name length",
 	(char*)"invalid scan parameters; either value null and compOp not NO_OP, or value not null and compOp NO_OP",
+	(char*)"invalid index number",
 };
 
 void IX_PrintError(RC rc)
