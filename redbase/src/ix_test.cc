@@ -221,9 +221,10 @@ RC InsertIntEntries(IX_IndexHandle &ih, int nEntries)
    for(i = 0; i < nEntries; i++) {
       value = values[i] + 1;
       RID rid(value, value*2);
+      cerr << "\nInserting " << value << endl;
       if ((rc = ih.InsertEntry((void *)&value, rid)))
          return (rc);
-
+      PrintIndex(ih);
       if((i + 1) % PROG_UNIT == 0){
          // cast to long for PC's
          printf("\r\t%d%%    ", (int)((i+1)*100L/nEntries));
@@ -513,7 +514,7 @@ RC PrintIndex(IX_IndexHandle &ih){
 		myQueue.pop();
 
 		if (tmp.first != prevHeight){
-			cerr << "\n\n\nheight: " << tmp.first << endl;
+			cerr << "\nheight: " << tmp.first << endl;
 			prevHeight = tmp.first;
 		}
 		
@@ -539,13 +540,15 @@ RC PrintIndex(IX_IndexHandle &ih){
 				if (GetSlotBitValue(pData, slotNum)){
 					char* ptr = GetEntryPtr(ih.ixIndexHeader, pData, slotNum);
 					memcpy(array, ptr, entrySize);
+                    int attr;
+                    memcpy(&attr, ptr, 4);
 					ptr += ih.ixIndexHeader.attrLength;
 					PageNum p;
 					SlotNum s;
 					memcpy(&p, ptr, sizeof(PageNum));
 					ptr += sizeof(PageNum);
 					memcpy(&s, ptr, sizeof(SlotNum));
-					cerr << "  " <<  p << ":" << s; // Print entry
+					cerr << "  " << attr << ":" <<  p << ":" << s; // Print entry
 				}
 			}
 

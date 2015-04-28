@@ -821,6 +821,7 @@ void IX_IndexHandle::MakeEntryCopyBack(char* pData, void* attribute, const RID &
 	// Determine where to insert new entry
 	for (SlotNum readIndex = 0; readIndex <= ixIndexHeader.maxEntryIndex; ++readIndex){
 		if (GetSlotBitValue(pData, readIndex)){
+            ptr = GetEntryPtr(pData, readIndex);
 			// if not inserted, determine if should insert now
 			if(!inserted){
 				// Check if attribute < attribute
@@ -841,7 +842,6 @@ void IX_IndexHandle::MakeEntryCopyBack(char* pData, void* attribute, const RID &
 			}
 
 			// Write entry to copyBack
-			ptr = GetEntryPtr(pData, readIndex);
 			memcpy(copyBackPtr, ptr, entrySize);
 			copyBackPtr += entrySize;
 		}
@@ -1472,6 +1472,8 @@ bool IX_IndexHandle::AttrSatisfiesCondition(void* one, CompOp compOp, void* two,
 		switch(attrType) {
 		case INT:
 			result = (o_i < t_i);
+            if (result)
+                cerr << "\n" << o_i << " < " << t_i << endl;
             break;
 		case FLOAT:
 			result = (o_f < t_f);
