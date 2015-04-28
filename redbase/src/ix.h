@@ -81,13 +81,11 @@ private:
 	bool GetSlotBitValue(char* pData, const SlotNum slotNum) const;   // Read a specific entry's bit value in page header
 	void SetSlotBitValue(char* pData, const SlotNum slotNum, bool b); // Write a specific entry's bit value in page header
 
-	// TODO: AFTER THIS POINT
 	// Insert helper functions
 	RC InsertEntryHelper(PageNum currPage, int height, void* attribute, const RID &rid, PageNum &newChildPage, void* &newAttribute);
 	// Internal insert
 	RC InternalInsert(PageNum pageNum, PageNum newChildPage, void* newAttribute, SlotNum keyNum);
 	void MakeKeyCopyBack(char* pData, SlotNum insertIndex, PageNum newChildPage, void* newAttribute, char* &copyBack, int &copyBackSize, int &numKeys);
-	// TODO: BEFORE THIS POINT
 	void WriteInternalFromKeyCopyBack(char* pData, char* copyBack, int copyBackSize, int numKeys);
 	// Leaf insert
 	RC LeafInsert(PageNum pageNum, void* attribute, const RID &rid);
