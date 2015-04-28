@@ -92,7 +92,6 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 	}
 
 	PageNum prevPage = pageNum;
-	bool found = false;
 
 	// Determine whether to increment entry iterator
 	bool increment = false;
@@ -154,20 +153,17 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 				return rc;
 			}
 		}
-		// No more entries to read
-		else
+		// No more entries to read, EOF
+		else {
 			finished = true;
+			PrintError(IX_EOF);
+			return IX_EOF;
+		}
 	}
 	// END CHANGES TO ACCOMODATE DELETES DURING INDEXSCAN
 
-	// If no more entries to read, EOF
-	if (finished){
-		PrintError(IX_EOF);
-		return IX_EOF;
-	}
-
-	// TODO: CHECK STARTING HERE
 	// Iterate through pages and entries until find one that satisfies condition (or EOF)
+	bool found = false;
 	while (!found && !finished){
 		// If record exists in slot
 		if (ixIndexHandle->GetSlotBitValue(pData, entryNum)){
@@ -300,7 +296,7 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 			entryNum = 0;
 		}
 
-		// If switched to new page...
+		// If switched to new page...clean up and update pData
 		if (prevPage != pageNum){
 			// Unpin last page
 			rc = ixIndexHandle->pfFileHandle.UnpinPage(prevPage);
