@@ -87,12 +87,12 @@ private:
 	// Internal insert
 	RC InternalInsert(PageNum pageNum, PageNum newChildPage, void* newAttribute, SlotNum keyNum);
 	void MakeKeyCopyBack(char* pData, SlotNum insertIndex, PageNum newChildPage, void* newAttribute, char* &copyBack, int &copyBackSize, int &numKeys);
+	// TODO: BEFORE THIS POINT
 	void WriteInternalFromKeyCopyBack(char* pData, char* copyBack, int copyBackSize, int numKeys);
 	// Leaf insert
 	RC LeafInsert(PageNum pageNum, void* attribute, const RID &rid);
 	void MakeEntryCopyBack(char* pData, void* attribute, const RID &rid, char* &copyBack, int &copyBackSize, int &numEntries);
 	void WriteLeafFromEntryCopyBack(char* pData, char* copyBack, int copyBackSize, int numEntries);
-	// TODO: BEFORE THIS POINT
 	RC SetSiblingPointers(PageNum L1Page, PageNum L2Page, char* L1, char* L2);
 	// Bucket insert
 	bool ShouldBucket(void* attribute, char* pData);

@@ -755,9 +755,6 @@ void IX_IndexHandle::WriteInternalFromKeyCopyBack(char* pData, char* copyBack, i
 	// Write back header
 	// numEntries
 	memcpy(pData, &numKeys, sizeof(int));
-
-	// Clean up
-	ptr = NULL;
 }
 
 // Assume there is free space in leaf
@@ -820,14 +817,12 @@ void IX_IndexHandle::MakeEntryCopyBack(char* pData, void* attribute, const RID &
 	bool inserted = false;
 
 	// Determine where to insert new entry
-	for (SlotNum readIndex = 0; readIndex < ixIndexHeader.maxEntryIndex; ++readIndex){
+	for (SlotNum readIndex = 0; readIndex <= ixIndexHeader.maxEntryIndex; ++readIndex){
 		if (GetSlotBitValue(pData, readIndex)){
 			// if not inserted, determine if should insert now
 			if(!inserted){
-				bool insertNow = false;
-
 				// Check if attribute < attribute
-				insertNow = AttrSatisfiesCondition(attribute, LT_OP, ptr, ixIndexHeader.attrType, ixIndexHeader.attrLength);
+				bool insertNow = AttrSatisfiesCondition(attribute, LT_OP, ptr, ixIndexHeader.attrType, ixIndexHeader.attrLength);
 
 				if (insertNow){
 					// Write new entry to copyBack
@@ -859,14 +854,7 @@ void IX_IndexHandle::MakeEntryCopyBack(char* pData, void* attribute, const RID &
 		copyBackPtr += sizeof(PageNum);
 		memcpy(copyBackPtr, &rid.slotNum, sizeof(SlotNum));
 		copyBackPtr += sizeof(SlotNum);
-
-		// Set inserted
-		inserted = true;
 	}
-
-	// Clean up
-	copyBackPtr = NULL;
-	ptr = NULL;
 }
 
 void IX_IndexHandle::WriteLeafFromEntryCopyBack(char* pData, char* copyBack, int copyBackSize, int numEntries)
@@ -879,7 +867,7 @@ void IX_IndexHandle::WriteLeafFromEntryCopyBack(char* pData, char* copyBack, int
 	// numEntries
 	memcpy(pData, &numEntries, sizeof(int));
 	// bitSlots
-	for(SlotNum i = 0; i < ixIndexHeader.maxEntryIndex; ++i)
+	for(SlotNum i = 0; i <= ixIndexHeader.maxEntryIndex; ++i)
 		SetSlotBitValue(pData, i, (i < numEntries));
 
 	// Clean up
