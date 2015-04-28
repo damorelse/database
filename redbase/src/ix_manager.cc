@@ -50,15 +50,18 @@ RC IX_Manager::CreateIndex(const char *fileName, int indexNo,
 	// End check input
 
 	// Create file
-	const char* filename = GetIndexFileName(fileName, indexNo);
-	RC rc = pfManager->CreateFile(filename);
+	stringstream ss;
+	ss << fileName << '.' << indexNo;
+	const char* indexName = ss.str().c_str();
+
+	RC rc = pfManager->CreateFile(indexName);
 	if (rc != OK_RC){
 		PrintError(rc);
 		return rc;
 	}
 
 	PF_FileHandle fileHandle = PF_FileHandle();
-	rc = pfManager->OpenFile(filename, fileHandle);
+	rc = pfManager->OpenFile(indexName, fileHandle);
 	if (rc != OK_RC){
 		PrintError(rc);
 		return rc;
@@ -165,7 +168,11 @@ RC IX_Manager::DestroyIndex(const char *fileName, int indexNo)
 	// End check input parameters.
 
 	// Delete file
-	RC rc = pfManager->DestroyFile(GetIndexFileName(fileName, indexNo));
+	stringstream ss;
+	ss << fileName << '.' << indexNo;
+	const char* indexName = ss.str().c_str();
+
+	RC rc = pfManager->DestroyFile(indexName);
 	if (rc != OK_RC){
 		PrintError(rc);
 		return rc;
@@ -194,7 +201,11 @@ RC IX_Manager::OpenIndex(const char *fileName, int indexNo,
 	// End check input parameters.
 
 	// Open file handle
-	RC rc = pfManager->OpenFile(GetIndexFileName(fileName, indexNo), indexHandle.pfFileHandle);
+	stringstream ss;
+	ss << fileName << '.' << indexNo;
+	const char* indexName = ss.str().c_str();
+
+	RC rc = pfManager->OpenFile(indexName, indexHandle.pfFileHandle);
 	if (rc != OK_RC){
 		PrintError(rc);
 		return rc;
