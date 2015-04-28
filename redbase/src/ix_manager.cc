@@ -171,7 +171,7 @@ RC IX_Manager::DestroyIndex(const char *fileName, int indexNo)
 	stringstream ss;
 	ss << fileName << '.' << indexNo;
 	const char* indexName = new char[ss.str().length()];
-	indexName = ss.str().c_str();
+	strcpy(indexName, ss.str().c_str());
 	RC rc = pfManager->DestroyFile(indexName);
 	if (rc != OK_RC){
 		PrintError(rc);
