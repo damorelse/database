@@ -180,7 +180,7 @@ public:
 private:
 	PF_Manager* pfManager;
 
-	const char* GetIndexFileName(const char *fileName, int indexNo);
+	string GetIndexFileName(const char *fileName, int indexNo);
 
 	int CalculateMaxKeys(int attrLength);  //Calculate max number of entries that will fit in one page
 	int CalculateMaxEntries(int attrLength);  //Calculate max number of entries that will fit in one page
