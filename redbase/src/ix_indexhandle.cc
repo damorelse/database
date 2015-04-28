@@ -916,11 +916,17 @@ RC IX_IndexHandle::SetSiblingPointers(PageNum L1Page, PageNum L2Page, char* L1, 
 		PrintError(rc);
 		return rc;
 	}
-
 	memcpy(L3 + leftOffset, &L2Page, sizeof(PageNum));
 
 	// Clean up
 	L3 = NULL;
+	rc = pfFileHandle.MarkDirty(L3Page);
+	if (rc != OK_RC){
+		pfFileHandle.UnpinPage(L3Page);
+		PrintError(rc);
+		return rc;
+	}
+
 	rc = pfFileHandle.UnpinPage(L3Page);
 	if (rc != OK_RC){
 		PrintError(rc);
@@ -1114,10 +1120,10 @@ RC IX_IndexHandle::LeafDelete(PageNum currPage, char* pData, void* attribute, co
 	PageNum deletePage = currPage;
 	SlotNum deleteSlot = 0;
 	char* deleteData = pData;
-	bool found = false;
+	int attrLength = ixIndexHeader.attrLength;
 	RC rc;
 
-	int attrLength = ixIndexHeader.attrLength;
+	bool found = false;
 	while (!found){
 		if(GetSlotBitValue(deleteData, deleteSlot)){
 			char* ptr = GetEntryPtr(deleteData, deleteSlot);
@@ -1172,12 +1178,6 @@ RC IX_IndexHandle::LeafDelete(PageNum currPage, char* pData, void* attribute, co
 		}
 	}
 
-	// Not found
-	if (!found){
-		PrintError(IX_ENTRYDNE);
-		return IX_ENTRYDNE;
-	}
-
 	// Found matching entry. Delete
 	SetSlotBitValue(deleteData, deleteSlot, false);
 
@@ -1204,7 +1204,8 @@ RC IX_IndexHandle::LeafDelete(PageNum currPage, char* pData, void* attribute, co
 		return OK_RC;
 	}
 
-	// Find page num of last bucket page
+	// Delete was not in last bucket page
+	// Find page num of last and second to last bucket page
 	PageNum notLastPage = deletePage;
 	char* notLastData;
 	PageNum lastPage;
@@ -1229,11 +1230,13 @@ RC IX_IndexHandle::LeafDelete(PageNum currPage, char* pData, void* attribute, co
 	pfPageHandle = PF_PageHandle();
 	rc = pfFileHandle.GetThisPage(lastPage, pfPageHandle);
 	if (rc != OK_RC){
+		pfFileHandle.UnpinPage(notLastPage);
 		PrintError(rc);
 		return rc;
 	}
 	rc = pfPageHandle.GetData(lastData);
 	if (rc != OK_RC){
+		pfFileHandle.UnpinPage(notLastPage);
 		pfFileHandle.UnpinPage(lastPage);
 		PrintError(rc);
 		return rc;
@@ -1243,6 +1246,7 @@ RC IX_IndexHandle::LeafDelete(PageNum currPage, char* pData, void* attribute, co
 	while(pageTmp != IX_NO_PAGE){
 		rc = pfFileHandle.UnpinPage(notLastPage);
 		if (rc != OK_RC){
+			pfFileHandle.UnpinPage(lastPage);
 			PrintError(rc);
 			return rc;
 		}
@@ -1254,11 +1258,13 @@ RC IX_IndexHandle::LeafDelete(PageNum currPage, char* pData, void* attribute, co
 		PF_PageHandle pfPageHandle = PF_PageHandle();
 		rc = pfFileHandle.GetThisPage(lastPage, pfPageHandle);
 		if (rc != OK_RC){
+			pfFileHandle.UnpinPage(notLastPage);
 			PrintError(rc);
 			return rc;
 		}
 		rc = pfPageHandle.GetData(lastData);
 		if (rc != OK_RC){
+			pfFileHandle.UnpinPage(notLastPage);
 			pfFileHandle.UnpinPage(lastPage);
 			PrintError(rc);
 			return rc;
@@ -1323,21 +1329,18 @@ RC IX_IndexHandle::LeafDelete(PageNum currPage, char* pData, void* attribute, co
 		int intTmp = IX_NO_PAGE;
 		memcpy(notLastData+sizeof(int), &intTmp, sizeof(PageNum));
 
-		if (notLastPage != deletePage){
-			rc = pfFileHandle.MarkDirty(notLastPage);
-			if (rc != OK_RC){
-				pfFileHandle.UnpinPage(deletePage);
-				pfFileHandle.UnpinPage(notLastPage);
-				PrintError(rc);
-				return rc;
-			}
-
-			rc = pfFileHandle.UnpinPage(notLastPage);
-			if (rc != OK_RC){
-				pfFileHandle.UnpinPage(deletePage);
-				PrintError(rc);
-				return rc;
-			}
+		rc = pfFileHandle.MarkDirty(notLastPage);
+		if (rc != OK_RC){
+			pfFileHandle.UnpinPage(deletePage);
+			pfFileHandle.UnpinPage(notLastPage);
+			PrintError(rc);
+			return rc;
+		}
+		rc = pfFileHandle.UnpinPage(notLastPage);
+		if (rc != OK_RC){
+			pfFileHandle.UnpinPage(deletePage);
+			PrintError(rc);
+			return rc;
 		}
 	}
 
@@ -1347,12 +1350,12 @@ RC IX_IndexHandle::LeafDelete(PageNum currPage, char* pData, void* attribute, co
 		PrintError(rc);
 		return rc;
 	}
-
 	rc = pfFileHandle.UnpinPage(deletePage);
 	if (rc != OK_RC){
 		PrintError(rc);
 		return rc;
 	}
+
 	return OK_RC;
 }
 

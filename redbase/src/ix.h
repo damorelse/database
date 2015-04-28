@@ -92,6 +92,7 @@ private:
 	RC LeafInsert(PageNum pageNum, void* attribute, const RID &rid);
 	void MakeEntryCopyBack(char* pData, void* attribute, const RID &rid, char* &copyBack, int &copyBackSize, int &numEntries);
 	void WriteLeafFromEntryCopyBack(char* pData, char* copyBack, int copyBackSize, int numEntries);
+	// TODO: BEFORE THIS POINT
 	RC SetSiblingPointers(PageNum L1Page, PageNum L2Page, char* L1, char* L2);
 	// Bucket insert
 	bool ShouldBucket(void* attribute, char* pData);
@@ -99,8 +100,8 @@ private:
 	// Delete helper functions
 	RC DeleteEntryHelper(PageNum currPage, int height, void* attribute, const RID &rid, PageNum &oldPage);
 	void InternalDelete(char* pData, SlotNum deleteKeyIndex, int &numKeys);
-	RC LeafDelete(PageNum currPage, char* pData, void* attribute, const RID &rid, int &numEntries); //TODO
-	// TODO: BEFORE THIS POINT
+	RC LeafDelete(PageNum currPage, char* pData, void* attribute, const RID &rid, int &numEntries);
+
 
 	// Both Insert/Delete helper functions
 	void ChooseSubtree(char* pData, void* attribute, PageNum &nextPage, int &numKeys, SlotNum &keyNum);
