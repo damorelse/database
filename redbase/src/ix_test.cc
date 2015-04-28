@@ -482,14 +482,14 @@ RC VerifyIntIndex(IX_IndexHandle &ih, int nStart, int nEntries, int bExists)
    return (0);
 }
 
-char* GetKeyPtr(IX_IndexHeader ixIndexHeader, char* pData, const SlotNum slotNum) const
+char* GetKeyPtr(IX_IndexHeader ixIndexHeader, char* pData, const SlotNum slotNum)
 {
 	char* ptr = pData + ixIndexHeader.internalHeaderSize;
 	ptr += sizeof(PageNum);
 	ptr += slotNum * (ixIndexHeader.attrLength + sizeof(PageNum));
 	return ptr;
 }
-char* GetEntryPtr(IX_IndexHeader ixIndexHeader, char* pData, const SlotNum slotNum) const
+char* GetEntryPtr(IX_IndexHeader ixIndexHeader, char* pData, const SlotNum slotNum)
 {
 	char* ptr = pData + ixIndexHeader.leafHeaderSize;
 	ptr += slotNum * (ixIndexHeader.attrLength + sizeof(PageNum) + sizeof(SlotNum));
@@ -532,7 +532,7 @@ RC PrintIndex(IX_IndexHandle &ih){
 			return rc;
 		}
 
-		if (prevHeight = 0){
+		if (prevHeight == 0){
 			int entrySize = ih.ixIndexHeader.attrLength +  sizeof(PageNum) + sizeof(SlotNum);
 			char* array = new char[entrySize];
 			for (SlotNum slotNum = 0; slotNum <= ih.ixIndexHeader.maxEntryIndex; ++slotNum){
