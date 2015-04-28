@@ -145,6 +145,7 @@ private:
 	RC FindLeafNode(void* attribute, PageNum &resultPage) const;
 	RC FindMinLeafNode(PageNum &resultPage) const;
 	RC FindLeafNodeHelper(PageNum currPage, int currHeight, bool findMin, void* attribute, PageNum &resultPage) const;
+
 	RC GetNextPage(PageNum pageNum, PageNum &resultPage);
 };
 

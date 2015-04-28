@@ -73,17 +73,12 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 		return IX_EOF;
 	}
 
-	PF_PageHandle pfPageHandle;
-	char* pData;
-	RC rc;
-	PageNum prevPage = pageNum;
-	bool found = false;
-
 	// CHANGES TO ACCOMODATE DELETES DURING INDEXSCAN
 	// Initialize page handle and page data
 	//rc = GetPage(ixIndexHandle->pfFileHandle, pageNum, pData);
-	pfPageHandle = PF_PageHandle();
-	rc = ixIndexHandle->pfFileHandle.GetThisPage(pageNum, pfPageHandle);
+	char* pData;
+	PF_PageHandle pfPageHandle = PF_PageHandle();
+	RC rc = ixIndexHandle->pfFileHandle.GetThisPage(pageNum, pfPageHandle);
 	if (rc != OK_RC){
 		PrintError(rc);
 		return rc;
@@ -96,29 +91,32 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 		return rc;
 	}
 
+	PageNum prevPage = pageNum;
+	bool found = false;
+
 	// Read previous entry if entry still filled
-	string strTmp = "";
 	if (ixIndexHandle->GetSlotBitValue(pData, entryNum)){
 		char* charArrTmp = new char[entrySize];
 		memcpy(charArrTmp, ixIndexHandle->GetEntryPtr(pData, entryNum), entrySize);
-		strTmp = string(charArrTmp);
+
+		// If previous entry is the same, increment entry iterator
+		if (memcmp(charArrTmp, lastEntry, entrySize) == 0){
+			// Increment entry num
+			entryNum += 1;
+			if (entryNum > ixIndexHandle->ixIndexHeader.maxEntryIndex){
+				rc = GetNextPage(prevPage, pageNum);
+				if (rc != OK_RC){
+					ixIndexHandle->pfFileHandle.UnpinPage(prevPage);
+					return rc;
+				}
+				entryNum = 0;
+			}
+		}
+
 		delete [] charArrTmp;
 	}
 
-	// If previous entry is the same, increment entry iterator
-	if (string(lastEntry) == strTmp && strTmp.length() > 0){
-		// Increment entry num
-		entryNum += 1;
-		if (entryNum > ixIndexHandle->ixIndexHeader.maxEntryIndex){
-			rc = GetNextPage(prevPage, pageNum);
-			if (rc != OK_RC){
-				ixIndexHandle->pfFileHandle.UnpinPage(prevPage);
-				return rc;
-			}
-			entryNum = 0;
-		}
-	}
-
+	// TODO: CHECK STARTING HERE
 	// If switched to new page...
 	if (prevPage != pageNum){
 		// Unpin last page
