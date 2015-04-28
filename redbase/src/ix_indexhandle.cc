@@ -40,7 +40,7 @@ RC IX_IndexHandle::InsertEntry(void *attribute, const RID &rid)
 	
 	// Recursive call
 	PageNum newChildPage = IX_NO_PAGE;
-	char* newAttribute = new char[ixIndexHeader.attrLength];
+	void* newAttribute = new char[ixIndexHeader.attrLength];
 	rc = InsertEntryHelper(ixIndexHeader.rootPage, ixIndexHeader.height, attribute, rid, newChildPage, newAttribute);
 	if (rc != OK_RC)
 		return rc;
