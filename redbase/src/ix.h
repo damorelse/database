@@ -62,10 +62,10 @@ public:
     ~IX_IndexHandle();
 
     // Insert a new index entry
-    RC InsertEntry(void *attribute, const RID &rid);
+    RC InsertEntry(void *attribute, const RID &rid); //TODO
 
     // Delete a new index entry
-    RC DeleteEntry(void *attribute, const RID &rid);
+    RC DeleteEntry(void *attribute, const RID &rid); //TODO
 
     // Force index files to disk
     RC ForcePages();
@@ -77,19 +77,20 @@ private:
 	IX_IndexHeader ixIndexHeader;
 
 	char* GetKeyPtr(char* pData, const SlotNum slotNum) const;        // Gets a pointer to a specific key's start location
-	char* GetEntryPtr(char* pData, const SlotNum slotNum) const;     // Gets a pointer to a specific entry's start location
+	char* GetEntryPtr(char* pData, const SlotNum slotNum) const;      // Gets a pointer to a specific entry's start location
 	bool GetSlotBitValue(char* pData, const SlotNum slotNum) const;   // Read a specific entry's bit value in page header
 	void SetSlotBitValue(char* pData, const SlotNum slotNum, bool b); // Write a specific entry's bit value in page header
 
+	// TODO: AFTER THIS POINT
 	// Insert helper functions
-	RC InsertEntryHelper(PageNum currPage, int height, void* attribute, const RID &rid, PageNum &newChildPage, void* newAttribute);
+	RC InsertEntryHelper(PageNum currPage, int height, void* attribute, const RID &rid, PageNum &newChildPage, void* &newAttribute);
 	// Internal insert
-	RC InternalInsert(PageNum pageNum, PageNum &newChildPage, void* newAttribute, SlotNum keyNum);
-	void MakeKeyCopyBack(char* pData, SlotNum insertIndex, PageNum &newChildPage, void* newAttribute, char* copyBack, int &copyBackSize, int &numKeys);
+	RC InternalInsert(PageNum pageNum, PageNum newChildPage, void* newAttribute, SlotNum keyNum);
+	void MakeKeyCopyBack(char* pData, SlotNum insertIndex, PageNum newChildPage, void* newAttribute, char* &copyBack, int &copyBackSize, int &numKeys);
 	void WriteInternalFromKeyCopyBack(char* pData, char* copyBack, int copyBackSize, int numKeys);
 	// Leaf insert
 	RC LeafInsert(PageNum pageNum, void* attribute, const RID &rid);
-	void MakeEntryCopyBack(char* pData, void* attribute, const RID &rid, char* copyBack, int &copyBackSize, int &numEntries);
+	void MakeEntryCopyBack(char* pData, void* attribute, const RID &rid, char* &copyBack, int &copyBackSize, int &numEntries);
 	void WriteLeafFromEntryCopyBack(char* pData, char* copyBack, int copyBackSize, int numEntries);
 	RC SetSiblingPointers(PageNum L1Page, PageNum L2Page, char* L1, char* L2);
 	// Bucket insert
@@ -102,7 +103,7 @@ private:
 
 	// Both Insert/Delete helper functions
 	void ChooseSubtree(char* pData, void* attribute, PageNum &nextPage, int &numKeys, SlotNum &keyNum);
-	RC GetLastPageInBucketChain(PageNum &lastPage, char* lastData);
+	RC GetLastPageInBucketChain(PageNum &lastPage, char*& lastData);
 	bool AttributeEqualEntry(char* one, char* two);
 	bool AttrSatisfiesCondition(void* one, CompOp compOp, void* two, AttrType attrType, int attrLength) const;
 };

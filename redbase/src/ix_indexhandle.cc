@@ -646,7 +646,7 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 }
 
 // Assumes there is free space in internal
-RC IX_IndexHandle::InternalInsert(PageNum pageNum, PageNum &newChildPage, void* newAttribute, SlotNum keyNum)
+RC IX_IndexHandle::InternalInsert(PageNum pageNum, PageNum newChildPage, void* newAttribute, SlotNum keyNum)
 {
 	// Get page data
 	char *pData;
