@@ -54,7 +54,7 @@ RC IX_IndexScan::OpenScan(const IX_IndexHandle &indexHandle,
 		return rc;
 
 	open = true;
-	entryNum = 0;
+	entryNum = -1;
 	rightLeaf = IX_NO_PAGE;
 	inBucket = false;
 	finished = false;
@@ -96,7 +96,7 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 	// Determine whether to increment entry iterator
 	bool increment = false;
 	// Entry now empty
-	if (!ixIndexHandle->GetSlotBitValue(pData, entryNum))
+	if (entryNum == -1 || !ixIndexHandle->GetSlotBitValue(pData, entryNum))
 		increment = true;
 	// Entry still filled
 	else {
