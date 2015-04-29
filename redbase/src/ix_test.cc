@@ -224,7 +224,6 @@ RC InsertIntEntries(IX_IndexHandle &ih, int nEntries)
       cerr << "\nInserting " << value << endl;
       if ((rc = ih.InsertEntry((void *)&value, rid)))
          return (rc);
-      PrintIndex(ih);
       if((i + 1) % PROG_UNIT == 0){
          // cast to long for PC's
          printf("\r\t%d%%    ", (int)((i+1)*100L/nEntries));
@@ -344,6 +343,9 @@ RC DeleteIntEntries(IX_IndexHandle &ih, int nEntries)
       RID rid(value, value*2);
       if ((rc = ih.DeleteEntry((void *)&value, rid)))
          return (rc);
+
+	  cerr << "Delete " << value << endl;
+	  PrintIndex(ih);
 
       if((i + 1) % PROG_UNIT == 0){
          printf("\r\t%d%%      ", (int)((i+1)*100L/nEntries));
@@ -686,8 +688,6 @@ RC Test2(void)
          (rc = ixm.CloseIndex(ih)) ||
          (rc = ixm.OpenIndex(FILENAME, index, ih)))
       return rc;
-   printf("opened index after insert\n");
-   PrintIndex(ih);
    if (
          
          // ensure inserted entries are all there
@@ -721,7 +721,10 @@ RC Test3(void)
 
    if ((rc = ixm.CreateIndex(FILENAME, index, INT, sizeof(int))) ||
          (rc = ixm.OpenIndex(FILENAME, index, ih)) ||
-         (rc = InsertIntEntries(ih, FEW_ENTRIES)) ||
+         (rc = InsertIntEntries(ih, FEW_ENTRIES)))
+		 return rc;
+   PrintIndex(ih);
+   if (
          (rc = DeleteIntEntries(ih, nDelete)) ||
          (rc = ixm.CloseIndex(ih)) ||
          (rc = ixm.OpenIndex(FILENAME, index, ih)) ||

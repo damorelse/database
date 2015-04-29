@@ -1073,9 +1073,6 @@ RC IX_IndexHandle::DeleteEntryHelper(PageNum currPage, int height, void* attribu
 			return OK_RC;
 		}
 	}
-
-	oldPage = IX_NO_PAGE;
-	return OK_RC;
 }
 
 // Does not mark page dirty
@@ -1178,19 +1175,20 @@ RC IX_IndexHandle::LeafDelete(PageNum currPage, char* pData, void* attribute, co
 		numEntries -= 1;
 		memcpy(deleteData, &numEntries, sizeof(int));
 
-		rc = pfFileHandle.MarkDirty(deletePage);
-		if (rc != OK_RC){
-			pfFileHandle.UnpinPage(deletePage);
-			PrintError(rc);
-			return rc;
-		}
+		if (deletePage != currPage){ // TODO: added condition
+			rc = pfFileHandle.MarkDirty(deletePage);
+			if (rc != OK_RC){
+				pfFileHandle.UnpinPage(deletePage);
+				PrintError(rc);
+				return rc;
+			}
 
-		rc = pfFileHandle.UnpinPage(deletePage);
-		if (rc != OK_RC){
-			PrintError(rc);
-			return rc;
+			rc = pfFileHandle.UnpinPage(deletePage);
+			if (rc != OK_RC){
+				PrintError(rc);
+				return rc;
+			}
 		}
-
 		return OK_RC;
 	}
 
