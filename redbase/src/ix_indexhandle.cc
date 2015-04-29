@@ -549,7 +549,7 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 				PrintError(rc);
 				return rc;
 			}
-			cerr << "A" << endl;
+			//cerr << "A" << endl;
 			rc = pfPageHandle.GetPageNum(newChildPage);
 			if (rc != OK_RC){
 				pfFileHandle.UnpinPage(currPage);
@@ -564,13 +564,13 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 				PrintError(rc);
 				return rc;
 			}
-			cerr << "B" << endl;
+			//cerr << "B" << endl;
 			// Initialize state
 			char* copyBack;
 			int copyBackSize;
 			int numEntries;
 			MakeEntryCopyBack(pData, attribute, rid, copyBack, copyBackSize, numEntries);
-			cerr << "C" << endl;
+			//cerr << "C" << endl;
 			// Determine where to split
 			int newNumEntries = numEntries / 2;
 			int entrySize = ixIndexHeader.attrLength + sizeof(PageNum) + sizeof(SlotNum);
@@ -586,7 +586,7 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 				newNumEntries = entryItr + 1;
 			else
 				newNumEntries = entryItr;
-			cerr << "C" << endl;
+			//cerr << "C" << endl;
 			// Set L2's bucket page to empty, default
 			PageNum bucketPage = IX_NO_PAGE;
 			memcpy(newPData + sizeof(int), &bucketPage, sizeof(PageNum));
@@ -600,17 +600,17 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 					memcpy(pData + sizeof(int), &bucketPage, sizeof(PageNum));
 				}
 			}
-			cerr << "D" << endl;
+			//cerr << "D" << endl;
 			// Write first d entries to L
 			int newSize = (ixIndexHeader.attrLength + sizeof(PageNum) + sizeof(SlotNum)) * (newNumEntries);
 			WriteLeafFromEntryCopyBack(pData, copyBack, newSize, newNumEntries);
-			cerr << "E" << endl;
+			//cerr << "E" << endl;
 			// Write rest of entries to new node L2
 			char* ptr = copyBack + newSize;
 			newNumEntries = numEntries - newNumEntries;
 			newSize = (ixIndexHeader.attrLength + sizeof(PageNum) + sizeof(SlotNum)) * (newNumEntries);
 			WriteLeafFromEntryCopyBack(newPData, ptr, newSize, newNumEntries);
-			cerr << "F" << endl;
+			//cerr << "F" << endl;
 			// Set newAttribute
 			memcpy(newAttribute, ptr, ixIndexHeader.attrLength);
 
@@ -623,7 +623,7 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 				pfFileHandle.UnpinPage(newChildPage);
 				return rc;
 			}
-			cerr << "G" << endl;
+			//cerr << "G" << endl;
 			// Mark L and L2 pages as dirty
 			rc = pfFileHandle.MarkDirty(currPage);
 			if (rc != OK_RC){
@@ -643,7 +643,7 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 				PrintError(rc);
 				return rc;
 			}
-			cerr << "H" << endl;
+			//cerr << "H" << endl;
 			// Clean up
 			pData = NULL;
 			newPData = NULL;
@@ -838,7 +838,7 @@ void IX_IndexHandle::MakeEntryCopyBack(char* pData, void* attribute, const RID &
 	// Initialize state
 	memcpy(&numEntries, pData, sizeof(int));
 	numEntries += 1;
-	if (numEntries < 0) //TODO
+	if (numEntries <= 0) //TODO
 		cerr << "Should be greater than 0: " << numEntries << endl;
 	int entrySize = ixIndexHeader.attrLength + sizeof(PageNum) + sizeof(SlotNum);
 
