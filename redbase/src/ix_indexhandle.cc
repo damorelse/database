@@ -893,36 +893,38 @@ RC IX_IndexHandle::SetSiblingPointers(PageNum L1Page, PageNum L2Page, char* L1, 
 	// Set L's right sibling to be L2
 	memcpy(L1 + rightOffset, &L2Page, sizeof(PageNum));
 
-	// Set L3's left sibling to be L2
-	char *L3;
-	//RC rc = GetPage(pfFileHandle, L3Page, L3);
-	PF_PageHandle pfPageHandle = PF_PageHandle();
-	RC rc = pfFileHandle.GetThisPage(L3Page, pfPageHandle);
-	if (rc != OK_RC){
-		PrintError(rc);
-		return rc;
-	}
-	rc = pfPageHandle.GetData(L3);
-	if (rc != OK_RC){
-		pfFileHandle.UnpinPage(L3Page);
-		PrintError(rc);
-		return rc;
-	}
-	memcpy(L3 + leftOffset, &L2Page, sizeof(PageNum));
+	// Set L3's left sibling to be L2 (if it exists)
+	if(L3Page != IX_NO_PAGE){
+		char *L3;
+		//RC rc = GetPage(pfFileHandle, L3Page, L3);
+		PF_PageHandle pfPageHandle = PF_PageHandle();
+		RC rc = pfFileHandle.GetThisPage(L3Page, pfPageHandle);
+		if (rc != OK_RC){
+			PrintError(rc);
+			return rc;
+		}
+		rc = pfPageHandle.GetData(L3);
+		if (rc != OK_RC){
+			pfFileHandle.UnpinPage(L3Page);
+			PrintError(rc);
+			return rc;
+		}
+		memcpy(L3 + leftOffset, &L2Page, sizeof(PageNum));
 
-	// Clean up
-	L3 = NULL;
-	rc = pfFileHandle.MarkDirty(L3Page);
-	if (rc != OK_RC){
-		pfFileHandle.UnpinPage(L3Page);
-		PrintError(rc);
-		return rc;
-	}
+		// Clean up
+		L3 = NULL;
+		rc = pfFileHandle.MarkDirty(L3Page);
+		if (rc != OK_RC){
+			pfFileHandle.UnpinPage(L3Page);
+			PrintError(rc);
+			return rc;
+		}
 
-	rc = pfFileHandle.UnpinPage(L3Page);
-	if (rc != OK_RC){
-		PrintError(rc);
-		return rc;
+		rc = pfFileHandle.UnpinPage(L3Page);
+		if (rc != OK_RC){
+			PrintError(rc);
+			return rc;
+		}
 	}
 
 	return OK_RC;
