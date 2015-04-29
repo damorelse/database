@@ -14,6 +14,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <ctime>
+#include <queue>
 
 #include "redbase.h"
 #include "pf.h"
@@ -34,6 +35,171 @@ using namespace std;
 #define PROG_UNIT      200              // how frequently to give progress
 // reports when adding lots of entries
 #define RECSIZE        128
+
+
+
+// GINA START
+char* GetKeyPtr(IX_IndexHeader ixIndexHeader, char* pData, const SlotNum slotNum)
+{
+	char* ptr = pData + ixIndexHeader.internalHeaderSize;
+	ptr += sizeof(PageNum);
+	ptr += slotNum * (ixIndexHeader.attrLength + sizeof(PageNum));
+	return ptr;
+}
+char* GetEntryPtr(IX_IndexHeader ixIndexHeader, char* pData, const SlotNum slotNum)
+{
+	char* ptr = pData + ixIndexHeader.leafHeaderSize;
+	ptr += slotNum * (ixIndexHeader.attrLength + sizeof(PageNum) + sizeof(SlotNum));
+	return ptr;
+}
+bool GetSlotBitValue(char* pData, const SlotNum slotNum)
+{
+	char c = *(pData + IX_BIT_START + slotNum / 8); //bits per byte
+	return c & (1 << slotNum % 8);
+}
+
+
+RC PrintIndex(IX_IndexHandle &ih){
+	queue<pair<int, PageNum> > myQueue;
+	pair<int, PageNum> tmp = make_pair(ih.ixIndexHeader.height, ih.ixIndexHeader.rootPage);
+	myQueue.push(tmp);
+
+	int prevHeight = ih.ixIndexHeader.height + 1;
+	while (!myQueue.empty()){
+		tmp = myQueue.front();
+		myQueue.pop();
+
+		if (tmp.first != prevHeight){
+			cerr << "\nheight: " << tmp.first << endl;
+			prevHeight = tmp.first;
+		}
+		
+		PF_PageHandle pfPageHandle = PF_PageHandle();
+		PageNum pageNum = tmp.second;
+		RC rc = ih.pfFileHandle.GetThisPage(pageNum, pfPageHandle);
+		if (rc != OK_RC){
+			PrintError(rc);
+			return rc;
+		}
+		char* pData;
+		rc = pfPageHandle.GetData(pData);
+		if (rc != OK_RC){
+			ih.pfFileHandle.UnpinPage(pageNum);
+			PrintError(rc);
+			return rc;
+		}
+
+		if (prevHeight == 0){
+			cerr << "Page " << pageNum << "   ";
+			int entrySize = ih.ixIndexHeader.attrLength +  sizeof(PageNum) + sizeof(SlotNum);
+			char* array = new char[entrySize];
+			for (SlotNum slotNum = 0; slotNum <= ih.ixIndexHeader.maxEntryIndex; ++slotNum){
+				if (GetSlotBitValue(pData, slotNum)){
+					char* ptr = GetEntryPtr(ih.ixIndexHeader, pData, slotNum);
+					memcpy(array, ptr, entrySize);
+                    int attr;
+                    memcpy(&attr, ptr, 4);
+					ptr += ih.ixIndexHeader.attrLength;
+					PageNum p;
+					SlotNum s;
+					memcpy(&p, ptr, sizeof(PageNum));
+					ptr += sizeof(PageNum);
+					memcpy(&s, ptr, sizeof(SlotNum));
+					cerr << "  " << attr << ":" <<  p << ":" << s; // Print entry
+				}
+			}
+
+			// Bucket too
+			PageNum bucket;
+			memcpy(&bucket, pData + sizeof(int), sizeof(PageNum));
+			
+			while (bucket != IX_NO_PAGE){
+				cerr << "Bucket " << pageNum << "   ";
+				PF_PageHandle pfPageHandle = PF_PageHandle();
+				RC rc = ih.pfFileHandle.GetThisPage(bucket, pfPageHandle);
+				if (rc != OK_RC){
+					PrintError(rc);
+					return rc;
+				}
+				char* bData;
+				rc = pfPageHandle.GetData(bData);
+				if (rc != OK_RC){
+					ih.pfFileHandle.UnpinPage(bucket);
+					PrintError(rc);
+					return rc;
+				}
+
+				for (SlotNum slotNum = 0; slotNum <= ih.ixIndexHeader.maxEntryIndex; ++slotNum){
+					if (GetSlotBitValue(bData, slotNum)){
+						char* ptr = GetEntryPtr(ih.ixIndexHeader, bData, slotNum);
+						memcpy(array, ptr, entrySize);
+						ptr += ih.ixIndexHeader.attrLength;
+						PageNum p;
+						SlotNum s;
+						memcpy(&p, ptr, sizeof(PageNum));
+						ptr += sizeof(PageNum);
+						memcpy(&s, ptr, sizeof(SlotNum));
+						cerr << "  " <<  p << ":" << s; // Print entry
+					}
+				}
+
+				memcpy(&bucket, bData + sizeof(int), sizeof(PageNum));
+
+				rc = ih.pfFileHandle.UnpinPage(bucket);
+				if (rc != OK_RC){
+					PrintError(rc);
+					return rc;
+				}
+
+			}
+			cerr << " |";
+			delete [] array;
+		}
+		else {
+			cerr << "Page " << pageNum << "   ";
+			int numKeys;
+			memcpy(&numKeys, pData, sizeof(int));
+			int keySize = ih.ixIndexHeader.attrLength;
+			char* array = new char[keySize];
+			for (SlotNum slotNum = 0; slotNum < numKeys; ++slotNum){
+				char* ptr = GetKeyPtr(ih.ixIndexHeader, pData, slotNum);
+				int attr;
+				memcpy(&attr, ptr, sizeof(int));
+				cerr << " " << attr; //Print key
+				
+				ptr -= sizeof(PageNum);
+				PageNum pageTmp;
+				memcpy(&pageTmp, ptr, sizeof(PageNum));
+				tmp = make_pair(prevHeight - 1, ih.ixIndexHeader.rootPage);
+				myQueue.push(tmp);
+			}
+
+			char* ptr = GetKeyPtr(ih.ixIndexHeader, pData, numKeys);
+			ptr -= sizeof(PageNum);
+			PageNum pageTmp;
+			memcpy(&pageTmp, ptr, sizeof(PageNum));
+			tmp = make_pair(prevHeight - 1, ih.ixIndexHeader.rootPage);
+			myQueue.push(tmp);
+
+			cerr << " |";
+			delete [] array;
+		}
+
+
+
+		rc = ih.pfFileHandle.UnpinPage(pageNum);
+		if (rc != OK_RC){
+			PrintError(rc);
+			return rc;
+		}
+
+		return OK_RC;
+	}
+
+	return 0;
+}
+// GINA END
+
 
 //
 // Values array we will be using for our tests
@@ -1432,6 +1598,8 @@ end:
    }
    printf("\n\nDel 50 all vals except 5 : %s\n", 
          ((count == 50) ? "PASS" : "FAIL\n"));  
+
+   PrintIndex(ihOK5);
 
 
    // Subtest 3: Add 50 values 1-50 (except val = 5)
