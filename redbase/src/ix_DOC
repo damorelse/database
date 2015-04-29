@@ -1,0 +1,51 @@
+Gina Pai
+gpai
+05603432
+
+Overall Design:
+
+	*File Structure
+Index headers stored root page number, the tree height, attribute type, attribute length, the maximum key slot number allowed in the internal nodes, the  maximum entry slot number allowed in leaf/bucket nodes, the internal node header size, and the leaf/bucket node header size.
+
+Internal node headers store the current number of keys it stores.
+
+Leaf node headers store the current number of entries it stores, the next bucket in the bucket chain's page number (if it exists, else set to an invalid page number), the left leaf neighbor's page number, the right leaf neighbor's page number, and a entry bitmap, 1 indicating the slot is occupied while 0 indicates the slot is free.
+
+Bucket node headers have the same structure as leaf node headers for simplicity, however the left and right leaf neighbor page numbers are always set to an invalid page number.
+
+Keys and entries are stored left to right within each node in increasing order by attribute.
+
+	*Bucket chains
+Each leaf node has its own independent bucket chain. Only the last page in each bucket chain is allowed to be less than full.
+
+	*Insert Entry
+I based my implementation of a recursive insert function by following pseudocode. The only difference is when it has to insert a new entry into a full leaf, it first checks if all of the entries in the leaf share the same attribute value and if the new entry's attribute is of the same value. If this condition is true, then the new entry will be bucketed instead of spliting the leaf node.
+
+	*Delete Entry
+I implemented lazy deletion and based my implementation of a recursive delete function by following pseudocode. The key difference is nodes are only deleted once they are empty, there is no merging or re-distribution of keys or entries.
+
+To maintain the bucket chain structure, an entry is moved from the last bucket in the chain to fill in the deleted entry's slot if an entry is removed from an earlier bucket in the chain.
+
+	*File Scan
+File scan first traverses the tree to find the first relevant minimum leaf page. This would be the leftmost leaf for no-comparison, less-than, and less-than-or-equal-to scans, and the leaf that would contain the value for equal-to, equal-to-or-greater, and greater-than scans. The file scan iterates within each node from left to right over every entry looking for the next entry that satisfies the condition. Once the file scan is done with a node, it moves on to the next bucket in the bucket chain if it exists, else it moves onto the right neighbor of the leaf at the head of the bucket chain.
+
+This protocol allows entries to be returned in increasing order by attribute value.
+
+A copy of the last entry's values and its location is maintained between GetNextEntry calls that points to the last returned entry's location. To accomodate the deletion-while-scanning and bucket-deletion process, the current entry occupying the location (if it exists) is compared to the last return entry's values. If it exists and the values are different, the file scan then begins its scan with that entry to ensure it does not miss checking any entry.
+
+Key Data Structures:
+	Index header
+	Internal node header
+	Leaf header
+	Bucket headers
+	Bucket chains
+
+Testing Process:
+My testing process involved running the provided test 'ix_test', the shared test 'ix_testkpg_2', and using the autograder. I also ran the tests with Valgrind turned on.
+
+Known Bugs:
+* Does not prevent duplicate entry inputs. 
+* Does not pass accordion test.
+
+Received Assistance:
+I followed the pseudo code from the textbook chapter link posted on Piazza to write my index insert and delete functions.
