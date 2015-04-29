@@ -353,7 +353,7 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 			ptr += ixIndexHeader.attrLength;
 			newNumKeys = numKeys - newNumKeys - 1;
 			newCopyBackSize = sizeof(PageNum) + newNumKeys * keySize;
-			WriteLeafFromEntryCopyBack(newPData, ptr, newCopyBackSize, newNumKeys);
+			WriteInternalFromKeyCopyBack(newPData, ptr, newCopyBackSize, newNumKeys); //GINA HERE
 
 			
 			// Mark N and N2 pages as dirty
