@@ -332,13 +332,13 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 	// After loop
 	// Scan finished, EOF
 	if (finished){
-		if (prevPage == pageNum){
+		//if (prevPage == pageNum){
 			rc = ixIndexHandle->pfFileHandle.UnpinPage(pageNum);
 			if (rc != OK_RC){
 				PrintError(rc);
 				return rc;
 			}
-		}
+		//}
 		PrintError(IX_EOF);
 		return IX_EOF;
 	}
