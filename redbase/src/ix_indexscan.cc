@@ -327,7 +327,7 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 			// No more entries to read
 			else
 				finished = true;
-			cerr << "scan: D" << endl;
+			//cerr << "scan: D" << endl;
 		}
 	}
 	
