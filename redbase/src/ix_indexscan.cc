@@ -161,7 +161,7 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 		}
 	}
 	// END CHANGES TO ACCOMODATE DELETES DURING INDEXSCAN
-
+	cerr << "scan: A" << endl;
 	// Iterate through pages and entries until find one that satisfies condition (or EOF)
 	bool found = false;
 	while (!found && !finished){
@@ -282,7 +282,7 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 		if (found || finished){
 			break;
         }
-
+		cerr << "scan: B" << endl;
 		// Entry not found and scan not finished
 		// Increment entry num
 		prevPage = pageNum;
@@ -295,7 +295,7 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 			}
 			entryNum = 0;
 		}
-
+		cerr << "scan: C" << endl;
 		// If switched to new page...clean up and update pData
 		if (prevPage != pageNum){
 			// Unpin last page
@@ -305,7 +305,7 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 				return rc;
 			}
 			pData = NULL;
-
+			cerr << "scan: C" << endl;
 			// If more entries to read...
 			if (pageNum != IX_NO_PAGE){
 				// Get new page handle and page data
@@ -326,6 +326,7 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 			// No more entries to read
 			else
 				finished = true;
+			cerr << "scan: D" << endl;
 		}
 	}
 	
@@ -333,6 +334,7 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 	// Scan finished, EOF
 	if (finished){
 		//if (prevPage == pageNum){
+		cerr << "scan: E" << endl;
 			rc = ixIndexHandle->pfFileHandle.UnpinPage(pageNum);
 			if (rc != OK_RC){
 				PrintError(rc);
@@ -352,7 +354,7 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 
 	// Set lastEntry
 	memcpy(lastEntry, ixIndexHandle->GetEntryPtr(pData, entryNum), entrySize);
-
+	cerr << "scan: F" << endl;
 	// Clean up.
 	pData = NULL;
 	ptr = NULL;
