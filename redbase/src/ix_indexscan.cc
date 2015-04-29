@@ -335,12 +335,13 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 	if (finished){
 		//if (prevPage == pageNum){
 		cerr << "scan: E" << endl;
+		if (pageNum != IX_NO_PAGE){
 			rc = ixIndexHandle->pfFileHandle.UnpinPage(pageNum);
 			if (rc != OK_RC){
 				PrintError(rc);
 				return rc;
 			}
-		//}
+		}
 		PrintError(IX_EOF);
 		return IX_EOF;
 	}
