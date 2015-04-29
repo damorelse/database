@@ -9,7 +9,8 @@ IX_IndexScan::IX_IndexScan(): ixIndexHandle(NULL), compOp(NO_OP), value(NULL), o
 {}
 IX_IndexScan::~IX_IndexScan()
 {
-	// Nothing, assume will call CloseScan
+	delete [] lastEntry;
+	lastEntry = NULL;
 }
 
 // Open index scan
