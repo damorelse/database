@@ -523,6 +523,7 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 		}
 		// Once in a while, the leaf is full
 		else {
+			cerr << "reached here" << endl;
 			// Split L
 			// Make L2 page, set newChildPage
 			char *newPData;
@@ -534,6 +535,7 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 				PrintError(rc);
 				return rc;
 			}
+			cerr << "A" << endl;
 			rc = pfPageHandle.GetPageNum(newChildPage);
 			if (rc != OK_RC){
 				pfFileHandle.UnpinPage(currPage);
@@ -548,13 +550,13 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 				PrintError(rc);
 				return rc;
 			}
-
+			cerr << "B" << endl;
 			// Initialize state
 			char* copyBack;
 			int copyBackSize;
 			int numEntries;
 			MakeEntryCopyBack(pData, attribute, rid, copyBack, copyBackSize, numEntries);
-
+			cerr << "C" << endl;
 			// Determine where to split
 			int newNumEntries = numEntries / 2;
 			int entrySize = ixIndexHeader.attrLength + sizeof(PageNum) + sizeof(SlotNum);
@@ -570,7 +572,7 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 				newNumEntries = entryItr + 1;
 			else
 				newNumEntries = entryItr;
-
+			cerr << "C" << endl;
 			// Set L2's bucket page to empty, default
 			PageNum bucketPage = IX_NO_PAGE;
 			memcpy(newPData + sizeof(int), &bucketPage, sizeof(PageNum));
@@ -584,17 +586,17 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 					memcpy(pData + sizeof(int), &bucketPage, sizeof(PageNum));
 				}
 			}
-
+			cerr << "D" << endl;
 			// Write first d entries to L
 			int newSize = (ixIndexHeader.attrLength + sizeof(PageNum) + sizeof(SlotNum)) * (newNumEntries);
 			WriteLeafFromEntryCopyBack(pData, copyBack, newSize, newNumEntries);
-
+			cerr << "E" << endl;
 			// Write rest of entries to new node L2
 			char* ptr = copyBack + newSize;
 			newNumEntries = numEntries - newNumEntries;
 			newSize = (ixIndexHeader.attrLength + sizeof(PageNum) + sizeof(SlotNum)) * (newNumEntries);
 			WriteLeafFromEntryCopyBack(newPData, ptr, newSize, newNumEntries);
-
+			cerr << "F" << endl;
 			// Set newAttribute
 			memcpy(newAttribute, ptr, ixIndexHeader.attrLength);
 
