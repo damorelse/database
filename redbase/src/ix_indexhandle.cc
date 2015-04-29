@@ -530,7 +530,6 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 		}
 		// Once in a while, the leaf is full
 		else {
-			cerr << "reached here" << endl;
 			// Split L
 			// Make L2 page, set newChildPage
 			char *newPData;
@@ -610,6 +609,7 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 			// Set sibling pointers
 			rc = SetSiblingPointers(currPage, newChildPage, pData, newPData);
 			if (rc != OK_RC){
+				delete [] copyBack;
 				pfFileHandle.UnpinPage(currPage);
 				pfFileHandle.UnpinPage(newChildPage);
 				return rc;
@@ -618,6 +618,7 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 			// Mark L and L2 pages as dirty
 			rc = pfFileHandle.MarkDirty(currPage);
 			if (rc != OK_RC){
+				delete [] copyBack;
 				pfFileHandle.UnpinPage(currPage);
 				pfFileHandle.UnpinPage(newChildPage);
 				PrintError(rc);
@@ -625,6 +626,7 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 			}
 			rc = pfFileHandle.MarkDirty(newChildPage);
 			if (rc != OK_RC){
+				delete [] copyBack;
 				pfFileHandle.UnpinPage(currPage);
 				pfFileHandle.UnpinPage(newChildPage);
 				PrintError(rc);
