@@ -607,7 +607,7 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 				pfFileHandle.UnpinPage(newChildPage);
 				return rc;
 			}
-
+			cerr << "G" << endl;
 			// Mark L and L2 pages as dirty
 			rc = pfFileHandle.MarkDirty(currPage);
 			if (rc != OK_RC){
@@ -623,7 +623,7 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 				PrintError(rc);
 				return rc;
 			}
-
+			cerr << "H" << endl;
 			// Clean up
 			pData = NULL;
 			newPData = NULL;
