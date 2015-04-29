@@ -283,7 +283,7 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 		if (found || finished){
 			break;
         }
-		cerr << "scan: B" << endl;
+		//cerr << "scan: B" << endl;
 		// Entry not found and scan not finished
 		// Increment entry num
 		prevPage = pageNum;
@@ -296,7 +296,7 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 			}
 			entryNum = 0;
 		}
-		cerr << "scan: C" << endl;
+		//cerr << "scan: C" << endl;
 		// If switched to new page...clean up and update pData
 		if (prevPage != pageNum){
 			// Unpin last page
