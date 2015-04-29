@@ -55,18 +55,21 @@ RC IX_IndexHandle::InsertEntry(void *attribute, const RID &rid)
 		RC rc = pfFileHandle.AllocatePage(pfPageHandle);
 		if (rc != OK_RC){
 			delete [] newAttribute;
+			newAttribute = NULL;
 			PrintError(rc);
 			return rc;
 		}
 		rc = pfPageHandle.GetPageNum(pageNum);
 		if (rc != OK_RC){
 			delete [] newAttribute;
+			newAttribute = NULL;
 			PrintError(rc);
 			return rc;
 		}
 		rc = pfPageHandle.GetData(pData);
 		if (rc != OK_RC){
 			delete [] newAttribute;
+			newAttribute = NULL;
 			pfFileHandle.UnpinPage(pageNum);
 			PrintError(rc);
 			return rc;
@@ -89,6 +92,7 @@ RC IX_IndexHandle::InsertEntry(void *attribute, const RID &rid)
 		rc = pfFileHandle.MarkDirty(pageNum);
 		if (rc != OK_RC){
 			delete [] newAttribute;
+			newAttribute = NULL;
 			pfFileHandle.UnpinPage(pageNum);
 			PrintError(rc);
 			return rc;
@@ -100,6 +104,7 @@ RC IX_IndexHandle::InsertEntry(void *attribute, const RID &rid)
 		rc = pfFileHandle.UnpinPage(pageNum);
 		if (rc != OK_RC){
 			delete [] newAttribute;
+			newAttribute = NULL;
 			PrintError(rc);
 			return rc;
 		}
@@ -112,7 +117,7 @@ RC IX_IndexHandle::InsertEntry(void *attribute, const RID &rid)
 
 	// Clean up
 	delete [] newAttribute;
-
+	newAttribute = NULL;
 	return OK_RC;
 }
 
@@ -360,6 +365,7 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 			rc = pfFileHandle.MarkDirty(currPage);
 			if (rc != OK_RC){
 				delete [] copyBack;
+				copyBack = NULL;
 				pfFileHandle.UnpinPage(currPage);
 				pfFileHandle.UnpinPage(newChildPage);
 				PrintError(rc);
@@ -368,6 +374,7 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 			rc = pfFileHandle.MarkDirty(newChildPage);
 			if (rc != OK_RC){
 				delete [] copyBack;
+				copyBack = NULL;
 				pfFileHandle.UnpinPage(currPage);
 				pfFileHandle.UnpinPage(newChildPage);
 				PrintError(rc);
@@ -378,6 +385,7 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 			pData = NULL;
 			newPData = NULL;
 			delete [] copyBack;
+			copyBack = NULL;
 			rc = pfFileHandle.UnpinPage(currPage);
 			if (rc != OK_RC){
 				pfFileHandle.UnpinPage(newChildPage);
@@ -610,6 +618,7 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 			rc = SetSiblingPointers(currPage, newChildPage, pData, newPData);
 			if (rc != OK_RC){
 				delete [] copyBack;
+				copyBack = NULL;
 				pfFileHandle.UnpinPage(currPage);
 				pfFileHandle.UnpinPage(newChildPage);
 				return rc;
@@ -619,6 +628,7 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 			rc = pfFileHandle.MarkDirty(currPage);
 			if (rc != OK_RC){
 				delete [] copyBack;
+				copyBack = NULL;
 				pfFileHandle.UnpinPage(currPage);
 				pfFileHandle.UnpinPage(newChildPage);
 				PrintError(rc);
@@ -627,6 +637,7 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 			rc = pfFileHandle.MarkDirty(newChildPage);
 			if (rc != OK_RC){
 				delete [] copyBack;
+				copyBack = NULL;
 				pfFileHandle.UnpinPage(currPage);
 				pfFileHandle.UnpinPage(newChildPage);
 				PrintError(rc);
@@ -637,6 +648,7 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 			pData = NULL;
 			newPData = NULL;
 			delete [] copyBack;
+			copyBack = NULL;
 			rc = pfFileHandle.UnpinPage(currPage);
 			if (rc != OK_RC){
 				pfFileHandle.UnpinPage(newChildPage);
@@ -706,6 +718,7 @@ RC IX_IndexHandle::InternalInsert(PageNum pageNum, PageNum newChildPage, void* n
 	rc = pfFileHandle.MarkDirty(pageNum);
 	if (rc != OK_RC){
 		delete [] copyBack;
+		copyBack = NULL;
 		pfFileHandle.UnpinPage(pageNum);
 		PrintError(rc);
 		return rc;
@@ -715,6 +728,7 @@ RC IX_IndexHandle::InternalInsert(PageNum pageNum, PageNum newChildPage, void* n
 	pData = NULL;
 	ptr = NULL;
 	delete [] copyBack;
+	copyBack = NULL;
 	rc = pfFileHandle.UnpinPage(pageNum);
 	if (rc != OK_RC){
 		PrintError(rc);
@@ -802,6 +816,7 @@ RC IX_IndexHandle::LeafInsert(PageNum pageNum, void* attribute, const RID &rid)
 	rc = pfFileHandle.MarkDirty(pageNum);
 	if (rc != OK_RC){
 		delete [] copyBack;
+		copyBack = NULL;
 		PrintError(rc);
 		return rc;
 	}
@@ -809,6 +824,7 @@ RC IX_IndexHandle::LeafInsert(PageNum pageNum, void* attribute, const RID &rid)
 	// Clean up
 	pData = NULL;
 	delete [] copyBack;
+	copyBack = NULL;
 	rc = pfFileHandle.UnpinPage(pageNum);
 	if (rc != OK_RC){
 		PrintError(rc);
