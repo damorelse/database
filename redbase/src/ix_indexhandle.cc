@@ -808,7 +808,7 @@ RC IX_IndexHandle::LeafInsert(PageNum pageNum, void* attribute, const RID &rid)
 	char* copyBack;
 	int copyBackSize;
 	int numEntries;
-	cerr << "Leaf Insert-MakeEntryCopyBack page: " << pageNum << endl;
+	//cerr << "Leaf Insert-MakeEntryCopyBack page: " << pageNum << endl;
 	MakeEntryCopyBack(pData, attribute, rid, copyBack, copyBackSize, numEntries);
 
 	WriteLeafFromEntryCopyBack(pData, copyBack, copyBackSize, numEntries);
@@ -839,8 +839,10 @@ void IX_IndexHandle::MakeEntryCopyBack(char* pData, void* attribute, const RID &
 	// Initialize state
 	memcpy(&numEntries, pData, sizeof(int));
 	numEntries += 1;
-	if (numEntries <= 0) //TODO
+	if (numEntries <= 0){ //TODO
 		cerr << "Should be greater than 0: " << numEntries << endl;
+        numEntries = 1;
+    }
 	int entrySize = ixIndexHeader.attrLength + sizeof(PageNum) + sizeof(SlotNum);
 
 	copyBackSize = (numEntries) * entrySize;
