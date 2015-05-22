@@ -113,17 +113,8 @@ struct Relcat {
 	int attrCount;
 	int indexCount;
 
-	Relcat(char* pData){
-		memcpy(this, pData, sizeof(Relcat));
-	}
-
-	Relcat(const char* relName, int tupleLen, int attrCount, int indexCount){
-		int len = (strlen(relName) > MAXNAME) ? MAXNAME : strlen(relName);
-		memcpy(this->relName, relName, len+1);
-		this->tupleLen = tupleLen;
-		this->attrCount = attrCount;
-		this->indexCount = indexCount;
-	}
+	Relcat(char* pData);
+	Relcat(const char* relName, int tupleLen, int attrCount, int indexCount);
 };
 
 // Change dbcreate.cc with
@@ -136,27 +127,9 @@ struct Attrcat {
 	int attrLen;
 	int indexNo;
 
-	Attrcat(){
-		offset = -1;
-		attrType = INT;
-		attrLen = 0;
-		indexNo = -1;
-	}
-
-	Attrcat(char* pData){
-		memcpy(this, pData, sizeof(Attrcat));
-	}
-
-	Attrcat(const char* relName, char* attrName, int offset, AttrType attrType, int attrLen, int indexNo){
-		int len = (strlen(relName) > MAXNAME) ? MAXNAME : strlen(relName);
-		memcpy(this->relName, relName, len+1);
-		len = (strlen(attrName) > MAXNAME) ? MAXNAME : strlen(attrName);
-		memcpy(this->attrName, attrName, len+1);
-		this->offset = offset;
-		this->attrType = attrType;
-		this->attrLen = attrLen;
-		this->indexNo = indexNo;
-	}
+	Attrcat();
+	Attrcat(char* pData);
+	Attrcat(const char* relName, char* attrName, int offset, AttrType attrType, int attrLen, int indexNo);
 };
 
 #endif
