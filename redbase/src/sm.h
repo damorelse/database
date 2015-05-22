@@ -15,6 +15,7 @@
 #include "rm.h"
 #include "ix.h"
 
+#define SM_INVALID -1
 //
 // SM_Manager: provides data management
 //
@@ -47,11 +48,36 @@ public:
                    const char *value);            //   value
 
 private:
+	bool sortAttrcats(Attrcat i, Attrcat j);
+	bool isCatalog(const char* relName);
+	RC CheckName(const char* relName);
+	RC GetRelcatRecord (const char* relName, RM_Record &record);
+	RC GetAttrcatRecord (const char* relName, const char *attrName, RM_Record &record);
+	RC GetAttrcats(const char* relName, Attrcat* attributes);
+
+	IX_Manager* ixManager;
+	RM_Manager* rmManager;
+	RM_FileHandle relFile, attrFile;
 };
 
 //
 // Print-error function
 //
 void SM_PrintError(RC rc);
+
+#define SM_NULLINPUT			(START_SM_WARN + 0)
+#define SM_ATTRNUM				(START_SM_WARN + 1)
+#define SM_NAMELEN				(START_SM_WARN + 2)
+#define SM_INVALIDENUM			(START_SM_WARN + 3)
+#define SM_INVALIDNAME			(START_SM_WARN + 4)
+#define SM_EXISTS				(START_SM_WARN + 5)
+#define SM_DNE					(START_SM_WARN + 6)
+#define SM_FILENOTOPEN			(START_SM_WARN + 7)
+#define SM_INVALIDCATACTION		(START_SM_WARN + 8)
+#define SM_LASTWARN		SM_INVALIDCATACTION
+
+#define SM_CHDIR			(START_SM_ERR - 0)
+#define SM_INVALIDATTRLEN	(START_SM_ERR - 1)
+#define SM_LASTERROR	SM_INVALIDATTRLEN	
 
 #endif

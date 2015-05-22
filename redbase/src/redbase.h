@@ -103,4 +103,60 @@ typedef char Boolean;
 // Global print error
 void PrintError(RC rc);
 
+// Global structures
+char* RELCAT = "relcat";
+char* ATTRCAT = "attrcat";
+// Change dbcreate.cc with
+struct Relcat {
+	char relName[MAXNAME+1];
+	int tupleLen;
+	int attrCount;
+	int indexCount;
+
+	Relcat(char* pData){
+		memcpy(this, pData, sizeof(Attrcat));
+	}
+
+	Relcat(const char* relName, int tupleLen, int attrCount, int indexCount){
+		int len = (strlen(relName) > MAXNAME) ? MAXNAME : strlen(relName);
+		memcpy(this->relName, relName, len+1);
+		this->tupleLen = tupleLen;
+		this->attrCount = attrCount;
+		this->indexCount = indexCount;
+	}
+};
+
+// Change dbcreate.cc with
+// Change sm_manager.cc's Help(const char *relName) with 
+struct Attrcat {
+	char relName[MAXNAME+1];
+	char attrName[MAXNAME+1];
+	int offset;
+	AttrType attrType;
+	int attrLen;
+	int indexNo;
+
+	Attrcat(){
+		offset = -1;
+		attrType = INT;
+		attrLen = 0;
+		indexNo = -1;
+	}
+
+	Attrcat(char* pData){
+		memcpy(this, pData, sizeof(Attrcat));
+	}
+
+	Attrcat(const char* relName, char* attrName, int offset, AttrType attrType, int attrLen, int indexNo){
+		int len = (strlen(relName) > MAXNAME) ? MAXNAME : strlen(relName);
+		memcpy(this->relName, relName, len+1);
+		len = (strlen(attrName) > MAXNAME) ? MAXNAME : strlen(attrName);
+		memcpy(this->attrName, attrName, len+1);
+		this->offset = offset;
+		this->attrType = attrType;
+		this->attrLen = attrLen;
+		this->indexNo = indexNo;
+	}
+};
+
 #endif

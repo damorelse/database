@@ -6,6 +6,7 @@
 #include "pf.h"
 #include "rm.h"
 #include "ix.h"
+#include "sm.h"
 
 using namespace std;
 
@@ -22,7 +23,7 @@ void PrintError(RC rc)
 	else if (posRc >= START_IX_WARN && posRc <= END_IX_WARN)
 		IX_PrintError(rc);
 	else if (posRc >= START_SM_WARN && posRc <= END_SM_WARN)
-		;// TODO: replace
+		SM_PrintError(rc);
 	else if (posRc >= START_QL_WARN && posRc <= END_QL_WARN)
 		;// TODO: replace
 	else
