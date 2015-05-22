@@ -97,15 +97,15 @@ typedef char Boolean;
 #define NULL 0
 #endif
 
-#endif
+
 
 
 // Global print error
 void PrintError(RC rc);
 
 // Global structures
-char* RELCAT = "relcat";
-char* ATTRCAT = "attrcat";
+const char* RELCAT = "relcat";
+const char* ATTRCAT = "attrcat";
 // Change dbcreate.cc with
 struct Relcat {
 	char relName[MAXNAME+1];
@@ -114,7 +114,7 @@ struct Relcat {
 	int indexCount;
 
 	Relcat(char* pData){
-		memcpy(this, pData, sizeof(Attrcat));
+		memcpy(this, pData, sizeof(Relcat));
 	}
 
 	Relcat(const char* relName, int tupleLen, int attrCount, int indexCount){
