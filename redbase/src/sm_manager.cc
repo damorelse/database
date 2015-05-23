@@ -8,7 +8,6 @@
 #include <algorithm>
 #include <unistd.h>
 #include <cstddef>
-#include <string>
 #include "redbase.h"
 #include "sm.h"
 #include "ix.h"
@@ -492,13 +491,15 @@ RC SM_Manager::Load(const char *relName,
 			switch(attributes[i].attrType){
 				case INT:
 				{
-					int tmp = stoi(token);
+					int tmp;
+					istringstream(token) >> tmp;
 					memcpy(dst, &tmp, 4);
 					break;
 				}
 				case FLOAT:
 				{
-					float tmp = stof(token);
+					float tmp;
+					istringstream(token) >> tmp;
 					memcpy(dst, &tmp, 4);
 					break;
 				}
@@ -508,6 +509,7 @@ RC SM_Manager::Load(const char *relName,
 					break;
 				}
 			}
+			i += 1;
 		}
 
 		// Insert into relation
@@ -515,7 +517,8 @@ RC SM_Manager::Load(const char *relName,
 		if (rc = fileHandle.InsertRec(pData, rid))
 			return rc;
 		// Insert into indexes
-		for (pair<Attrcat, IX_IndexHandle> pair : indexes){
+		for (int i = 0; i < indexes.size(); ++i){
+			pair<Attrcat, IX_IndexHandle> pair = indexes.at(i);
 			char* attribute = pData + pair.first.offset;
 			if (rc = pair.second.InsertEntry(attribute, rid))
 				return rc;
@@ -531,7 +534,8 @@ RC SM_Manager::Load(const char *relName,
 	if (rc = rmManager->CloseFile(fileHandle));
 		return rc;
 	// Close index files
-	for (pair<Attrcat, IX_IndexHandle> pair : indexes){
+	for (int i = 0; i < indexes.size(); ++i){
+		pair<Attrcat, IX_IndexHandle> pair = indexes.at(i);
 		if (rc = ixManager->CloseIndex(pair.second))
 			return rc;
 	}
@@ -693,7 +697,7 @@ RC SM_Manager::Help(const char *relName)
 }
 
 // Private functions
-bool SM_Manager::sortAttrcats(Attrcat i, Attrcat j){
+bool SM_Manager::sortAttrcats(const Attrcat &i, const Attrcat &j){
 	return i.offset < j.offset;
 }
 bool SM_Manager::isCatalog(const char* relName){
