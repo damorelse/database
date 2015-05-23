@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include "redbase.h"
 
+const char* ATTRCAT = "attrcat";
+
 Attrcat::Attrcat(){
 	offset = -1;
 	attrType = INT;

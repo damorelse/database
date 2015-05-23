@@ -104,8 +104,9 @@ typedef char Boolean;
 void PrintError(RC rc);
 
 // Global structures
-const char* RELCAT = "relcat";
-const char* ATTRCAT = "attrcat";
+extern const char* RELCAT;
+extern const char* ATTRCAT;
+
 // Change dbcreate.cc with
 struct Relcat {
 	char relName[MAXNAME+1];
