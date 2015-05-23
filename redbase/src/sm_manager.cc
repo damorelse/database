@@ -778,7 +778,7 @@ RC SM_Manager::GetAttrcats(const char* relName, Attrcat* attributes){
 		if (rc = record.GetData(pData))
 			return rc;
 		Attrcat attrcat(pData);
-		memcpy(attributes+i, pData, attrcat.attrLen);
+		memcpy(attributes+i, pData, sizeof(Attrcat));
 		i += 1;
 	}
 	// Check if error occurred while scanning attrcat file
