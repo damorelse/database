@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "redbase.h"
 
-const char* RELCAT = "relcat";
+const char* MYRELCAT = "relcat";
 
 Relcat::Relcat(char* pData){
 		memcpy(this, pData, sizeof(Relcat));

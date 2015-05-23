@@ -104,8 +104,10 @@ typedef char Boolean;
 void PrintError(RC rc);
 
 // Global structures
-extern const char* RELCAT;
-extern const char* ATTRCAT;
+extern const char* MYRELCAT;
+extern const char* MYATTRCAT;
+//#define RELCAT "relcat"
+//#define ATTRCAT "attrcat"
 
 // Change dbcreate.cc with
 struct Relcat {

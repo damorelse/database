@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include "redbase.h"
 
-const char* ATTRCAT = "attrcat";
+const char* MYATTRCAT = "attrcat";
 
 Attrcat::Attrcat(){
 	offset = -1;

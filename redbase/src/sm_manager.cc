@@ -35,9 +35,9 @@ RC SM_Manager::OpenDb(const char *dbName)
 
 	// Open relcat and attrcat relations
 	RC rc;
-	if (rc = rmManager->OpenFile(RELCAT, relFile))
+	if (rc = rmManager->OpenFile(MYRELCAT, relFile))
 		return rc;
-	if (rc = rmManager->OpenFile(ATTRCAT, attrFile))
+	if (rc = rmManager->OpenFile(MYATTRCAT, attrFile))
 		return rc;
 
     return (0);
@@ -293,11 +293,11 @@ RC SM_Manager::CreateIndex(const char *relName,
 	if (rc = ixManager->OpenIndex(relName, indexNo, indexHandle))
 		return rc;
 	// Open (relation if not a catalog) and scan
-	if (strcmp(relName, RELCAT) == 0){
+	if (strcmp(relName, MYRELCAT) == 0){
 		if (rc = fileScan.OpenScan(relFile, INT, 4, 0, NO_OP, NULL))
 		return rc;
 	}
-	else if (strcmp(relName, ATTRCAT) == 0){
+	else if (strcmp(relName, MYATTRCAT) == 0){
 		if (rc = fileScan.OpenScan(attrFile, INT, 4, 0, NO_OP, NULL))
 			return rc;
 	} 
@@ -581,11 +581,11 @@ RC SM_Manager::Print(const char *relName)
 	// Initialize scan
 	RM_FileScan fileScan;
 	RM_FileHandle fileHandle;
-	if (strcmp(relName, RELCAT) == 0){
+	if (strcmp(relName, MYRELCAT) == 0){
 		if (rc = fileScan.OpenScan(relFile, INT, 4, 0, NO_OP, NULL))
 		return rc;
 	}
-	else if (strcmp(relName, ATTRCAT) == 0){
+	else if (strcmp(relName, MYATTRCAT) == 0){
 		if (rc = fileScan.OpenScan(attrFile, INT, 4, 0, NO_OP, NULL))
 			return rc;
 	} 
@@ -637,7 +637,7 @@ RC SM_Manager::Help()
 {
     //cout << "Help\n";
 	RC rc;
-	if (rc = Print(RELCAT))
+	if (rc = Print(MYRELCAT))
 		return rc;
     return (0);
 }
@@ -672,12 +672,12 @@ RC SM_Manager::Help(const char *relName)
 	// Make dataAttrs based on Attrcat
 	const int attrCount = 6;
 	DataAttrInfo* dataAttrs = new DataAttrInfo[attrCount]; 
-	dataAttrs[0] = DataAttrInfo(ATTRCAT, "relName", offsetof(struct Attrcat, relName), STRING, MAXNAME+1, SM_INVALID);
-	dataAttrs[1] = DataAttrInfo(ATTRCAT, "attrName", offsetof(struct Attrcat, attrName), STRING, MAXNAME+1, SM_INVALID);
-	dataAttrs[2] = DataAttrInfo(ATTRCAT, "offset", offsetof(struct Attrcat, offset), INT, sizeof(int), SM_INVALID);
-	dataAttrs[3] = DataAttrInfo(ATTRCAT, "attrType", offsetof(struct Attrcat, attrType), INT, sizeof(AttrType), SM_INVALID);
-	dataAttrs[4] = DataAttrInfo(ATTRCAT, "attrLen", offsetof(struct Attrcat, attrLen),INT, sizeof(int), SM_INVALID);
-	dataAttrs[5] = DataAttrInfo(ATTRCAT, "indexNo", offsetof(struct Attrcat, indexNo), INT, sizeof(int), SM_INVALID);
+	dataAttrs[0] = DataAttrInfo(MYATTRCAT, "relName", offsetof(struct Attrcat, relName), STRING, MAXNAME+1, SM_INVALID);
+	dataAttrs[1] = DataAttrInfo(MYATTRCAT, "attrName", offsetof(struct Attrcat, attrName), STRING, MAXNAME+1, SM_INVALID);
+	dataAttrs[2] = DataAttrInfo(MYATTRCAT, "offset", offsetof(struct Attrcat, offset), INT, sizeof(int), SM_INVALID);
+	dataAttrs[3] = DataAttrInfo(MYATTRCAT, "attrType", offsetof(struct Attrcat, attrType), INT, sizeof(AttrType), SM_INVALID);
+	dataAttrs[4] = DataAttrInfo(MYATTRCAT, "attrLen", offsetof(struct Attrcat, attrLen),INT, sizeof(int), SM_INVALID);
+	dataAttrs[5] = DataAttrInfo(MYATTRCAT, "indexNo", offsetof(struct Attrcat, indexNo), INT, sizeof(int), SM_INVALID);
 
 	// Initialize printer
 	Printer printer(dataAttrs, attrCount);
@@ -702,7 +702,7 @@ bool sortAttrcats(const Attrcat &i, const Attrcat &j){
 	return i.offset < j.offset;
 }
 bool SM_Manager::isCatalog(const char* relName){
-	return (strcmp(relName, RELCAT) == 0 || strcmp(relName, ATTRCAT) == 0);
+	return (strcmp(relName, MYRELCAT) == 0 || strcmp(relName, MYATTRCAT) == 0);
 }
 RC SM_Manager::CheckName(const char* name){
 	if (!name)
