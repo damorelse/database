@@ -48,7 +48,7 @@ public:
                    const char *value);            //   value
 
 private:
-	bool sortAttrcats(const Attrcat i, const Attrcat j);
+	bool sortAttrcats(const Attrcat &i, const Attrcat &j);
 	bool isCatalog(const char* relName);
 	RC CheckName(const char* relName);
 	RC GetRelcatRecord (const char* relName, RM_Record &record);
