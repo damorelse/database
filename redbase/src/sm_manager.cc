@@ -6,6 +6,9 @@
 #include <string>
 #include <sstream>
 #include <algorithm>
+#include <unistd.h>
+#include <cstddef>
+#include <string>
 #include "redbase.h"
 #include "sm.h"
 #include "ix.h"
@@ -80,7 +83,8 @@ RC SM_Manager::CreateTable(const char *relName,
 		return SM_INVALIDCATACTION;
 
 	// Check relation name uniqueness
-	rc = GetRelcatRecord(relName, RM_Record());
+	RM_Record record;
+	rc = GetRelcatRecord(relName, record);
 	if (rc == 0)
 		return SM_EXISTS;
 	if (rc != RM_EOF)
@@ -469,7 +473,6 @@ RC SM_Manager::Load(const char *relName,
 	if (rc = record.GetData(pData))
 		return rc;
 	Relcat relcat(pData);
-	int tupleLen = relcat.tupleLen;
 
 	// Open ASCII file
 	ifstream asciiFile(fileName);
@@ -487,17 +490,23 @@ RC SM_Manager::Load(const char *relName,
 		while(getline(ss, token, ',')){
 			char* dst = pData + attributes[i].offset;
 			switch(attributes[i].attrType){
-			case INT:
-				int tmp = stoi(token);
-				memcpy(dst, &tmp, 4);
-				break;
-			case FLOAT:
-				float tmp = stof(token);
-				memcpy(dst, &tmp, 4);
-				break;
-			case STRING:
-				memcpy(dst, token.c_str(), attributes[i].attrLen);
-				break;
+				case INT:
+				{
+					int tmp = stoi(token);
+					memcpy(dst, &tmp, 4);
+					break;
+				}
+				case FLOAT:
+				{
+					float tmp = stof(token);
+					memcpy(dst, &tmp, 4);
+					break;
+				}
+				case STRING:
+				{
+					memcpy(dst, token.c_str(), attributes[i].attrLen);
+					break;
+				}
 			}
 		}
 

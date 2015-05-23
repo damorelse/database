@@ -51,6 +51,27 @@ struct DataAttrInfo
        return (*this);
     };
 
+	// Added
+	DataAttrInfo(const Attrcat attrcat){
+		strcpy(this->relName, attrcat.relName);
+		strcpy(this->attrName, attrcat.attrName);
+		this->offset = attrcat.offset;
+		this->attrType = attrcat.attrType;
+		this->attrLength = attrcat.attrLen;
+		this->indexNo = attrcat.indexNo;
+	}
+
+	// Added
+	DataAttrInfo(const char* relName, const char* attrName, int offset, AttrType attrType, 
+		         int attrLen, int indexNo){
+		strcpy(this->relName, relName);
+		strcpy(this->attrName, attrName);
+		this->offset = offset;
+		this->attrType = attrType;
+		this->attrLength = attrLen;
+		this->indexNo = indexNo;
+	}
+
     char     relName[MAXNAME+1];    // Relation name
     char     attrName[MAXNAME+1];   // Attribute name
     int      offset;                // Offset of attribute
