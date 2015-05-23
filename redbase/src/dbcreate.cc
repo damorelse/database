@@ -94,14 +94,8 @@ int main(int argc, char *argv[])
 	attributes.push_back(Attrcat(MYRELCAT, "attrCount", offsetof(struct Relcat, attrCount), INT, sizeof(int), SM_INVALID));
 	attributes.push_back(Attrcat(MYRELCAT, "indexCount", offsetof(struct Relcat, indexCount), INT, sizeof(int), SM_INVALID));
 	// attrcat
-	//attributes.push_back(Attrcat(MYATTRCAT, "relName", offsetof(struct Attrcat, relName), STRING, MAXNAME+1, SM_INVALID));
-	//attributes.push_back(Attrcat(MYATTRCAT, "attrName", offsetof(struct Attrcat, attrName), STRING, MAXNAME+1, SM_INVALID));
-	//attributes.push_back(Attrcat(MYATTRCAT, "offset", offsetof(struct Attrcat, offset), INT, sizeof(int), SM_INVALID));
-	//attributes.push_back(Attrcat(MYATTRCAT, "attrType", offsetof(struct Attrcat, attrType), INT, sizeof(AttrType), SM_INVALID));
-	//attributes.push_back(Attrcat(MYATTRCAT, "attrLen", offsetof(struct Attrcat, attrLen), INT, sizeof(int), SM_INVALID));
-	//attributes.push_back(Attrcat(MYATTRCAT, "indexNo", offsetof(struct Attrcat, indexNo), INT, sizeof(int), SM_INVALID));
-	attributes.push_back(Attrcat(MYATTRCAT, "relName", 1, STRING, MAXNAME+1, SM_INVALID));
-	attributes.push_back(Attrcat(MYATTRCAT, "attrName", 2, STRING, MAXNAME+1, SM_INVALID));
+	attributes.push_back(Attrcat(MYATTRCAT, "relName", offsetof(struct Attrcat, relName), STRING, MAXNAME+1, SM_INVALID));
+	attributes.push_back(Attrcat(MYATTRCAT, "attrName", offsetof(struct Attrcat, attrName), STRING, MAXNAME+1, SM_INVALID));
 	attributes.push_back(Attrcat(MYATTRCAT, "offset", offsetof(struct Attrcat, offset), INT, sizeof(int), SM_INVALID));
 	attributes.push_back(Attrcat(MYATTRCAT, "attrType", offsetof(struct Attrcat, attrType), INT, sizeof(AttrType), SM_INVALID));
 	attributes.push_back(Attrcat(MYATTRCAT, "attrLen", offsetof(struct Attrcat, attrLen), INT, sizeof(int), SM_INVALID));
