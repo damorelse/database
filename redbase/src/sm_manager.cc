@@ -15,6 +15,7 @@
 #include "printer.h"
 
 using namespace std;
+bool sortAttrcats(const Attrcat &i, const Attrcat &j);
 
 SM_Manager::SM_Manager(IX_Manager &ixm, RM_Manager &rmm): ixManager(&ixm), rmManager(&rmm)
 {
@@ -697,7 +698,7 @@ RC SM_Manager::Help(const char *relName)
 }
 
 // Private functions
-bool SM_Manager::sortAttrcats(const Attrcat &i, const Attrcat &j){
+bool sortAttrcats(const Attrcat &i, const Attrcat &j){
 	return i.offset < j.offset;
 }
 bool SM_Manager::isCatalog(const char* relName){
