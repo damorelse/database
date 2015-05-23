@@ -10,6 +10,7 @@
 #include <cstring>
 #include <unistd.h>
 #include <vector>
+#include <cstddef>
 #include "rm.h"
 #include "sm.h"
 #include "redbase.h"
