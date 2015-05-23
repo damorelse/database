@@ -1,4 +1,6 @@
 #include <string>
+#include <cstring>
+#include <stdio.h>
 #include "redbase.h"
 
 Relcat::Relcat(char* pData){

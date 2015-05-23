@@ -1,4 +1,6 @@
 #include <string>
+#include <cstring>
+#include <stdio.h>
 #include "redbase.h"
 
 Attrcat::Attrcat(){
@@ -21,3 +23,4 @@ Attrcat::Attrcat(const char* relName, char* attrName, int offset, AttrType attrT
 	this->attrType = attrType;
 	this->attrLen = attrLen;
 	this->indexNo = indexNo;
+}

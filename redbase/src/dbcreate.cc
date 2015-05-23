@@ -101,7 +101,8 @@ int main(int argc, char *argv[])
 	attributes.push_back(Attrcat(ATTRCAT, "attrLen", offsetof(struct Attrcat, attrLen), INT, sizeof(int), SM_INVALID));
 	attributes.push_back(Attrcat(ATTRCAT, "indexNo", offsetof(struct Attrcat, indexNo), INT, sizeof(int), SM_INVALID));
 	// Insert all the Attrcats into attrcat catalog
-	for (Attrcat attrcat : attributes){
+	for (int i = 0; i < attributes.size(); ++i){
+		Attrcat attrcat = attributes.at(i);
 		if (rc = attrFile.InsertRec((char*)&attrcat, rid))
 			return rc;
 	}
