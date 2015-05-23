@@ -719,6 +719,8 @@ RC SM_Manager::GetRelcatRecord(const char* relName, RM_Record &record){
 	RM_FileScan fileScan;
 	RC rc;
 	int offset = (int)offsetof(struct Relcat, relName);
+	if (offset == -1)
+		return -1;
 
 	// Scan for an entry for relation
 	if (rc = fileScan.OpenScan(relFile, STRING, MAXNAME, offset, EQ_OP, relation))
