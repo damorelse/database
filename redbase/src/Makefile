@@ -39,7 +39,7 @@ RM_SOURCES     = rm_error.cc rm_filehandle.cc rm_filescan.cc \
                  global_error.cc
 IX_SOURCES     = ix_error.cc ix_indexhandle.cc ix_indexscan.cc \
                  ix_manager.cc
-SM_SOURCES     = sm_manager.cc printer.cc relcat.cc attrcat.cc
+SM_SOURCES     = sm_error.cc sm_manager.cc printer.cc relcat.cc attrcat.cc
 QL_SOURCES     = ql_manager_stub.cc
 UTILS_SOURCES  = dbcreate.cc dbdestroy.cc redbase.cc
 PARSER_SOURCES = scan.c parse.c nodes.c interp.c
