@@ -210,6 +210,7 @@ void IX_PrintError(RC rc);
 #define IX_FILENAMELEN			 (START_IX_ERR - 4)
 #define IX_INVALIDSCANCOMBO      (START_IX_ERR - 5)
 #define IX_INVALIDNUM            (START_IX_ERR - 6)
+#define IX_TOOMANYSAME			 (START_IX_ERR - 7)
 #define IX_LASTERROR	END_IX_ERR                   //TODO: set
 
 

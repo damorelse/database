@@ -22,6 +22,7 @@ static char *IX_ErrorMsg[] = {
 	(char*)"invalid file name length",
 	(char*)"invalid scan parameters; either value null and compOp not NO_OP, or value not null and compOp NO_OP",
 	(char*)"invalid index number",
+	(char*)"too many entries with same key attribute", 
 };
 
 void IX_PrintError(RC rc)
