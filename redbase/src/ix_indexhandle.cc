@@ -1,6 +1,7 @@
 #include <cstring>
 #include <string>
 #include <iostream>
+#include <cerrno>
 #include "ix.h"
 
 using namespace std;
@@ -39,6 +40,7 @@ RC IX_IndexHandle::InsertEntry(void *attribute, const RID &rid)
 	// End check input.
 
 	// Recursive call
+	cerr << "IX a" << endl;
 	PageNum newChildPage = IX_NO_PAGE;
 	char* newAttribute = new char[ixIndexHeader.attrLength];
 	rc = InsertEntryHelper(ixIndexHeader.rootPage, ixIndexHeader.height, attribute, rid, newChildPage, newAttribute);
@@ -46,7 +48,7 @@ RC IX_IndexHandle::InsertEntry(void *attribute, const RID &rid)
 		delete [] newAttribute;
 		return rc;
 	}
-
+	cerr << "IX b" << endl;
 	// Root node was split, need to add level to index
 	if (newChildPage != IX_NO_PAGE){
 		// Create new root
