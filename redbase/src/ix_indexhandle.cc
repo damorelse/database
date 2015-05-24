@@ -42,8 +42,10 @@ RC IX_IndexHandle::InsertEntry(void *attribute, const RID &rid)
 	PageNum newChildPage = IX_NO_PAGE;
 	char* newAttribute = new char[ixIndexHeader.attrLength];
 	rc = InsertEntryHelper(ixIndexHeader.rootPage, ixIndexHeader.height, attribute, rid, newChildPage, newAttribute);
-	if (rc != OK_RC)
+	if (rc != OK_RC){
+		delete [] newAttribute;
 		return rc;
+	}
 
 	// Root node was split, need to add level to index
 	if (newChildPage != IX_NO_PAGE){
