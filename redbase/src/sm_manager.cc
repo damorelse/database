@@ -544,7 +544,7 @@ RC SM_Manager::Load(const char *relName,
 		for (int i = 0; i < indexes.size(); ++i){
 			pair<Attrcat, IX_IndexHandle> pair = indexes.at(i);
 			char* attribute = pData + pair.first.offset;
-			if (rc = pair.second.InsertEntry(attribute, rid)){
+			if (rc = indexes.at(i).second.InsertEntry(attribute, rid)){
 				delete [] pData;
 				return rc;
 			}
@@ -561,8 +561,7 @@ RC SM_Manager::Load(const char *relName,
 		return rc;
 	// Close index files
 	for (int i = 0; i < indexes.size(); ++i){
-		pair<Attrcat, IX_IndexHandle> pair = indexes.at(i);
-		if (rc = ixManager->CloseIndex(pair.second))
+		if (rc = ixManager->CloseIndex(indexes.at(i).second))
 			return rc;
 	}
 

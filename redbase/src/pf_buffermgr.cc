@@ -18,7 +18,7 @@
 #include <cstdio>
 #include <unistd.h>
 #include <iostream>
-#includae <cerrno>
+#include <cerrno>
 #include "pf_buffermgr.h"
 
 using namespace std;

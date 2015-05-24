@@ -114,7 +114,10 @@ RC IX_IndexHandle::InsertEntry(void *attribute, const RID &rid)
 			PrintError(rc);
 			return rc;
 		}
-
+		if(rc = ForcePages()){
+			PrintError(rc);
+			return rc;
+		}
 		// Modify index header info
 		modified = true;
 		ixIndexHeader.rootPage = pageNum;
