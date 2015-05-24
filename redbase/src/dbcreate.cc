@@ -59,7 +59,6 @@ int main(int argc, char *argv[])
 		PrintError(rc);
 		return rc;
 	}
-
 	// attrcat
 	if (rc = rmm.CreateFile(MYATTRCAT, sizeof(Attrcat))){
 		PrintError(rc);

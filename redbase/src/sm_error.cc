@@ -20,6 +20,7 @@ static char *SM_WarnMsg[] = {
 static char *SM_ErrorMsg[] = {
 	(char*)"change directory error",
 	(char*)"invalid attribute length",
+	(char*)"invalid ascii file format (includes string attributes that are too long)",
 };
 
 void SM_PrintError(RC rc)

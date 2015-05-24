@@ -18,9 +18,7 @@
 using namespace std;
 bool sortAttrcats(const Attrcat &i, const Attrcat &j);
 
-SM_Manager::SM_Manager(IX_Manager &ixm, RM_Manager &rmm): ixManager(&ixm), rmManager(&rmm)
-{
-}
+SM_Manager::SM_Manager(IX_Manager &ixm, RM_Manager &rmm): ixManager(&ixm), rmManager(&rmm){}
 
 SM_Manager::~SM_Manager()
 {
@@ -311,7 +309,6 @@ RC SM_Manager::CreateIndex(const char *relName,
 	}
 
 	// Insert each relation tuple into index
-	int tmptmp = 0;
 	while ( OK_RC == (rc = fileScan.GetNextRec(record))){
 		if (rc = record.GetData(pData))
 			return rc;
@@ -321,9 +318,7 @@ RC SM_Manager::CreateIndex(const char *relName,
 		
 		if (rc = indexHandle.InsertEntry(attribute, rid))
 			return rc;
-		tmptmp += 1;
 	}
-    cerr << "index holds " << tmptmp << endl;
 	// Check if error occurred while scanning
 	if (rc != RM_EOF)
 		return rc;
@@ -414,7 +409,7 @@ RC SM_Manager::Load(const char *relName,
 	vector<pair<Attrcat, IX_IndexHandle> > indexes;
 	vector<Attrcat> attributes;
 	RC rc;
-    cerr << "Begin load" << endl;
+
 	// Check input
 	if (rc = CheckName(relName))
 		return rc;
@@ -495,20 +490,28 @@ RC SM_Manager::Load(const char *relName,
 				case INT:
 				{
 					int tmp;
-					istringstream(token) >> tmp;
+					istringstream ss(token);
+					ss >> tmp;
+					if (ss.fail() || ss.rdbuf()->in_avail() != 0)
+						return SM_INVALIDLOADFORMAT;
 					memcpy(dst, &tmp, 4);
 					break;
 				}
 				case FLOAT:
 				{
 					float tmp;
-					istringstream(token) >> tmp;
+					istringstream ss(token);
+					ss >> tmp;
+					if (ss.fail() || ss.rdbuf()->in_avail() != 0)
+						return SM_INVALIDLOADFORMAT;
 					memcpy(dst, &tmp, 4);
 					break;
 				}
 				case STRING:
 				{
-					memcpy(dst, token.c_str(), attributes[i].attrLen);
+					if (token.size() > attributes[i].attrLen)
+						return  SM_INVALIDLOADFORMAT;
+					memcpy(dst, token.c_str(), token.size());
 					break;
 				}
 			}
@@ -525,7 +528,6 @@ RC SM_Manager::Load(const char *relName,
 			char* attribute = pData + pair.first.offset;
 			if (rc = pair.second.InsertEntry(attribute, rid))
 				return rc;
-			cerr << "+1 to index" << endl;
 		}
 
 		// Clean up pData
