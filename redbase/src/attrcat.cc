@@ -6,7 +6,7 @@
 const char* MYATTRCAT = "attrcat";
 
 Attrcat::Attrcat(){
-	memset(this, 0, sizeof(Attrcat));
+	memset(this, '\0', sizeof(Attrcat));
 	offset = -1;
 	attrType = INT;
 	attrLen = 0;
@@ -18,11 +18,11 @@ Attrcat::Attrcat(char* pData){
 }
 
 Attrcat::Attrcat(const char* relName, char* attrName, int offset, AttrType attrType, int attrLen, int indexNo){
-	memset(this, 0, sizeof(Attrcat));
+	memset(this, '\0', sizeof(Attrcat));
 	int len = (strlen(relName) > MAXNAME) ? MAXNAME : strlen(relName);
-	memcpy(this->relName, relName, len+1);
+	memcpy(this->relName, relName, len);
 	len = (strlen(attrName) > MAXNAME) ? MAXNAME : strlen(attrName);
-	memcpy(this->attrName, attrName, len+1);
+	memcpy(this->attrName, attrName, len);
 	this->offset = offset;
 	this->attrType = attrType;
 	this->attrLen = attrLen;

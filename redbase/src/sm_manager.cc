@@ -185,7 +185,8 @@ RC SM_Manager::DropTable(const char *relName)
 
 	// Find relation's indexes
 	char relation[MAXNAME + 1];
-	strcpy(relation, relName);
+	memset(relation, '\0', MAXNAME + 1);
+	memcpy(relation, relName, min(strlen(relName), MAXNAME));
 	int offset = (int)offsetof(struct Attrcat, relName);
 	if (rc = fileScan.OpenScan(attrFile, STRING, MAXNAME, offset, EQ_OP, relation))
 		return rc;
@@ -429,7 +430,8 @@ RC SM_Manager::Load(const char *relName,
 	RM_FileScan fileScan;
 	int offset = (int)offsetof(struct Attrcat, relName);
 	char relation[MAXNAME + 1];
-	strcpy(relation, relName);
+	memset(relation, '\0', MAXNAME + 1);
+	memcpy(relation, relName, min(strlen(relName), MAXNAME));
 	if (rc = fileScan.OpenScan(attrFile, STRING, MAXNAME, offset, EQ_OP, relation))
 		return rc;
 
@@ -518,8 +520,8 @@ RC SM_Manager::Load(const char *relName,
 						delete [] pData;
 						return  SM_INVALIDLOADFORMAT;
 					}
-					memset(dst, 0, attributes[i].attrLen + 1);
-					memcpy(dst, token.c_str(), token.size()+1);
+					memset(dst, '\0', attributes[i].attrLen);
+					memcpy(dst, token.c_str(), token.size());
 					break;
 				}
 			}
@@ -754,7 +756,8 @@ RC SM_Manager::CheckName(const char* name){
 }
 RC SM_Manager::GetRelcatRecord(const char* relName, RM_Record &record){
 	char relation[MAXNAME + 1];
-	strcpy(relation, relName);
+	memset(relation, '\0', MAXNAME + 1);
+	memcpy(relation, relName, min(strlen(relName), MAXNAME));
 	RM_FileScan fileScan;
 	RC rc;
 	int offset = (int)offsetof(struct Relcat, relName);
@@ -771,9 +774,11 @@ RC SM_Manager::GetRelcatRecord(const char* relName, RM_Record &record){
 }
 RC SM_Manager::GetAttrcatRecord (const char *relName, const char *attrName, RM_Record &record){
 	char relation[MAXNAME + 1];
-	strcpy(relation, relName);
+	memset(relation, '\0', MAXNAME + 1);
+	memcpy(relation, relName, min(strlen(relName), MAXNAME));
 	char attribute[MAXNAME + 1];
-	strcpy(attribute, attrName);
+	memset(attribute, '\0', MAXNAME + 1);
+	memcpy(attribute, attrName, min(strlen(attrName), MAXNAME));
 
 	RM_FileScan fileScan;
 	RC rc;
@@ -806,7 +811,8 @@ RC SM_Manager::GetAttrcats(const char* relName, Attrcat* attributes){
 
 	// Open scan
 	char relation[MAXNAME + 1];
-	strcpy(relation, relName);
+	memset(relation, '\0', MAXNAME + 1);
+	memcpy(relation, relName, min(strlen(relName), MAXNAME));
 	int offset = (int)offsetof(struct Attrcat, relName);
 	if (rc = fileScan.OpenScan(attrFile, STRING, MAXNAME, offset, EQ_OP, relation))
 		return rc;
