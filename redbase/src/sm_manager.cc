@@ -182,13 +182,6 @@ RC SM_Manager::DropTable(const char *relName)
 		return rc;
 	if (rc = relFile.DeleteRec(rid))
 		return rc;
-	
-	// Check if any indexes
-	if (rc = record.GetData(pData))
-		return rc;
-	Relcat relcat(pData);
-	if (relcat.indexCount == 0)
-		return 0;
 
 	// Find relation's indexes
 	char relation[MAXNAME + 1];
