@@ -18,6 +18,7 @@
 #include <cstdio>
 #include <unistd.h>
 #include <iostream>
+#includae <cerrno>
 #include "pf_buffermgr.h"
 
 using namespace std;
@@ -274,7 +275,7 @@ RC PF_BufferMgr::AllocatePage(int fd, PageNum pageNum, char **ppBuffer)
    sprintf (psMessage, "Allocating a page for (%d,%d)....", fd, pageNum);
    WriteLog(psMessage);
 #endif
-
+   cerr << "AllocatePage " << pageNum << endl;
    // If page is already in buffer, return an error
    if (!(rc = hashTable.Find(fd, pageNum, slot)))
       return (PF_PAGEINBUF);
