@@ -10,6 +10,7 @@ Relcat::Relcat(char* pData){
 	}
 
 Relcat::Relcat(const char* relName, int tupleLen, int attrCount, int indexCount){
+	memset(this, 0, sizeof(Relcat));
 	int len = (strlen(relName) > MAXNAME) ? MAXNAME : strlen(relName);
 	memcpy(this->relName, relName, len+1);
 	this->tupleLen = tupleLen;
