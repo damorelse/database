@@ -497,7 +497,7 @@ RC SM_Manager::Load(const char *relName,
 					ss >> tmp;
 					if (ss.fail() || ss.rdbuf()->in_avail() != 0){
 						delete [] pData;
-						cerr << "INT" << endl;
+						cerr << "INT: " << line << " token: " << token << endl;
 						return SM_INVALIDLOADFORMAT;
 					}
 					memcpy(dst, &tmp, 4);
