@@ -311,6 +311,7 @@ RC SM_Manager::CreateIndex(const char *relName,
 	}
 
 	// Insert each relation tuple into index
+	int tmptmp = 0;
 	while ( OK_RC == (rc = fileScan.GetNextRec(record))){
 		if (rc = record.GetData(pData))
 			return rc;
@@ -320,7 +321,9 @@ RC SM_Manager::CreateIndex(const char *relName,
 		
 		if (rc = indexHandle.InsertEntry(attribute, rid))
 			return rc;
+		tmptmp += 1;
 	}
+    cerr << "index holds " << tmptmp << endl;
 	// Check if error occurred while scanning
 	if (rc != RM_EOF)
 		return rc;
@@ -522,6 +525,7 @@ RC SM_Manager::Load(const char *relName,
 			char* attribute = pData + pair.first.offset;
 			if (rc = pair.second.InsertEntry(attribute, rid))
 				return rc;
+			cerr << "+1 to index" << endl;
 		}
 
 		// Clean up pData
