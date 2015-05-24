@@ -511,7 +511,7 @@ RC SM_Manager::Load(const char *relName,
 				{
 					if (token.size() > attributes[i].attrLen)
 						return  SM_INVALIDLOADFORMAT;
-					memcpy(dst, token.c_str(), token.size());
+					memcpy(dst, token.c_str(), token.size()+1);
 					break;
 				}
 			}
