@@ -497,6 +497,7 @@ RC SM_Manager::Load(const char *relName,
 					ss >> tmp;
 					if (ss.fail() || ss.rdbuf()->in_avail() != 0){
 						delete [] pData;
+						cerr << "INT" << endl;
 						return SM_INVALIDLOADFORMAT;
 					}
 					memcpy(dst, &tmp, 4);
@@ -509,6 +510,7 @@ RC SM_Manager::Load(const char *relName,
 					ss >> tmp;
 					if (ss.fail() || ss.rdbuf()->in_avail() != 0){
 						delete [] pData;
+						cerr << "FLOAT" << endl;
 						return SM_INVALIDLOADFORMAT;
 					}
 					memcpy(dst, &tmp, 4);
@@ -518,6 +520,7 @@ RC SM_Manager::Load(const char *relName,
 				{
 					if (token.size() > attributes[i].attrLen){
 						delete [] pData;
+						cerr << "STRING" << endl;
 						return  SM_INVALIDLOADFORMAT;
 					}
 					memset(dst, '\0', attributes[i].attrLen);
