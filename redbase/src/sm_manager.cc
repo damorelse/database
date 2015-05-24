@@ -420,7 +420,15 @@ RC SM_Manager::Load(const char *relName,
 	if (strlen(fileName) == 0)
 		return SM_NAMELEN;
 	// End check input.
-	
+
+	// Check if relation exists
+	RM_Record record;
+	if (rc = GetRelcatRecord(relName, record)){
+		if (rc == RM_EOF)
+			return SM_DNE;
+		return rc;
+	}
+
 	// Open relation files
 	if (rc = rmManager->OpenFile(relName, fileHandle))
 		return rc;
@@ -431,7 +439,7 @@ RC SM_Manager::Load(const char *relName,
 	strcpy(relation, relName);
 	if (rc = fileScan.OpenScan(attrFile, STRING, MAXNAME, offset, EQ_OP, relation))
 		return rc;
-	RM_Record record;
+
 	// Find each attribute
 	while ( OK_RC == (rc = fileScan.GetNextRec(record))){
 		// Read attribute's attrcat info
