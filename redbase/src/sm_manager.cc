@@ -492,8 +492,10 @@ RC SM_Manager::Load(const char *relName,
 					int tmp;
 					istringstream ss(token);
 					ss >> tmp;
-					if (ss.fail() || ss.rdbuf()->in_avail() != 0)
+					if (ss.fail() || ss.rdbuf()->in_avail() != 0){
+						delete [] pData;
 						return SM_INVALIDLOADFORMAT;
+					}
 					memcpy(dst, &tmp, 4);
 					break;
 				}
@@ -502,15 +504,19 @@ RC SM_Manager::Load(const char *relName,
 					float tmp;
 					istringstream ss(token);
 					ss >> tmp;
-					if (ss.fail() || ss.rdbuf()->in_avail() != 0)
+					if (ss.fail() || ss.rdbuf()->in_avail() != 0){
+						delete [] pData;
 						return SM_INVALIDLOADFORMAT;
+					}
 					memcpy(dst, &tmp, 4);
 					break;
 				}
 				case STRING:
 				{
-					if (token.size() > attributes[i].attrLen)
+					if (token.size() > attributes[i].attrLen){
+						delete [] pData;
 						return  SM_INVALIDLOADFORMAT;
+					}
 					memcpy(dst, token.c_str(), token.size()+1);
 					break;
 				}
@@ -520,14 +526,18 @@ RC SM_Manager::Load(const char *relName,
 
 		// Insert into relation
 		RID rid;
-		if (rc = fileHandle.InsertRec(pData, rid))
+		if (rc = fileHandle.InsertRec(pData, rid)){
+			delete [] pData;
 			return rc;
+		}
 		// Insert into indexes
 		for (int i = 0; i < indexes.size(); ++i){
 			pair<Attrcat, IX_IndexHandle> pair = indexes.at(i);
 			char* attribute = pData + pair.first.offset;
-			if (rc = pair.second.InsertEntry(attribute, rid))
+			if (rc = pair.second.InsertEntry(attribute, rid)){
+				delete [] pData;
 				return rc;
+			}
 		}
 
 		// Clean up pData
@@ -573,8 +583,10 @@ RC SM_Manager::Print(const char *relName)
 		return rc;
 	Relcat relcat(pData);
 	Attrcat* attributes = new Attrcat[relcat.attrCount];
-	if (rc = GetAttrcats(relName, attributes))
+	if (rc = GetAttrcats(relName, attributes)){
+		delete [] attributes;
 		return rc;
+	}
 
 	// Initialize printer
 	DataAttrInfo* dataAttrs = new DataAttrInfo[relcat.attrCount]; 
@@ -587,28 +599,46 @@ RC SM_Manager::Print(const char *relName)
 	RM_FileScan fileScan;
 	RM_FileHandle fileHandle;
 	if (strcmp(relName, MYRELCAT) == 0){
-		if (rc = fileScan.OpenScan(relFile, INT, 4, 0, NO_OP, NULL))
-		return rc;
+		if (rc = fileScan.OpenScan(relFile, INT, 4, 0, NO_OP, NULL)){
+			delete [] attributes;
+			delete [] dataAttrs;
+			return rc;
+		}
 	}
 	else if (strcmp(relName, MYATTRCAT) == 0){
-		if (rc = fileScan.OpenScan(attrFile, INT, 4, 0, NO_OP, NULL))
+		if (rc = fileScan.OpenScan(attrFile, INT, 4, 0, NO_OP, NULL)){
+			delete [] attributes;
+			delete [] dataAttrs;
 			return rc;
+		}
 	} 
 	else{
-		if (rc = rmManager->OpenFile(relName, fileHandle))
+		if (rc = rmManager->OpenFile(relName, fileHandle)){
+			delete [] attributes;
+			delete [] dataAttrs;
 			return rc;
-		if (rc = fileScan.OpenScan(fileHandle, INT, 4, 0, NO_OP, NULL))
+		}
+		if (rc = fileScan.OpenScan(fileHandle, INT, 4, 0, NO_OP, NULL)){
+			delete [] attributes;
+			delete [] dataAttrs;
 			return rc;
+		}
 	}
 
 	// Scan and print tuples
 	while ( OK_RC == (rc = fileScan.GetNextRec(record))){
-		if (rc = record.GetData(pData))
+		if (rc = record.GetData(pData)){
+			delete [] attributes;
+			delete [] dataAttrs;
 			return rc;
+		}
 		printer.Print(cout, pData);
 	}
-	if (rc != RM_EOF)
+	if (rc != RM_EOF){
+		delete [] attributes;
+		delete [] dataAttrs;
 		return rc;
+	}
 
 	// Finish printer
 	printer.PrintFooter(cout);
@@ -671,8 +701,10 @@ RC SM_Manager::Help(const char *relName)
 		return rc;
 	Relcat relcat(pData);
 	Attrcat* attributes = new Attrcat[relcat.attrCount];
-	if (rc = GetAttrcats(relName, attributes))
+	if (rc = GetAttrcats(relName, attributes)){
+		delete [] attributes;
 		return rc;
+	}
 
 	// Make dataAttrs based on Attrcat
 	const int attrCount = 6;
@@ -724,8 +756,6 @@ RC SM_Manager::GetRelcatRecord(const char* relName, RM_Record &record){
 	RM_FileScan fileScan;
 	RC rc;
 	int offset = (int)offsetof(struct Relcat, relName);
-	if (offset == -1)
-		return -1;
 
 	// Scan for an entry for relation
 	if (rc = fileScan.OpenScan(relFile, STRING, MAXNAME, offset, EQ_OP, relation))
