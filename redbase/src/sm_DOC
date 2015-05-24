@@ -1,0 +1,38 @@
+Gina Pai
+gpai
+05603432
+
+Overall Design:
+	*Unix Command Lines
+Implemented as suggested.
+
+	*Index Numbers
+Index numbers are set as the indexing attribute's offset in the relation records. This guarantees the numbers are non-negative and unique among the relation's other indexes.
+
+	*Metadata
+The catalogs, relcat and attrcat, are stored and treated like regular relations. The only difference is input parameter checks for methods "CreateTable", "DropTable", and "Load" do not accept them as valid relation names.
+
+Relcat records store relation name, tuple length, attribute count, and index count.
+
+Attrcat records store relation name, attribute name, attribute's record offset, attribute type, attribute length, and index number (if it exists, else -1). 
+
+	*Metadata Management
+The catalogs relcat and attrcat are opened and closed with the database. 
+
+To resolve the issue of re-opening catalogs and changes not being reflected on the disk, we simply guarantee that catalogs are not re-opened. When a filehandle is needed on a relation to perform some action (e.g. a file scan), there is first a check for if the relation is a catalog. If the relation is a catalog, the action is simply performed using the catalog's SM_Manager filehandle. 
+
+	*Metadata Methods
+Implemented "GetRelcat" and "GetAttrcats" methods for a relation, and "GetAttrcat" method for a relation-attribute.
+
+Key Data Structures:
+	Relcat catalog
+	Attrcat catalog
+
+Testing Process:
+My testing process involved manual testing and running the provided test 'sm_test.1' and the shared tests 'sm_test.2', 'sm_test.3', 'sm_test.4'. Once I guaranteed my code passed all these tests, I then re-ran the tests with Valgrind turned on and guaranteed there were no memory-related errors.
+
+Known Bugs:
+There are no known bugs at this time.
+
+Received Assistance:
+None.
