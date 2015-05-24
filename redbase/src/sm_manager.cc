@@ -517,6 +517,7 @@ RC SM_Manager::Load(const char *relName,
 						delete [] pData;
 						return  SM_INVALIDLOADFORMAT;
 					}
+					memset(dst, 0, attributes[i].attrLen + 1);
 					memcpy(dst, token.c_str(), token.size()+1);
 					break;
 				}
