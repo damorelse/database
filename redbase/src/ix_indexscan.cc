@@ -70,7 +70,7 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 {
 	// Check if scan finished
 	if (finished){
-		PrintError(IX_EOF);
+		//PrintError(IX_EOF);
 		return IX_EOF;
 	}
 
@@ -157,7 +157,7 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 		// No more entries to read, EOF
 		else {
 			finished = true;
-			PrintError(IX_EOF);
+			//PrintError(IX_EOF);
 			return IX_EOF;
 		}
 	}
@@ -343,7 +343,7 @@ RC IX_IndexScan::GetNextEntry(RID &rid)
 				return rc;
 			}
 		}
-		PrintError(IX_EOF);
+		//PrintError(IX_EOF);
 		return IX_EOF;
 	}
 

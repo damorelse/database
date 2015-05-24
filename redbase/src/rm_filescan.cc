@@ -102,7 +102,7 @@ RC RM_FileScan::GetNextRec(RM_Record &rec)               // Get next matching re
 
 	// Check if page out of range, EOF
 	if (pageNum > rmFileHandle->rmFileHeader.maxPage){
-		PrintError(RM_EOF);
+		//PrintError(RM_EOF);
 		return RM_EOF;
 	}
 
@@ -279,7 +279,7 @@ RC RM_FileScan::GetNextRec(RM_Record &rec)               // Get next matching re
 	// After loop
 	// No matching record was found, EOF
 	if (!found){
-		PrintError(RM_EOF);
+		//PrintError(RM_EOF);
 		return RM_EOF;
 	}
 
