@@ -1,3 +1,4 @@
+#include <cerrno>
 #include <cstdio>
 #include <iostream>
 #include <set>
@@ -410,7 +411,7 @@ RC SM_Manager::Load(const char *relName,
 	vector<pair<Attrcat, IX_IndexHandle> > indexes;
 	vector<Attrcat> attributes;
 	RC rc;
-
+    cerr << "Begin load" << endl;
 	// Check input
 	if (rc = CheckName(relName))
 		return rc;
@@ -421,11 +422,10 @@ RC SM_Manager::Load(const char *relName,
 	if (strlen(fileName) == 0)
 		return SM_NAMELEN;
 	// End check input.
-
+	
 	// Open relation files
-	if (rc = rmManager->OpenFile(relName, fileHandle));
+	if (rc = rmManager->OpenFile(relName, fileHandle))
 		return rc;
-
 	// Open all index files
 	RM_FileScan fileScan;
 	int offset = (int)offsetof(struct Attrcat, relName);
@@ -478,10 +478,9 @@ RC SM_Manager::Load(const char *relName,
 	ifstream asciiFile(fileName);
 	if (!asciiFile.is_open())
 		return SM_FILENOTOPEN;
-
 	// Read tuples from ASCII file
 	string line;
-	while (getline(asciiFile, line)){		
+	while (getline(asciiFile, line)){	
 		// Build pData
 		char* pData = new char[relcat.tupleLen];
 		int i = 0;
