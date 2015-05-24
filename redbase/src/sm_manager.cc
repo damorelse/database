@@ -1,4 +1,4 @@
-#include <cerrno>
+#include <//cerrno>
 #include <cstdio>
 #include <iostream>
 #include <set>
@@ -434,7 +434,7 @@ RC SM_Manager::Load(const char *relName,
 	memcpy(relation, relName, min(strlen(relName), MAXNAME));
 	if (rc = fileScan.OpenScan(attrFile, STRING, MAXNAME, offset, EQ_OP, relation))
 		return rc;
-    cerr << "A" << endl;
+    //cerr << "A" << endl;
 	// Find each attribute
 	while ( OK_RC == (rc = fileScan.GetNextRec(record))){
 		// Read attribute's attrcat info
@@ -454,7 +454,7 @@ RC SM_Manager::Load(const char *relName,
 		// Add to attributes
 		attributes.push_back(attrcat);
 	}
-    cerr << "B" << endl;
+    //cerr << "B" << endl;
 	// Check if error occurred
 	if (rc != RM_EOF)
 		return rc;
@@ -464,7 +464,7 @@ RC SM_Manager::Load(const char *relName,
 
 	// Sort attributes by attrNo
 	sort(attributes.begin(), attributes.end(), sortAttrcats);
-    cerr << "C" << endl;
+    //cerr << "C" << endl;
 	// Get tupleLen
 	if (rc = GetRelcatRecord(relName, record)){
 		if (rc == RM_EOF)
@@ -475,7 +475,7 @@ RC SM_Manager::Load(const char *relName,
 	if (rc = record.GetData(pData))
 		return rc;
 	Relcat relcat(pData);
-    cerr << "D" << endl;
+    //cerr << "D" << endl;
 	// Open ASCII file
 	ifstream asciiFile(fileName);
 	if (!asciiFile.is_open())
@@ -488,7 +488,7 @@ RC SM_Manager::Load(const char *relName,
 		int i = 0;
 		stringstream ss(line);
 		string token;
-        cerr << "E" << endl;
+        //cerr << "E" << endl;
 		while(getline(ss, token, ',')){
 			char* dst = pData + attributes[i].offset;
 			switch(attributes[i].attrType){
@@ -499,7 +499,7 @@ RC SM_Manager::Load(const char *relName,
 					ss >> tmp;
 					if (ss.fail() || ss.rdbuf()->in_avail() != 0){
 						delete [] pData;
-						cerr << "INT: " << line << " token: " << token << endl;
+						//cerr << "INT: " << line << " token: " << token << endl;
 						return SM_INVALIDLOADFORMAT;
 					}
 					memcpy(dst, &tmp, 4);
@@ -512,7 +512,7 @@ RC SM_Manager::Load(const char *relName,
 					ss >> tmp;
 					if (ss.fail() || ss.rdbuf()->in_avail() != 0){
 						delete [] pData;
-						cerr << "FLOAT" << endl;
+						//cerr << "FLOAT" << endl;
 						return SM_INVALIDLOADFORMAT;
 					}
 					memcpy(dst, &tmp, 4);
@@ -522,7 +522,7 @@ RC SM_Manager::Load(const char *relName,
 				{
 					if (token.size() > attributes[i].attrLen){
 						delete [] pData;
-						cerr << "STRING" << endl;
+						//cerr << "STRING" << endl;
 						return  SM_INVALIDLOADFORMAT;
 					}
 					memset(dst, '\0', attributes[i].attrLen);
@@ -532,14 +532,14 @@ RC SM_Manager::Load(const char *relName,
 			}
 			i += 1;
 		}
-        cerr << "F" << endl;
+        //cerr << "F" << endl;
 		// Insert into relation
 		RID rid;
 		if (rc = fileHandle.InsertRec(pData, rid)){
 			delete [] pData;
 			return rc;
 		} 
-        cerr << "G" << endl;
+        //cerr << "G" << endl;
 		// Insert into indexes
 		for (int i = 0; i < indexes.size(); ++i){
 			pair<Attrcat, IX_IndexHandle> pair = indexes.at(i);
@@ -553,7 +553,7 @@ RC SM_Manager::Load(const char *relName,
 		// Clean up pData
 		delete [] pData;
 	}
-    cerr << "H" << endl;
+    //cerr << "H" << endl;
 	// Close ASCII file
 	asciiFile.close();
 	// Close relation file

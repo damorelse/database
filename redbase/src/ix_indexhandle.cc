@@ -40,7 +40,7 @@ RC IX_IndexHandle::InsertEntry(void *attribute, const RID &rid)
 	// End check input.
 
 	// Recursive call
-	cerr << "IX a" << endl;
+	//cerr << "IX a" << endl;
 	PageNum newChildPage = IX_NO_PAGE;
 	char* newAttribute = new char[ixIndexHeader.attrLength];
 	rc = InsertEntryHelper(ixIndexHeader.rootPage, ixIndexHeader.height, attribute, rid, newChildPage, newAttribute);
@@ -48,14 +48,14 @@ RC IX_IndexHandle::InsertEntry(void *attribute, const RID &rid)
 		delete [] newAttribute;
 		return rc;
 	}
-	cerr << "IX b" << endl;
+	//cerr << "IX b" << endl;
 	// Root node was split, need to add level to index
 	if (newChildPage != IX_NO_PAGE){
 		// Create new root
 		PageNum pageNum;
 		char *pData;
 		//RC rc = CreatePage(pfFileHandle, pageNum, pData);
-        cerr << "IX allocatepage 4a" << endl;
+        //cerr << "IX allocatepage 4a" << endl;
 		PF_PageHandle pfPageHandle;
 		RC rc = pfFileHandle.AllocatePage(pfPageHandle);
 		if (rc != OK_RC){
@@ -64,7 +64,7 @@ RC IX_IndexHandle::InsertEntry(void *attribute, const RID &rid)
 			PrintError(rc);
 			return rc;
 		}
-		cerr << "IX allocatepage 4b" << endl;
+		//cerr << "IX allocatepage 4b" << endl;
 		rc = pfPageHandle.GetPageNum(pageNum);
 		if (rc != OK_RC){
 			delete [] newAttribute;
@@ -326,14 +326,14 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 			char* newPData;
 			//rc = CreatePage(pfFileHandle, newPage, newPData);
 			PF_PageHandle pfPageHandle;
-			cerr << "IX allocatepage 1a" << endl;
+			//cerr << "IX allocatepage 1a" << endl;
 			RC rc = pfFileHandle.AllocatePage(pfPageHandle);
 			if (rc != OK_RC){
 				rc = pfFileHandle.UnpinPage(currPage);
 				PrintError(rc);
 				return rc;
 			}
-            cerr << "IX allocatepage 1b" << endl;
+            //cerr << "IX allocatepage 1b" << endl;
 			rc = pfPageHandle.GetPageNum(newPage);
 			if (rc != OK_RC){
 				rc = pfFileHandle.UnpinPage(currPage);
@@ -448,7 +448,7 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 			// Make L2 page, set newChildPage
 			char *newPData;
 			//rc = CreatePage(pfFileHandle, newChildPage, newPData);
-            cerr << "IX allocatepage 3a" << endl;
+            //cerr << "IX allocatepage 3a" << endl;
 			PF_PageHandle pfPageHandle;
 			RC rc = pfFileHandle.AllocatePage(pfPageHandle);
 			if (rc != OK_RC){
@@ -456,7 +456,7 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 				PrintError(rc);
 				return rc;
 			}
-            cerr << "IX allocatepage 3b" << endl;
+            //cerr << "IX allocatepage 3b" << endl;
 
 			rc = pfPageHandle.GetPageNum(newChildPage);
 			if (rc != OK_RC){
