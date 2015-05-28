@@ -7,6 +7,7 @@
 #include "rm.h"
 #include "ix.h"
 #include "sm.h"
+#include "ql.h"
 
 using namespace std;
 
@@ -25,7 +26,7 @@ void PrintError(RC rc)
 	else if (posRc >= START_SM_WARN && posRc <= END_SM_WARN)
 		SM_PrintError(rc);
 	else if (posRc >= START_QL_WARN && posRc <= END_QL_WARN)
-		;// TODO: replace
+		QL_PrintError(rc);
 	else
 		cerr << "Global PrintError error: " << rc << " is out of bounds\n";
 }

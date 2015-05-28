@@ -557,7 +557,7 @@ RC SM_Manager::Load(const char *relName,
 	// Close ASCII file
 	asciiFile.close();
 	// Close relation file
-	if (rc = rmManager->CloseFile(fileHandle));
+	if (rc = rmManager->CloseFile(fileHandle))
 		return rc;
 	// Close index files
 	for (int i = 0; i < indexes.size(); ++i){
@@ -648,15 +648,18 @@ RC SM_Manager::Print(const char *relName)
 		delete [] dataAttrs;
 		return rc;
 	}
+	if (rc = fileScan.CloseScan()){
+		delete [] attributes;
+		delete [] dataAttrs;
+		return rc;
+	}
 
 	// Finish printer
 	printer.PrintFooter(cout);
-
+	
 	// Clean up
 	delete [] attributes;
 	delete [] dataAttrs;
-	if (rc = fileScan.CloseScan())
-		return rc;
 	// Close relation if necessary
 	if (!isCatalog(relName)){
 		if (rc = rmManager->CloseFile(fileHandle))
@@ -806,6 +809,7 @@ RC SM_Manager::GetAttrcatRecord (const char *relName, const char *attrName, RM_R
 			return 0;
 		}
 	}
+	fileScan.CloseScan();
 	return rc;
 }
 RC SM_Manager::GetAttrcats(const char* relName, Attrcat* attributes){

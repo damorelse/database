@@ -23,6 +23,10 @@ struct RelAttr{
     char     *relName;    // Relation name (may be NULL)
     char     *attrName;   // Attribute name
 
+	RelAttr(const RelAttr &other);
+	~RelAttr();
+	RelAttr& operator=(const RelAttr &other);
+
     // Print function
     friend std::ostream &operator<<(std::ostream &s, const RelAttr &ra);
 };
@@ -31,6 +35,8 @@ struct Value{
     AttrType type;         /* type of value               */
     void     *data;        /* value                       */
 			   /* print function              */
+	Value(const Value &other);
+	~Value();
     friend std::ostream &operator<<(std::ostream &s, const Value &v);
 };
 
@@ -43,6 +49,8 @@ struct Condition{
     RelAttr  rhsAttr;    /* right-hand side attribute            */
     Value    rhsValue;   /* right-hand side value                */
 			 /* print function                               */
+
+	Condition(const RelAttr lhsAttr, CompOp op, const int isAttr, const RelAttr rhsAttr, const Value rhsValue);
     friend std::ostream &operator<<(std::ostream &s, const Condition &c);
 
 };

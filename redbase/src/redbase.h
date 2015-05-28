@@ -133,6 +133,7 @@ struct Attrcat {
 	Attrcat();
 	Attrcat(char* pData);
 	Attrcat(const char* relName, char* attrName, int offset, AttrType attrType, int attrLen, int indexNo);
+	Attrcat& operator=(char* pData);
 };
 
 #endif

@@ -29,6 +29,7 @@ class RID {
 public:
     RID();                                         // Default constructor
     RID(PageNum pageNum, SlotNum slotNum);
+	RID(char* pData);
     ~RID();                                        // Destructor
 
     RC GetPageNum(PageNum &pageNum) const;         // Return page number

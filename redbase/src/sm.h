@@ -53,7 +53,7 @@ private:
 	RC GetRelcatRecord (const char* relName, RM_Record &record);
 	RC GetAttrcatRecord (const char* relName, const char *attrName, RM_Record &record);
 	RC GetAttrcats(const char* relName, Attrcat* attributes);
-
+	
 	IX_Manager* ixManager;
 	RM_Manager* rmManager;
 	RM_FileHandle relFile, attrFile;

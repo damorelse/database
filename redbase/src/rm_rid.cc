@@ -1,3 +1,4 @@
+#include <cstring>
 #include "rm_rid.h"
 
 using namespace std;
@@ -5,6 +6,10 @@ using namespace std;
 RID::RID(): pageNum(-1), slotNum(-1){}
 
 RID::RID(PageNum pageNum, SlotNum slotNum): pageNum(pageNum), slotNum(slotNum){}
+
+RID::RID(char* pData){
+	memcpy(this, pData, sizeof(RID));
+}
 
 RID::~RID(){}
 

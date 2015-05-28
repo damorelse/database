@@ -28,3 +28,8 @@ Attrcat::Attrcat(const char* relName, char* attrName, int offset, AttrType attrT
 	this->attrLen = attrLen;
 	this->indexNo = indexNo;
 }
+
+Attrcat& Attrcat::operator=(char* pData){
+	memcpy(this, pData, sizeof(Attrcat));
+	return *this;
+}

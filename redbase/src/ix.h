@@ -201,7 +201,7 @@ void IX_PrintError(RC rc);
 #define IX_FILESCANREOPEN		 (START_IX_WARN + 2)
 #define IX_EOF					 (START_IX_WARN + 3)
 #define IX_SCANNOTFINISHED       (START_IX_WARN + 4)
-#define IX_LASTWARN		END_IX_WARN                  //TODO: set
+#define IX_LASTWARN		IX_SCANNOTFINISHED                  
 
 #define IX_INVALIDENUM           (START_IX_ERR - 0)
 #define IX_NULLINPUT			 (START_IX_ERR - 1)
@@ -211,7 +211,7 @@ void IX_PrintError(RC rc);
 #define IX_INVALIDSCANCOMBO      (START_IX_ERR - 5)
 #define IX_INVALIDNUM            (START_IX_ERR - 6)
 #define IX_TOOMANYSAME			 (START_IX_ERR - 7)
-#define IX_LASTERROR	END_IX_ERR                   //TODO: set
+#define IX_LASTERROR	IX_TOOMANYSAME
 
 
 #endif
