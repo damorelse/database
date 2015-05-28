@@ -290,44 +290,24 @@ RC QL_Manager::Delete(const char *relName,
 		smm->DropTable(qPlan.output);
 		return rc;
 	}
-	// Get attrcats
-	RM_Record record;
-	char* pData;
-	if (rc = smm->GetRelcatRecord(relName, record)){
-		smm->DropTable(qPlan.output);
-		return rc;
-	}
-	if (rc = record.GetData(pData)){
-		smm->DropTable(qPlan.output);
-		return rc;
-	}
-	Relcat relcat(pData);
-
-	Attrcat* attributes = new Attrcat[relcat.attrCount];
-	if (rc = smm->GetAttrcats(relName, attributes)){
-		delete [] attributes;
-		smm->DropTable(qPlan.output);
-		return rc;
-	}
 	// Open index files
 	vector<pair<Attrcat, IX_IndexHandle> > indexes;
-	for (int i = 0; i < relcat.attrCount; ++i){
+	for (int i = 0; i < qPlan.numOutAttrs; ++i){
 		// If index exists, add to indexes
-		if (attributes[i].indexNo != SM_INVALID){
+		if (qPlan.outAttrs[i].indexNo != SM_INVALID){
 			IX_IndexHandle indexHandle;
-			if (rc = ixm->OpenIndex(relName, attributes[i].indexNo, indexHandle)){
-				delete [] attributes;
+			if (rc = ixm->OpenIndex(relName, qPlan.outAttrs[i].indexNo, indexHandle)){
 				smm->DropTable(qPlan.output);
 				return rc;
 			}
-			indexes.push_back(make_pair(attributes[i], indexHandle));
+			indexes.push_back(make_pair(qPlan.outAttrs[i], indexHandle));
 		}
 	}
 	// Start Printer
 	DataAttrInfo* dataAttrs = new DataAttrInfo[qPlan.numOutAttrs]; 
-	for (int i = 0; i < relcat.attrCount; ++i)
+	for (int i = 0; i < qPlan.numOutAttrs; ++i)
 		dataAttrs[i] = DataAttrInfo (qPlan.outAttrs[i]);
-	Printer printer(dataAttrs, relcat.attrCount);
+	Printer printer(dataAttrs, qPlan.numOutAttrs);
 	printer.PrintHeader(cout);
 	// OPEN END
 
@@ -335,19 +315,20 @@ RC QL_Manager::Delete(const char *relName,
 	RM_FileHandle tmpFileHandle;
 	RM_FileScan tmpFileScan;
 	if (rc = rmm->OpenFile(qPlan.output, tmpFileHandle)){
-		delete [] attributes;
+		delete [] dataAttrs;
 		smm->DropTable(qPlan.output);
 		return rc;
 	}
 	if (rc = tmpFileScan.OpenScan(tmpFileHandle, INT, 4, 0, NO_OP, NULL)){
-		delete [] attributes;
+		delete [] dataAttrs;
 		smm->DropTable(qPlan.output);
 		return rc;
 	}
+	RM_Record record;
 	while (OK_RC == (rc = tmpFileScan.GetNextRec(record))){
 		char* pData;
 		if (rc = record.GetData(pData)){
-			delete [] attributes;
+			delete [] dataAttrs;
 			smm->DropTable(qPlan.output);
 			return rc;
 		}
@@ -355,7 +336,7 @@ RC QL_Manager::Delete(const char *relName,
 		RID rid(pData);
 		// Update relation 
 		if (rc = fileHandle.DeleteRec(rid)){
-			delete [] attributes;
+			delete [] dataAttrs;
 			smm->DropTable(qPlan.output);
 			return rc;
 		}
@@ -363,7 +344,7 @@ RC QL_Manager::Delete(const char *relName,
 		for (int k = 0; k < indexes.size(); ++k){
 			char* attribute = pData + sizeof(RID) + indexes[k].first.offset;
 			if (rc = indexes[k].second.DeleteEntry(attribute, rid)){
-				delete [] attributes;
+				delete [] dataAttrs;
 				smm->DropTable(qPlan.output);
 				return rc;
 			}
@@ -372,17 +353,17 @@ RC QL_Manager::Delete(const char *relName,
 		printer.Print(cout, pData + sizeof(RID));
 	}
 	if (rc != RM_EOF){
-		delete [] attributes;
+		delete [] dataAttrs;
 		smm->DropTable(qPlan.output);
 		return rc;
 	}
 	if (rc = tmpFileScan.CloseScan()){
-		delete [] attributes;
+		delete [] dataAttrs;
 		smm->DropTable(qPlan.output);
 		return rc;
 	}
 	if (rc = rmm->CloseFile(tmpFileHandle)){
-		delete [] attributes;
+		delete [] dataAttrs;
 		smm->DropTable(qPlan.output);
 		return rc;
 	}
@@ -390,14 +371,14 @@ RC QL_Manager::Delete(const char *relName,
 	// CLOSE START
 	// Close relation file
 	if (rc = rmm->CloseFile(fileHandle)){
-		delete [] attributes;
+		delete [] dataAttrs;
 		smm->DropTable(qPlan.output);
 		return rc;
 	}
 	// Close index files
 	for (int i = 0; i < indexes.size(); ++i){
 		if (rc = ixm->CloseIndex(indexes[i].second)){
-			delete [] attributes;
+			delete [] dataAttrs;
 			smm->DropTable(qPlan.output);
 			return rc;
 		}
@@ -407,7 +388,7 @@ RC QL_Manager::Delete(const char *relName,
 	// CLOSE END
 
 	// Clean up
-	delete [] attributes;
+	delete [] dataAttrs;
 	if (rc = smm->DropTable(qPlan.output))
 		return rc;
 
@@ -461,15 +442,7 @@ RC QL_Manager::Update(const char *relName,
 	}
 	// Get left attrcat
 	Attrcat leftAttrcat;
-	if (rc = smm->GetAttrcatRecord(relName, updAttr.attrName, record)){
-		smm->DropTable(qPlan.output);
-		return rc;
-	}
-	if (rc = record.GetData(pData)){
-		smm->DropTable(qPlan.output);
-		return rc;
-	}
-	leftAttrcat = pData;
+	leftAttrcat = qPlan.getAttrcat(relName, updAttr.attrName);
 	// Get index handle (if necessary)
 	IX_IndexHandle indexHandle;
 	if (leftAttrcat.indexNo != SM_INVALID){
@@ -480,39 +453,14 @@ RC QL_Manager::Update(const char *relName,
 	}
 	// Get right attrcat (if necessary)
 	Attrcat rightAttrcat;
-	if (!bIsValue){
-		if (rc = smm->GetAttrcatRecord(relName, rhsRelAttr.attrName, record)){
-			smm->DropTable(qPlan.output);
-			return rc;
-		}
-		if (rc = record.GetData(pData)){
-			smm->DropTable(qPlan.output);
-			return rc;
-		}
-		rightAttrcat = pData;
-	}
-	// Get attrcats
-	if (rc = smm->GetRelcatRecord(relName, record)){
-		smm->DropTable(qPlan.output);
-		return rc;
-	}
-	if (rc = record.GetData(pData)){
-		smm->DropTable(qPlan.output);
-		return rc;
-	}
-	Relcat relcat(pData);
-
-	Attrcat* attributes = new Attrcat[relcat.attrCount];
-	if (rc = smm->GetAttrcats(relName, attributes)){
-		delete [] attributes;
-		smm->DropTable(qPlan.output);
-		return rc;
-	}
+	if (!bIsValue)
+		rightAttrcat = qPlan.getAttrcat(relName, rhsRelAttr.attrName);
+	
 	// Start Printer
-	DataAttrInfo* dataAttrs = new DataAttrInfo[relcat.attrCount]; 
-	for (int i = 0; i < relcat.attrCount; ++i)
-		dataAttrs[i] = DataAttrInfo (attributes[i]);
-	Printer printer(dataAttrs, relcat.attrCount);
+	DataAttrInfo* dataAttrs = new DataAttrInfo[qPlan.numOutAttrs]; 
+	for (int i = 0; i < qPlan.numOutAttrs; ++i)
+		dataAttrs[i] = DataAttrInfo (qPlan.outAttrs[i]);
+	Printer printer(dataAttrs, qPlan.numOutAttrs);
 	printer.PrintHeader(cout);
 	// OPEN END
 
@@ -520,19 +468,19 @@ RC QL_Manager::Update(const char *relName,
 	RM_FileHandle tmpFileHandle;
 	RM_FileScan tmpFileScan;
 	if (rc = rmm->OpenFile(qPlan.output, tmpFileHandle)){
-		delete [] attributes;
+		delete [] dataAttrs;
 		smm->DropTable(qPlan.output);
 		return rc;
 	}
 	if (rc = tmpFileScan.OpenScan(tmpFileHandle, INT, 4, 0, NO_OP, NULL)){
-		delete [] attributes;
+		delete [] dataAttrs;
 		smm->DropTable(qPlan.output);
 		return rc;
 	}
 	while (OK_RC == (rc = tmpFileScan.GetNextRec(record))){
 		char* pData;
 		if (rc = record.GetData(pData)){
-			delete [] attributes;
+			delete [] dataAttrs;
 			smm->DropTable(qPlan.output);
 			return rc;
 		}
@@ -543,7 +491,7 @@ RC QL_Manager::Update(const char *relName,
 		// If update attribute has an index, delete old entry
 		if (leftAttrcat.indexNo != SM_INVALID){
 			if (rc = indexHandle.DeleteEntry(attribute, rid)){
-				delete [] attributes;
+				delete [] dataAttrs;
 				smm->DropTable(qPlan.output);
 				return rc;
 			}
@@ -559,14 +507,14 @@ RC QL_Manager::Update(const char *relName,
 		// If update attribute has an index, insert new entry
 		if (leftAttrcat.indexNo != SM_INVALID){
 			if (rc = indexHandle.InsertEntry(attribute, rid)){
-				delete [] attributes;
+				delete [] dataAttrs;
 				smm->DropTable(qPlan.output);
 				return rc;
 			}
 		}
 		// Update relation 
 		if (rc = fileHandle.UpdateRec(record)){
-			delete [] attributes;
+			delete [] dataAttrs;
 			smm->DropTable(qPlan.output);
 			return rc;
 		}
@@ -575,17 +523,17 @@ RC QL_Manager::Update(const char *relName,
 		printer.Print(cout, pData + sizeof(RID));
 	}
 	if (rc != RM_EOF){
-		delete [] attributes;
+		delete [] dataAttrs;
 		smm->DropTable(qPlan.output);
 		return rc;
 	}
 	if (rc = tmpFileScan.CloseScan()){
-		delete [] attributes;
+		delete [] dataAttrs;
 		smm->DropTable(qPlan.output);
 		return rc;
 	}
 	if (rc = rmm->CloseFile(tmpFileHandle)){
-		delete [] attributes;
+		delete [] dataAttrs;
 		smm->DropTable(qPlan.output);
 		return rc;
 	}
@@ -593,14 +541,14 @@ RC QL_Manager::Update(const char *relName,
 	// CLOSE START
 	// Close relation file
 	if (rc = rmm->CloseFile(fileHandle)){
-		delete [] attributes;
+		delete [] dataAttrs;
 		smm->DropTable(qPlan.output);
 		return rc;
 	}
 	// Close index file (if necessary)
 	if (leftAttrcat.indexNo != SM_INVALID){
 		if (rc = ixm->CloseIndex(indexHandle)){
-			delete [] attributes;
+			delete [] dataAttrs;
 			smm->DropTable(qPlan.output);
 			return rc;
 		}
@@ -610,7 +558,7 @@ RC QL_Manager::Update(const char *relName,
 	// CLOSE END
 
 	// Clean up
-	delete [] attributes;
+	delete [] dataAttrs;
 	if (rc = smm->DropTable(qPlan.output))
 		return rc;
 
@@ -756,6 +704,12 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 	// End check input
 
 	// TODO
+
+	// Find join groups
+	// Order each join group
+	// Apply conditions and projections to each join pair
+		// Order conditions
+	// Cross join groups
 }
 RC QL_Manager::GetResults(Node qPlan)
 {
