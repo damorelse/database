@@ -76,53 +76,56 @@ public:
 	virtual ~Node();
 	virtual RC execute();
 	virtual bool ConditionApplies(Condition &cond);
+	void Node::Project(bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
 	void printType();
 	Attrcat getAttrcat(const char *relName, char* attrName);
-	RC Project(char* inData, char* &outData);
 
-	char type[MAXNAME+1];
+	// Returns early in join/select if no conditions apply
 	int numConditions;
 	Condition *conditions;
 
-	int numRelations; // cumulative
-	char *relations;
-	int numOutAttrs; // If root, must order to reflect select attributes
-	Attrcat *outAttrs;
-
-	char output[MAXNAME+1];
-	char input[MAXNAME+1];
-	char input2[MAXNAME+1];
-
-	Node *parent; // set by parent
+	char type[MAXNAME+1];
 	Node *child;
 	Node *otherChild;
+	Node *parent; // set by parent node
+	char input[MAXNAME+1];
+	char otherInput[MAXNAME+1];
+	char output[MAXNAME+1]; // set during execution
+	
+	int numRelations;
+	char *relations;
 
-	RC rc;
+	int numCountPairs;
+	pair<RelAttr, int> *pCounts;
+	int numOutAttrs;
+	Attrcat *outAttrs;
 	bool project;
+
+	RC rc; // set optionally
 };
 class Selection : public Node {
 public:
-	Selection(Node &left, int numConds, Condition *conds, bool calcProj);
+	Selection(Node &left, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
 	~Selection();
 	RC execute();
 	bool ConditionApplies(Condition &cond);
 }; 
 class Join : public Node {
 public:
-	Join(Node &left, Node &right, int numConds, Condition *conds, bool calcProj);
+	Join(Node &left, Node &right, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
 	~Join();
 	RC execute();
 	bool ConditionApplies(Condition &cond);
 }; 
 class Cross : public Node {
 public:
-	Cross(Node &left, Node &right, bool calcProj);
+	Cross(Node &left, Node &right, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
 	~Cross();
 	RC execute();
 };
 class Relation : public Node {
 public:
-	Relation(const char *relName, SM_Manager *smm, bool calcProj);
+	Relation(const char *relName, SM_Manager *smm, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
 	~Relation();
 
 	SM_Manager *smm;

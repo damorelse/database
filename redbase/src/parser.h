@@ -23,6 +23,7 @@ struct RelAttr{
     char     *relName;    // Relation name (may be NULL)
     char     *attrName;   // Attribute name
 
+	RelAttr(char* rel, char*attr);
 	RelAttr(const RelAttr &other);
 	~RelAttr();
 	RelAttr& operator=(const RelAttr &other);

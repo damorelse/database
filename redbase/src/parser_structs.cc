@@ -1,5 +1,14 @@
 #include "parser.h"
 
+RelAttr::RelAttr(char* rel, char* attr){
+	relName = new char[MAXNAME+1];
+	memset(relName, '\0', MAXNAME+1);
+	strcpy(relName, rel);
+
+	attrName = new char[MAXNAME+1];
+	memset(attrName, '\0', MAXNAME+1);
+	strcpy(attrName, attr);
+}
 RelAttr::RelAttr(const RelAttr &other){
 	relName = new char[MAXNAME+1];
 	memset(relName, '\0', MAXNAME+1);

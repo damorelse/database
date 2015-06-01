@@ -722,6 +722,19 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 	}
 	// End check input
 
+	// Make projection map
+	map<RelAttr, int> projMap;
+	for (int i = 0; i < mySelAttrs.size(); ++i){
+		projMap[mySelAttrs[i]] += 1;
+	}
+	for (int i = 0; i < myAttrConds.size(); ++i){
+		projMap[RelAttr(myAttrConds[i].lhsAttr.relName, myAttrConds[i].lhsAttr.attrName)] += 1;
+		projMap[RelAttr(myAttrConds[i].rhsAttr.relName, myAttrConds[i].rhsAttr.attrName)] += 1;
+	}
+	for (int i = 0; i < myValConds.size(); ++i)
+		projMap[RelAttr(myValConds[i].lhsAttr.relName, myValConds[i].lhsAttr.attrName)] += 1;
+	vector<pair<RelAttr, int> > projVector;
+    copy(projMap.begin(), projMap.end(), back_inserter(projVector));
 
 	// Make join lists
 	map<char*, set<char*>> joinLists;
@@ -766,11 +779,11 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 	// Create relation/selection nodes
 	map<char*, Node> relSelNodes;
 	for(int i = 0; i < nRelations; ++i){
-		Node rel = Relation ((char*)relations[i], smm, calcProj);
+		Node rel = Relation ((char*)relations[i], smm, calcProj, projVector.size(), &projVector[0]);
 		if (rel.rc)
 			return rel.rc;
 
-		Node sel = Selection (rel, nConditions, &myConds[0], calcProj);
+		Node sel = Selection (rel, nConditions, &myConds[0], calcProj, projVector.size(), &projVector[0]);
 		if (sel.rc)
 			relSelNodes[(char*)relations[i]] = rel;
 		else 
@@ -830,11 +843,12 @@ RC QL_Manager::GetResults(Node qPlan)
 
 	 return 0;
 }
+
 void QL_Manager::PrintQueryPlan(const Node qPlan)
 {
-	RecursivePrint(qPlan, 0);	
+	RecursivePrint(qPlan, 0);
 }
-
+// TODO: how to print projection
 void QL_Manager::RecursivePrint(Node node, int indent){
 	// Go down tree, print each branch one at a time, right-most branch first
 	for (int i = 0; i < indent; ++i)
@@ -849,7 +863,7 @@ void QL_Manager::RecursivePrint(Node node, int indent){
 		return;
 	}
 	cout << "|";
-	if (node.otherchild){
+	if (node.otherChild){
 		cout << "___" << endl;
 
 		for (int i = 0; i < indent+2; ++i)
@@ -857,8 +871,8 @@ void QL_Manager::RecursivePrint(Node node, int indent){
 	}
 	cout << endl;
 
-	if (node.otherchild)
-		RecursivePrint(*node.otherchild, indent + 1);
+	if (node.otherChild)
+		RecursivePrint(*node.otherChild, indent + 1);
 
 	RecursivePrint(*node.child, indent);
 }
