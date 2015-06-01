@@ -11,6 +11,7 @@
 #include <fstream>
 #include <map>
 #include <queue>
+#include <list>
 #include "redbase.h"
 #include "ql.h"
 #include "sm.h"
@@ -661,7 +662,12 @@ RC QL_Manager::CheckCondition(Condition &condition, const char * const relations
 	return 0;
 }
 
-
+list<set<char*>>::iterator GetJoinSet(list<set<char*>>joinGroups, char* relName){
+	for (list<set<char*>>::iterator  it = joinGroups.begin(); it!=joinGroups.end(); ++it)
+		if (it->find(relName) != it->end())
+			return it;
+	return joinGroups.end();
+}
 RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
                        int nRelations, const char * const relations[],
                        int nConditions, const Condition conditions[],
@@ -703,13 +709,51 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 	}
 	// End check input
 
-	// TODO
+	// Make relations
 
 	// Find join groups
-	// Order each join group
-	// Apply conditions and projections to each join pair
-		// Order conditions
-	// Cross join groups
+	list<set<char*>> joinGroups;
+	set<char*> seenRel;
+	for (int i = 0; i < myAttrConds.size(); ++i){
+		if (strcmp(myAttrConds[i].lhsAttr.relName, myAttrConds[i].rhsAttr.relName) == 0)
+			continue;
+		else if (seenRel.find(myAttrConds[i].lhsAttr.relName) == seenRel.end() &&
+			     seenRel.find(myAttrConds[i].rhsAttr.relName) == seenRel.end())
+		{
+				set<char*> group;
+				group.insert(myAttrConds[i].lhsAttr.relName);
+				group.insert(myAttrConds[i].rhsAttr.relName);
+				joinGroups.push_back(group);
+		}
+		else if (seenRel.find(myAttrConds[i].lhsAttr.relName) != seenRel.end() &&
+			     seenRel.find(myAttrConds[i].rhsAttr.relName) != seenRel.end())
+		{
+			list< set<char*> >::iterator leftIt = GetJoinSet(joinGroups, myAttrConds[i].lhsAttr.relName);
+			list< set<char*> >::iterator rightIt = GetJoinSet(joinGroups, myAttrConds[i].rhsAttr.relName);
+			if (leftIt != rightIt){
+				leftIt->insert(rightIt->begin(), rightIt->end());
+				joinGroups.erase(rightIt);
+			}
+		}
+		else if (seenRel.find(myAttrConds[i].lhsAttr.relName) != seenRel.end())
+		{
+			list< set<char*> >::iterator leftIt = GetJoinSet(joinGroups, myAttrConds[i].lhsAttr.relName);
+			leftIt->insert(myAttrConds[i].rhsAttr.relName);
+		}
+		else 
+		{
+			list< set<char*> >::iterator rightIt = GetJoinSet(joinGroups, myAttrConds[i].rhsAttr.relName);
+			rightIt->insert(myAttrConds[i].lhsAttr.relName);
+		}
+
+		seenRel.insert(myAttrConds[i].lhsAttr.relName);
+		seenRel.insert(myAttrConds[i].rhsAttr.relName);
+	}
+
+	// Create relation nodes
+	// Order conditions
+	// Order joins within each group
+	// Order join groups
 }
 RC QL_Manager::GetResults(Node qPlan)
 {
@@ -757,6 +801,33 @@ RC QL_Manager::GetResults(Node qPlan)
 }
 void QL_Manager::PrintQueryPlan(const Node qPlan)
 {
-	// TODO
-	
+	RecursivePrint(qPlan, 0);	
+}
+
+void QL_Manager::RecursivePrint(Node node, int indent){
+	// Go down tree, print each branch one at a time, right-most branch first
+	for (int i = 0; i < indent; ++i)
+		cout << "|   ";
+	node.printType();
+	cout << endl;
+
+	for (int i = 0; i < indent; ++i)
+		cout << "|   ";
+	if (!node.child){
+		cout << endl;
+		return;
+	}
+	cout << "|";
+	if (node.otherchild){
+		cout << "___" << endl;
+
+		for (int i = 0; i < indent+2; ++i)
+			cout << "|   ";
+	}
+	cout << endl;
+
+	if (node.otherchild)
+		RecursivePrint(*node.otherchild, indent + 1);
+
+	RecursivePrint(*node.child, indent);
 }

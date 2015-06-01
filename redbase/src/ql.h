@@ -66,6 +66,7 @@ private:
 	// Store attribute offsets without sizeof(RID)
 	RC GetResults(Node qPlan);
 	void PrintQueryPlan(Node qPlan);
+	void RecursivePrint(Node qPlan, int indent);
 };
 
 // TODO: Start
@@ -74,16 +75,16 @@ public:
 	Node();
 	virtual ~Node();
 	virtual RC execute();
+	virtual bool ConditionApplies(Condition &cond);
+	void printType();
+	Attrcat getAttrcat(const char *relName, char* attrName);
 	RC Project(char* inData, char* &outData);
-	Attrcat& getAttrcat(const char *relName, char* attrName);
 
-	int numRelations;
-	char* *relations;
-	int numInAttrs;
-	Attrcat *inAttrs;
-	// If root, must order to reflect select attributes
-	int numOutAttrs;
-	Attrcat* outAttrs;
+	char type[MAXNAME+1];
+	int numRelations; // cumulative
+	char *relations;
+	int numOutAttrs; // If root, must order to reflect select attributes
+	Attrcat *outAttrs;
 	int numConditions;
 	Condition *conditions;
 
@@ -91,24 +92,37 @@ public:
 	char input[MAXNAME+1];
 	char input2[MAXNAME+1];
 
-	Node* parent;
-	Node* child;
-	Node* otherchild;
+	Node *parent; // set by parent
+	Node *child;
+	Node *otherChild;
+
+	bool project;
 };
 class Select : public Node {
 public:
+	Select(Node left, int numConds, Condition *conds);
 	~Select();
 	RC execute();
+	bool ConditionApplies(Condition &cond);
 }; 
 class Join : public Node {
 public:
+	Join(Node left, Node right, int numConds, Condition *conds);
 	~Join();
 	RC execute();
+	bool ConditionApplies(Condition &cond);
 }; 
 class Cross : public Node {
 public:
+	Cross(Node left, Node right);
 	~Cross();
 	RC execute();
+};
+class Relation : public Node {
+	Relation(const char *relName, SM_Manager *smm);
+	~Relation();
+
+	SM_Manager *smm;
 };
 // TODO: End
 

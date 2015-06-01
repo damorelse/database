@@ -21,6 +21,7 @@
 //
 class SM_Manager {
     friend class QL_Manager;
+	friend class Relation;
 public:
     SM_Manager    (IX_Manager &ixm, RM_Manager &rmm);
     ~SM_Manager   ();                             // Destructor

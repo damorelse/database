@@ -62,16 +62,6 @@ RC SM_Manager::CreateTable(const char *relName,
                            int        attrCount,
                            AttrInfo   *attributes)
 {
-    //cout << "CreateTable\n"
-    //     << "   relName     =" << relName << "\n"
-    //     << "   attrCount   =" << attrCount << "\n";
-    //for (int i = 0; i < attrCount; i++)
-    //    cout << "   attributes[" << i << "].attrName=" << attributes[i].attrName
-    //         << "   attrType="
-    //         << (attributes[i].attrType == INT ? "INT" :
-    //             attributes[i].attrType == FLOAT ? "FLOAT" : "STRING")
-    //         << "   attrLength=" << attributes[i].attrLength << "\n";
-	
 	RC rc;
 
 	// Check input
@@ -148,7 +138,6 @@ RC SM_Manager::CreateTable(const char *relName,
 
 RC SM_Manager::DropTable(const char *relName)
 {
-    //cout << "DropTable\n   relName=" << relName << "\n";
 	RC rc;
 
 	// Check input
@@ -222,10 +211,6 @@ RC SM_Manager::DropTable(const char *relName)
 RC SM_Manager::CreateIndex(const char *relName,
                            const char *attrName)
 {
-    //cout << "CreateIndex\n"
-    //     << "   relName =" << relName << "\n"
-    //     << "   attrName=" << attrName << "\n";
-
 	RC rc;
 
 	// Check input
@@ -334,10 +319,6 @@ RC SM_Manager::CreateIndex(const char *relName,
 RC SM_Manager::DropIndex(const char *relName,
                          const char *attrName)
 {
-    //cout << "DropIndex\n"
-    //     << "   relName =" << relName << "\n"
-    //     << "   attrName=" << attrName << "\n";
-
 	RC rc;
 
 	// Check input
@@ -395,10 +376,6 @@ RC SM_Manager::DropIndex(const char *relName,
 RC SM_Manager::Load(const char *relName,
                     const char *fileName)
 {
-    //cout << "Load\n"
-    //     << "   relName =" << relName << "\n"
-    //     << "   fileName=" << fileName << "\n";
-
 	RM_FileHandle fileHandle;
 	vector<pair<Attrcat, IX_IndexHandle> > indexes;
 	vector<Attrcat> attributes;
@@ -570,9 +547,6 @@ RC SM_Manager::Load(const char *relName,
 
 RC SM_Manager::Print(const char *relName)
 {
-	//cout << "Print\n"
- //        << "   relName=" << relName << "\n";
-
 	RC rc;
 
 	// Check input
@@ -671,12 +645,7 @@ RC SM_Manager::Print(const char *relName)
 
 RC SM_Manager::Set(const char *paramName, const char *value)
 {
-    //cout << "Set\n"
-    //     << "   paramName=" << paramName << "\n"
-    //     << "   value    =" << value << "\n";
-
 	// TODO: nothing for now
-
     return (0);
 }
 
@@ -691,9 +660,6 @@ RC SM_Manager::Help()
 
 RC SM_Manager::Help(const char *relName)
 {
-    //cout << "Help\n"
-    //     << "   relName=" << relName << "\n";
-
 	RC rc;
 
 	// Check input
