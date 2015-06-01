@@ -64,6 +64,10 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	// End check input
 
 	Node qPlan;
+	if (nSelAttrs == 1 && strcmp(selAttrs[0].attrName, "*") == 0){
+		nSelAttrs = 0;
+		selAttrs = NULL;
+	}
 	if (rc = MakeSelectQueryPlan(nSelAttrs, selAttrs, nRelations, relations, nConditions, conditions, qPlan))
 		return rc;
 	if (rc = GetResults(qPlan)){
@@ -75,10 +79,10 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	}
 
 	// Start Printer
-	DataAttrInfo* dataAttrs = new DataAttrInfo[nSelAttrs]; 
-	for (int i = 0; i < nSelAttrs; ++i)
+	DataAttrInfo* dataAttrs = new DataAttrInfo[qPlan.numOutAttrs]; 
+	for (int i = 0; i < qPlan.numOutAttrs; ++i)
 		dataAttrs[i] = DataAttrInfo (qPlan.outAttrs[i]);
-	Printer printer(dataAttrs, nSelAttrs);
+	Printer printer(dataAttrs, qPlan.numOutAttrs);
 	printer.PrintHeader(cout);
 
 	// Print
@@ -682,78 +686,105 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 	}
 
 	// Check relation uniqueness
-	set<string> relSet(relations, relations+nRelations);
-	if (relSet.size() != nRelations)
+	set<string> myRels(relations, relations+nRelations);
+	if (myRels.size() != nRelations)
 		return QL_MULTIREL;
 
 	// Check attributes valid (and make copies)
+	bool calcProj = true;
 	vector<RelAttr> mySelAttrs(nSelAttrs);
-	for (int i = 0; i < nSelAttrs; ++i){
-		mySelAttrs[i] = selAttrs[i];
-		if (rc = CheckAttribute(mySelAttrs[i], relations, nRelations))
-			return rc;
-	}
+	vector<Condition> myConds(nConditions);
 	vector<Condition> myAttrConds;
 	vector<Condition> myValConds;
-	for (int i = 0; i < nConditions; ++i){
-		if(conditions[i].bRhsIsAttr){
-			myAttrConds.push_back(conditions[i]);
-			rc = CheckCondition(myAttrConds.back(), relations, nRelations);
+	if (nSelAttrs == 0)
+		calcProj = false;
+	else {
+		for (int i = 0; i < nSelAttrs; ++i){
+			mySelAttrs[i] = selAttrs[i];
+			if (rc = CheckAttribute(mySelAttrs[i], relations, nRelations))
+				return rc;
 		}
-		else {
-			myValConds.push_back(conditions[i]);
-			rc = CheckCondition(myValConds.back(), relations, nRelations);
+
+		for (int i = 0; i < nConditions; ++i){
+			if(conditions[i].bRhsIsAttr){
+				myAttrConds.push_back(conditions[i]);
+				rc = CheckCondition(myAttrConds.back(), relations, nRelations);
+				myConds.push_back(myAttrConds.back());
+			}
+			else {
+				myValConds.push_back(conditions[i]);
+				rc = CheckCondition(myValConds.back(), relations, nRelations);
+				myConds.push_back(myAttrConds.back());
+			}
+			if (rc)
+				return rc;
 		}
-		if (rc)
-			return rc;
 	}
 	// End check input
 
-	// Make relations
 
-	// Find join groups
-	list<set<char*>> joinGroups;
-	set<char*> seenRel;
+	// Make join lists
+	map<char*, set<char*>> joinLists;
 	for (int i = 0; i < myAttrConds.size(); ++i){
-		if (strcmp(myAttrConds[i].lhsAttr.relName, myAttrConds[i].rhsAttr.relName) == 0)
-			continue;
-		else if (seenRel.find(myAttrConds[i].lhsAttr.relName) == seenRel.end() &&
-			     seenRel.find(myAttrConds[i].rhsAttr.relName) == seenRel.end())
-		{
-				set<char*> group;
-				group.insert(myAttrConds[i].lhsAttr.relName);
-				group.insert(myAttrConds[i].rhsAttr.relName);
-				joinGroups.push_back(group);
+		if (strcmp(myAttrConds[i].lhsAttr.relName, myAttrConds[i].rhsAttr.relName) != 0){
+			joinLists[myAttrConds[i].lhsAttr.relName].insert(myAttrConds[i].rhsAttr.relName);
+			joinLists[myAttrConds[i].rhsAttr.relName].insert(myAttrConds[i].lhsAttr.relName);
 		}
-		else if (seenRel.find(myAttrConds[i].lhsAttr.relName) != seenRel.end() &&
-			     seenRel.find(myAttrConds[i].rhsAttr.relName) != seenRel.end())
-		{
-			list< set<char*> >::iterator leftIt = GetJoinSet(joinGroups, myAttrConds[i].lhsAttr.relName);
-			list< set<char*> >::iterator rightIt = GetJoinSet(joinGroups, myAttrConds[i].rhsAttr.relName);
-			if (leftIt != rightIt){
-				leftIt->insert(rightIt->begin(), rightIt->end());
-				joinGroups.erase(rightIt);
-			}
-		}
-		else if (seenRel.find(myAttrConds[i].lhsAttr.relName) != seenRel.end())
-		{
-			list< set<char*> >::iterator leftIt = GetJoinSet(joinGroups, myAttrConds[i].lhsAttr.relName);
-			leftIt->insert(myAttrConds[i].rhsAttr.relName);
-		}
-		else 
-		{
-			list< set<char*> >::iterator rightIt = GetJoinSet(joinGroups, myAttrConds[i].rhsAttr.relName);
-			rightIt->insert(myAttrConds[i].lhsAttr.relName);
-		}
-
-		seenRel.insert(myAttrConds[i].lhsAttr.relName);
-		seenRel.insert(myAttrConds[i].rhsAttr.relName);
 	}
 
-	// Create relation nodes
-	// Order conditions
-	// Order joins within each group
-	// Order join groups
+	// Make join groups
+	vector<set<char*>> joinGroups;
+	set<char*> processed;
+	while (processed.size() < nRelations){
+		// Initialize, find first member of new group
+		int i = 0;
+		for (; i < nRelations; ++i)
+			if (processed.find((char*)relations[i]) == processed.end())
+				break;
+
+		// Find rest of members
+		queue<char*> toProcess;
+		toProcess.push((char*)relations[i]);
+		set<char*> currProcessed;
+		while(!toProcess.empty()){
+			currProcessed.insert(toProcess.front());
+			if (joinLists.find(toProcess.front()) != joinLists.end()){
+				for (set<char*>::iterator it = joinLists[toProcess.front()].begin(); 
+					 it != joinLists[toProcess.front()].end(); ++it){
+					if (currProcessed.find(*it) == currProcessed.end())
+						toProcess.push(*it);
+				}
+			}
+			toProcess.pop();
+		}
+
+		// Update join groups
+		joinGroups.push_back(currProcessed);
+		processed.insert(currProcessed.begin(), currProcessed.end());
+	}
+
+	// Create relation/selection nodes
+	map<char*, Node> relSelNodes;
+	for(int i = 0; i < nRelations; ++i){
+		Node rel = Relation ((char*)relations[i], smm, calcProj);
+		if (rel.rc)
+			return rel.rc;
+
+		Node sel = Selection (rel, nConditions, &myConds[0], calcProj);
+		if (sel.rc)
+			relSelNodes[(char*)relations[i]] = rel;
+		else 
+			relSelNodes[(char*)relations[i]] = sel;
+	}
+
+	for (int i = 0; i < joinGroups.size; ++i){
+		// Join ordering (byte size / index joins)
+		// TODO
+		// Condition ordering (indexed-selectivity, all unindexed)
+		// TODO
+	}
+	// Cross ordering (byte size)
+	// TODO
 }
 RC QL_Manager::GetResults(Node qPlan)
 {

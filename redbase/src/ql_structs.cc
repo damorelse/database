@@ -23,6 +23,7 @@ Node::Node(){
 	child = NULL;
 	otherChild = NULL;
 
+	rc = 0;
 	project = false;
 }
 Node::~Node(){
@@ -80,20 +81,11 @@ RC Node::Project(char* inData, char* &outData){
 }
 
 
-Select::Select(Node left, int numConds, Condition *conds){
-		// set parent for both children
+Selection::Selection(Node& left, int numConds, Condition *conds, bool calcProj){
+	// set parent for children
 	left.parent = this;
 
 	strcpy(type, "Select");
-	numRelations = left.numRelations;
-	// relations
-	relations = new char[numRelations * (MAXNAME+1)];
-	memcpy(relations, left.relations, left.numRelations * (MAXNAME+1));
-	// numOutAttrs
-	numOutAttrs = left.numOutAttrs;
-	// outAttrs
-	outAttrs = new Attrcat[numOutAttrs];
-	memcpy(outAttrs, left.outAttrs, left.numOutAttrs * sizeof(Attrcat));
 	// numConditions and conditions
 	vector<Condition> condVector;
 	for (int i = 0; i < numConds; ++i){
@@ -103,6 +95,22 @@ Select::Select(Node left, int numConds, Condition *conds){
 	numConditions = condVector.size();
 	copy(condVector.begin(), condVector.end(), conditions);
 
+	// Early exit
+	if (numConditions == 0){
+		rc = QL_SELNODE;
+		return;
+	}
+
+	numRelations = left.numRelations;
+	// relations
+	relations = new char[numRelations * (MAXNAME+1)];
+	memcpy(relations, left.relations, left.numRelations * (MAXNAME+1));
+	// numOutAttrs
+	numOutAttrs = left.numOutAttrs;
+	// outAttrs
+	outAttrs = new Attrcat[numOutAttrs];
+	memcpy(outAttrs, left.outAttrs, left.numOutAttrs * sizeof(Attrcat));
+
 	// output will be set by execute
 	strcpy(input, left.output);
 	// input2 set by default
@@ -111,11 +119,10 @@ Select::Select(Node left, int numConds, Condition *conds){
 	child = &left;
 	// otherChild set by default
 }
-Select::~Select(){/*nothing*/}
-RC Select::execute(){
+RC Selection::execute(){
 	// TODO
 }
-bool Select::ConditionApplies(Condition &cond){
+bool Selection::ConditionApplies(Condition &cond){
 	if (strcmp(relations, cond.lhsAttr.relName) != 0)
 		return false;
 	if (cond.bRhsIsAttr && 
@@ -124,12 +131,27 @@ bool Select::ConditionApplies(Condition &cond){
 	return true;
 }
 
-Join::Join(Node left, Node right, int numConds, Condition *conds){
+Join::Join(Node& left, Node& right, int numConds, Condition *conds, bool calcProj){
 	// set parent for both children
 	left.parent = this;
 	right.parent = this;
 
 	strcpy(type, "Join");
+	// numConditions and conditions
+	vector<Condition> condVector;
+	for (int i = 0; i < numConds; ++i){
+		if (ConditionApplies(conds[i]))
+			condVector.push_back(conds[i]);
+	}
+	numConditions = condVector.size();
+	copy(condVector.begin(), condVector.end(), conditions);
+
+	// Early exit
+	if (numConditions == 0){
+		rc = QL_JOINNODE;
+		return;
+	}
+
 	numRelations = left.numRelations + right.numRelations;
 	// relations
 	relations = new char[numRelations * (MAXNAME+1)];
@@ -141,14 +163,6 @@ Join::Join(Node left, Node right, int numConds, Condition *conds){
 	outAttrs = new Attrcat[numOutAttrs];
 	memcpy(outAttrs, left.outAttrs, left.numOutAttrs * sizeof(Attrcat));
 	memcpy(outAttrs + left.numOutAttrs * sizeof(Attrcat), right.outAttrs, right.numOutAttrs * sizeof(Attrcat));
-	// numConditions and conditions
-	vector<Condition> condVector;
-	for (int i = 0; i < numConds; ++i){
-		if (ConditionApplies(conds[i]))
-			condVector.push_back(conds[i]);
-	}
-	numConditions = condVector.size();
-	copy(condVector.begin(), condVector.end(), conditions);
 
 	// output will be set by execute
 	strcpy(input, left.output);
@@ -158,7 +172,6 @@ Join::Join(Node left, Node right, int numConds, Condition *conds){
 	child = &left;
 	otherChild = &right;
 }
-Join::~Join(){/*nothing*/}
 RC Join::execute(){
 	// TODO
 }
@@ -176,12 +189,14 @@ bool Join::ConditionApplies(Condition &cond){
 	return false;
 }
 
-Cross::Cross(Node left, Node right){
+Cross::Cross(Node &left, Node &right, bool calcProj){
 	// set parent for both children
 	left.parent = this;
 	right.parent = this;
 
 	strcpy(type, "X");
+	// numConditions and conditions default set
+
 	numRelations = left.numRelations + right.numRelations;
 	// relations
 	relations = new char[numRelations * (MAXNAME+1)];
@@ -193,7 +208,6 @@ Cross::Cross(Node left, Node right){
 	outAttrs = new Attrcat[numOutAttrs];
 	memcpy(outAttrs, left.outAttrs, left.numOutAttrs * sizeof(Attrcat));
 	memcpy(outAttrs + left.numOutAttrs * sizeof(Attrcat), right.outAttrs, right.numOutAttrs * sizeof(Attrcat));
-	// numConditions and conditions default set
 
 	// output will be set by execute
 	strcpy(input, left.output);
@@ -203,30 +217,38 @@ Cross::Cross(Node left, Node right){
 	child = &left;
 	otherChild = &right;
 }
-Cross::~Cross(){/*nothing*/}
 RC Cross::execute(){
 	// TODO
 }
 
-Relation::Relation(const char *relName, SM_Manager *smm){
+Relation::Relation(const char *relName, SM_Manager *smm, bool calcProj){
 	this->smm = smm;
 
 	strcpy(type, relName);
+	// numConditions/conditions set by default
+
 	numRelations = 1;
 	relations = new char[numRelations * (MAXNAME+1)];
 	strcpy(relations, relName);
 	// numOutAttrs
-	RC rc;
 	RM_Record record;
 	char* pData;
-	rc = smm->GetRelcatRecord(relName, record);
-	rc = record.GetData(pData);
+	if (smm->GetRelcatRecord(relName, record)){
+		rc = QL_RELNODE;
+		return;
+	}
+	if (record.GetData(pData)){
+		rc = QL_RELNODE;
+		return;
+	}
 	Relcat relcat(pData);
 	numOutAttrs = relcat.attrCount;
 	// outAttrs
 	outAttrs = new Attrcat[relcat.attrCount];
-	rc = smm->GetAttrcats(relName, outAttrs);
-	// numConditions/conditions set by default
+	if (smm->GetAttrcats(relName, outAttrs)){
+		rc = QL_RELNODE;
+		return;
+	}
 
 	strcpy(output, relName);
 	// input/input2 set by default
@@ -234,4 +256,5 @@ Relation::Relation(const char *relName, SM_Manager *smm){
 	// parent will be set by parent
 	// child/otherchild set by default
 }
-Relation::~Relation(){/*nothing*/}
+
+// TODO: calculate projections too, set Attrcat offset correctly
