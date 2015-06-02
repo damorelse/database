@@ -79,10 +79,13 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	}
 
 	// Start Printer
-	DataAttrInfo* dataAttrs = new DataAttrInfo[qPlan.numOutAttrs]; 
-	for (int i = 0; i < qPlan.numOutAttrs; ++i)
-		dataAttrs[i] = DataAttrInfo (qPlan.outAttrs[i]);
-	Printer printer(dataAttrs, qPlan.numOutAttrs);
+	int ridsSize = nRelations * sizeof(RID);
+	vector<DataAttrInfo> dataAttrs; 
+	for (int i = 0; i < qPlan.numOutAttrs; ++i){
+		dataAttrs.push_back(DataAttrInfo (qPlan.outAttrs[i]));
+		dataAttrs.back().offset -= ridsSize;
+	}
+	Printer printer(&dataAttrs[0], qPlan.numOutAttrs);
 	printer.PrintHeader(cout);
 
 	// Print
@@ -104,7 +107,7 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 			return rc;
 		}
 		// Print 
-		printer.Print(cout, pData + nRelations*sizeof(RID));
+		printer.Print(cout, pData + ridsSize);
 	}
 	if (rc != RM_EOF){
 		smm->DropTable(qPlan.output);
@@ -246,16 +249,15 @@ RC QL_Manager::Insert(const char *relName,
 	}
 
 	// Print result
-	DataAttrInfo* dataAttrs = new DataAttrInfo[relcat.attrCount]; 
+	vector<DataAttrInfo> dataAttrs; 
 	for (int i = 0; i < relcat.attrCount; ++i)
 		dataAttrs[i] = DataAttrInfo (attributes[i]);
-	Printer printer(dataAttrs, relcat.attrCount);
+	Printer printer(&dataAttrs[0], relcat.attrCount);
 	printer.PrintHeader(cout);
 	printer.Print(cout, pData);
 	printer.PrintFooter(cout);
 
 	//  Clean up
-	delete [] dataAttrs;
 	delete [] pData;
 	delete [] attributes;
 
@@ -309,10 +311,13 @@ RC QL_Manager::Delete(const char *relName,
 		}
 	}
 	// Start Printer
-	DataAttrInfo* dataAttrs = new DataAttrInfo[qPlan.numOutAttrs]; 
-	for (int i = 0; i < qPlan.numOutAttrs; ++i)
-		dataAttrs[i] = DataAttrInfo (qPlan.outAttrs[i]);
-	Printer printer(dataAttrs, qPlan.numOutAttrs);
+	int ridsSize = sizeof(RID);
+	vector<DataAttrInfo> dataAttrs; 
+	for (int i = 0; i < qPlan.numOutAttrs; ++i){
+		dataAttrs.push_back(DataAttrInfo (qPlan.outAttrs[i]));
+		dataAttrs.back().offset -= ridsSize;
+	}
+	Printer printer(&dataAttrs[0], qPlan.numOutAttrs);
 	printer.PrintHeader(cout);
 	// OPEN END
 
@@ -320,12 +325,10 @@ RC QL_Manager::Delete(const char *relName,
 	RM_FileHandle tmpFileHandle;
 	RM_FileScan tmpFileScan;
 	if (rc = rmm->OpenFile(qPlan.output, tmpFileHandle)){
-		delete [] dataAttrs;
 		smm->DropTable(qPlan.output);
 		return rc;
 	}
 	if (rc = tmpFileScan.OpenScan(tmpFileHandle, INT, 4, 0, NO_OP, NULL)){
-		delete [] dataAttrs;
 		smm->DropTable(qPlan.output);
 		return rc;
 	}
@@ -333,7 +336,6 @@ RC QL_Manager::Delete(const char *relName,
 	while (OK_RC == (rc = tmpFileScan.GetNextRec(record))){
 		char* pData;
 		if (rc = record.GetData(pData)){
-			delete [] dataAttrs;
 			smm->DropTable(qPlan.output);
 			return rc;
 		}
@@ -341,34 +343,29 @@ RC QL_Manager::Delete(const char *relName,
 		RID rid(pData);
 		// Update relation 
 		if (rc = fileHandle.DeleteRec(rid)){
-			delete [] dataAttrs;
 			smm->DropTable(qPlan.output);
 			return rc;
 		}
 		// Update indexes
 		for (int k = 0; k < indexes.size(); ++k){
-			char* attribute = pData + sizeof(RID) + indexes[k].first.offset;
+			char* attribute = pData + indexes[k].first.offset;
 			if (rc = indexes[k].second.DeleteEntry(attribute, rid)){
-				delete [] dataAttrs;
 				smm->DropTable(qPlan.output);
 				return rc;
 			}
 		}
 		// Print 
-		printer.Print(cout, pData + sizeof(RID));
+		printer.Print(cout, pData + ridsSize);
 	}
 	if (rc != RM_EOF){
-		delete [] dataAttrs;
 		smm->DropTable(qPlan.output);
 		return rc;
 	}
 	if (rc = tmpFileScan.CloseScan()){
-		delete [] dataAttrs;
 		smm->DropTable(qPlan.output);
 		return rc;
 	}
 	if (rc = rmm->CloseFile(tmpFileHandle)){
-		delete [] dataAttrs;
 		smm->DropTable(qPlan.output);
 		return rc;
 	}
@@ -376,14 +373,12 @@ RC QL_Manager::Delete(const char *relName,
 	// CLOSE START
 	// Close relation file
 	if (rc = rmm->CloseFile(fileHandle)){
-		delete [] dataAttrs;
 		smm->DropTable(qPlan.output);
 		return rc;
 	}
 	// Close index files
 	for (int i = 0; i < indexes.size(); ++i){
 		if (rc = ixm->CloseIndex(indexes[i].second)){
-			delete [] dataAttrs;
 			smm->DropTable(qPlan.output);
 			return rc;
 		}
@@ -393,7 +388,6 @@ RC QL_Manager::Delete(const char *relName,
 	// CLOSE END
 
 	// Clean up
-	delete [] dataAttrs;
 	if (rc = smm->DropTable(qPlan.output))
 		return rc;
 
@@ -462,10 +456,13 @@ RC QL_Manager::Update(const char *relName,
 		rightAttrcat = qPlan.getAttrcat(relName, rhsRelAttr.attrName);
 	
 	// Start Printer
-	DataAttrInfo* dataAttrs = new DataAttrInfo[qPlan.numOutAttrs]; 
-	for (int i = 0; i < qPlan.numOutAttrs; ++i)
-		dataAttrs[i] = DataAttrInfo (qPlan.outAttrs[i]);
-	Printer printer(dataAttrs, qPlan.numOutAttrs);
+	int ridsSize = sizeof(RID);
+	vector<DataAttrInfo> dataAttrs; 
+	for (int i = 0; i < qPlan.numOutAttrs; ++i){
+		dataAttrs.push_back(DataAttrInfo (qPlan.outAttrs[i]));
+		dataAttrs.back().offset -= ridsSize;
+	}
+	Printer printer(&dataAttrs[0], qPlan.numOutAttrs);
 	printer.PrintHeader(cout);
 	// OPEN END
 
@@ -473,30 +470,26 @@ RC QL_Manager::Update(const char *relName,
 	RM_FileHandle tmpFileHandle;
 	RM_FileScan tmpFileScan;
 	if (rc = rmm->OpenFile(qPlan.output, tmpFileHandle)){
-		delete [] dataAttrs;
 		smm->DropTable(qPlan.output);
 		return rc;
 	}
 	if (rc = tmpFileScan.OpenScan(tmpFileHandle, INT, 4, 0, NO_OP, NULL)){
-		delete [] dataAttrs;
 		smm->DropTable(qPlan.output);
 		return rc;
 	}
 	while (OK_RC == (rc = tmpFileScan.GetNextRec(record))){
 		char* pData;
 		if (rc = record.GetData(pData)){
-			delete [] dataAttrs;
 			smm->DropTable(qPlan.output);
 			return rc;
 		}
 		// Get rid
 		RID rid(pData);
-		char* attribute = pData + sizeof(RID) + leftAttrcat.offset;
+		char* attribute = pData + leftAttrcat.offset;
 
 		// If update attribute has an index, delete old entry
 		if (leftAttrcat.indexNo != SM_INVALID){
 			if (rc = indexHandle.DeleteEntry(attribute, rid)){
-				delete [] dataAttrs;
 				smm->DropTable(qPlan.output);
 				return rc;
 			}
@@ -506,20 +499,18 @@ RC QL_Manager::Update(const char *relName,
 		if (bIsValue)
 			memcpy(attribute, rhsValue.data, leftAttrcat.attrLen);
 		else {
-			char* rightAttribute = pData + sizeof(RID) + rightAttrcat.offset;
+			char* rightAttribute = pData + ridsSize + rightAttrcat.offset;
 			memcpy(attribute, rightAttribute, leftAttrcat.attrLen);
 		}
 		// If update attribute has an index, insert new entry
 		if (leftAttrcat.indexNo != SM_INVALID){
 			if (rc = indexHandle.InsertEntry(attribute, rid)){
-				delete [] dataAttrs;
 				smm->DropTable(qPlan.output);
 				return rc;
 			}
 		}
 		// Update relation 
 		if (rc = fileHandle.UpdateRec(record)){
-			delete [] dataAttrs;
 			smm->DropTable(qPlan.output);
 			return rc;
 		}
@@ -528,17 +519,14 @@ RC QL_Manager::Update(const char *relName,
 		printer.Print(cout, pData + sizeof(RID));
 	}
 	if (rc != RM_EOF){
-		delete [] dataAttrs;
 		smm->DropTable(qPlan.output);
 		return rc;
 	}
 	if (rc = tmpFileScan.CloseScan()){
-		delete [] dataAttrs;
 		smm->DropTable(qPlan.output);
 		return rc;
 	}
 	if (rc = rmm->CloseFile(tmpFileHandle)){
-		delete [] dataAttrs;
 		smm->DropTable(qPlan.output);
 		return rc;
 	}
@@ -546,14 +534,12 @@ RC QL_Manager::Update(const char *relName,
 	// CLOSE START
 	// Close relation file
 	if (rc = rmm->CloseFile(fileHandle)){
-		delete [] dataAttrs;
 		smm->DropTable(qPlan.output);
 		return rc;
 	}
 	// Close index file (if necessary)
 	if (leftAttrcat.indexNo != SM_INVALID){
 		if (rc = ixm->CloseIndex(indexHandle)){
-			delete [] dataAttrs;
 			smm->DropTable(qPlan.output);
 			return rc;
 		}
@@ -563,7 +549,6 @@ RC QL_Manager::Update(const char *relName,
 	// CLOSE END
 
 	// Clean up
-	delete [] dataAttrs;
 	if (rc = smm->DropTable(qPlan.output))
 		return rc;
 
@@ -779,11 +764,11 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 	// Create relation/selection nodes
 	map<char*, Node> relSelNodes;
 	for(int i = 0; i < nRelations; ++i){
-		Node rel = Relation ((char*)relations[i], smm, calcProj, projVector.size(), &projVector[0]);
+		Node rel = Relation (smm, (char*)relations[i], calcProj, projVector.size(), &projVector[0]);
 		if (rel.rc)
 			return rel.rc;
 
-		Node sel = Selection (rel, nConditions, &myConds[0], calcProj, projVector.size(), &projVector[0]);
+		Node sel = Selection (smm, rel, nConditions, &myConds[0], calcProj, projVector.size(), &projVector[0]);
 		if (sel.rc)
 			relSelNodes[(char*)relations[i]] = rel;
 		else 
@@ -848,9 +833,26 @@ void QL_Manager::PrintQueryPlan(const Node qPlan)
 {
 	RecursivePrint(qPlan, 0);
 }
-// TODO: how to print projection
+// Go down tree, print each branch one at a time, right-most branch first
 void QL_Manager::RecursivePrint(Node node, int indent){
-	// Go down tree, print each branch one at a time, right-most branch first
+	// Print projection (if it exists)
+	if (node.project){
+		for (int i = 0; i < indent; ++i)
+			cout << "|   ";
+		cout << "Project (";
+		for (int i = 0; i < node.numOutAttrs; ++i){
+			cout << node.outAttrs[i].relName << "." << node.outAttrs[i].attrName;
+			if (i + 1 < node.numOutAttrs)
+				cout << ", ";
+		}
+		cout << ")" << endl;
+
+		for (int i = 0; i < indent + 1; ++i)
+			cout << "|   ";
+		cout << endl;
+	}
+
+	// Print node
 	for (int i = 0; i < indent; ++i)
 		cout << "|   ";
 	node.printType();

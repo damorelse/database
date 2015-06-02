@@ -1,5 +1,19 @@
 #include "parser.h"
 
+AttrInfo::AttrInfo(){
+	memset(attrName, '\0', MAXNAME+1);
+	attrType = INT;
+	attrLength = 4;
+}
+AttrInfo::AttrInfo(Attrcat attrcat){
+	memset(attrName, '\0', MAXNAME+1);
+	strcpy(attrName, attrcat.attrName);
+
+	attrType = attrcat.attrType;
+	attrLength = attrcat.attrLen;
+}
+
+
 RelAttr::RelAttr(char* rel, char* attr){
 	relName = new char[MAXNAME+1];
 	memset(relName, '\0', MAXNAME+1);
@@ -58,6 +72,7 @@ Value::~Value(){
 	delete [] data;
 	data = NULL;
 }
+
 Condition::Condition(const RelAttr lhsAttr, CompOp op, const int isAttr, 
 					 const RelAttr rhsAttr, const Value rhsValue)
 					 : lhsAttr(lhsAttr), op(op), bRhsIsAttr(isAttr), rhsAttr(rhsAttr), rhsValue(rhsValue)

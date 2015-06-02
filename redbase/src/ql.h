@@ -84,6 +84,7 @@ public:
 	int numConditions;
 	Condition *conditions;
 
+	SM_Manager *smm;
 	char type[MAXNAME+1];
 	Node *child;
 	Node *otherChild;
@@ -105,27 +106,27 @@ public:
 };
 class Selection : public Node {
 public:
-	Selection(Node &left, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
+	Selection(SM_Manager *smm, Node &left, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
 	~Selection();
 	RC execute();
 	bool ConditionApplies(Condition &cond);
 }; 
 class Join : public Node {
 public:
-	Join(Node &left, Node &right, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
+	Join(SM_Manager *smm, Node &left, Node &right, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
 	~Join();
 	RC execute();
 	bool ConditionApplies(Condition &cond);
 }; 
 class Cross : public Node {
 public:
-	Cross(Node &left, Node &right, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
+	Cross(SM_Manager *smm, Node &left, Node &right, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
 	~Cross();
 	RC execute();
 };
 class Relation : public Node {
 public:
-	Relation(const char *relName, SM_Manager *smm, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
+	Relation(SM_Manager *smm, const char *relName, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
 	~Relation();
 
 	SM_Manager *smm;

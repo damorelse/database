@@ -2,6 +2,7 @@
 #include <set>
 #include <map>
 #include <iterator>
+#include <fstream>
 #include "ql.h"
 #include "sm.h"
 
@@ -146,7 +147,7 @@ Attrcat Node::getAttrcat(const char *relName, char* attrName){
 }
 
 
-Selection::Selection(Node& left, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals){
+Selection::Selection(SM_Manager *smm, Node& left, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals){
 	// set parent for children
 	left.parent = this;
 
@@ -164,6 +165,7 @@ Selection::Selection(Node& left, int numConds, Condition *conds, bool calcProj, 
 		return;
 	}
 
+	this->smm = smm;
 	strcpy(type, "Select");
 	child = &left;
 	// otherChild set by default
@@ -197,7 +199,7 @@ bool Selection::ConditionApplies(Condition &cond){
 	return true;
 }
 
-Join::Join(Node& left, Node& right, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals){
+Join::Join(SM_Manager *smm, Node& left, Node& right, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals){
 	// set parent for both children
 	left.parent = this;
 	right.parent = this;
@@ -216,6 +218,7 @@ Join::Join(Node& left, Node& right, int numConds, Condition *conds, bool calcPro
 		return;
 	}
 
+	this->smm = smm;
 	strcpy(type, "Join");
 	child = &left;
 	otherChild = &right;
@@ -256,13 +259,14 @@ bool Join::ConditionApplies(Condition &cond){
 	return false;
 }
 
-Cross::Cross(Node &left, Node &right, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals){
+Cross::Cross(SM_Manager *smm, Node &left, Node &right, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals){
 	// set parent for both children
 	left.parent = this;
 	right.parent = this;
 
 	// numConditions and conditions default set
 
+	this->smm = smm;
 	strcpy(type, "X");
 	child = &left;
 	otherChild = &right;
@@ -287,15 +291,30 @@ Cross::Cross(Node &left, Node &right, bool calcProj, int numTotalPairs, pair<Rel
 	Project(calcProj, numTotalPairs, pTotals);
 }
 RC Cross::execute(){
-	// TODO
+	// Set output
+	char* fileName = tmpnam(NULL);
+	strcpy(output, fileName);
+	// Create relation
+	vector<AttrInfo> attributes;
+	// TODO: add in RID attributes
+	for (int i = 0; i < numOutAttrs; ++i)
+		attributes.push_back(AttrInfo(outAttrs[i]));
+	if (rc = smm->CreateTable(output, numOutAttrs, &attributes[0]))
+		return rc;
+
+	// Perform filescans, write results to temp file
+	RM_FileHandle file;
+	RM_FileHandle otherFile;
+
+	// Delete input files
+	remove(input);
+	remove(otherInput);
 }
 
-Relation::Relation(const char *relName, SM_Manager *smm, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals){
-	// Relation specific code
-	this->smm = smm;
-
+Relation::Relation(SM_Manager *smm, const char *relName, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals){
 	// numConditions/conditions set by default
 
+	this->smm = smm;
 	strcpy(type, relName);
 	// child/otherChild set by default
 	// parent set by parent node
