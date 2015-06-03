@@ -69,14 +69,11 @@ private:
 	void RecursivePrint(Node qPlan, int indent);
 };
 
-// TODO: Start
 class Node {
 public:
 	Node();
 	virtual ~Node();
 	virtual RC execute();
-	virtual bool ConditionApplies(Condition &cond);
-	void Node::Project(bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
 	void printType();
 	Attrcat getAttrcat(const char *relName, char* attrName);
 
@@ -85,45 +82,64 @@ public:
 	Condition *conditions;
 
 	SM_Manager *smm;
+	RM_Manager *rmm;
+	IX_Manager *ixm;
 	char type[MAXNAME+1];
 	Node *child;
 	Node *otherChild;
 	Node *parent; // set by parent node
-	char input[MAXNAME+1];
-	char otherInput[MAXNAME+1];
 	char output[MAXNAME+1]; // set during execution
 	
 	int numRelations;
 	char *relations;
+	int numRids;
+	Attrcat *rids;
 
-	int numCountPairs;
-	pair<RelAttr, int> *pCounts;
 	int numOutAttrs;
 	Attrcat *outAttrs;
+	int numCountPairs;
+	pair<RelAttr, int> *pCounts;
 	bool project;
 
 	RC rc; // set optionally
+
+protected:
+	// Constructor
+	virtual bool ConditionApplies(Condition &cond);
+	void SetRelations();
+	void SetRids();
+	void SetOutAttrs();
+	void Project(bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
+	// Execution
+	RC CreateTmpOutput();
+	bool CheckCondition(char* pData, Condition cond);
+	RC WriteToOutput(RM_Record record, RM_Record otherRecord, char* outPData, RM_FileHandle &outFile);
+	RC DeleteTmpInput();
 };
+// Child must be a relation
 class Selection : public Node {
 public:
-	Selection(SM_Manager *smm, Node &left, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
+	Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
 	~Selection();
+	bool UseIndex(Condition cond);
 	RC execute();
 	bool ConditionApplies(Condition &cond);
 }; 
+// Children must be join, selection, or relation
 class Join : public Node {
 public:
-	Join(SM_Manager *smm, Node &left, Node &right, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
+	Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, Node &right, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
 	~Join();
 	RC execute();
 	bool ConditionApplies(Condition &cond);
 }; 
 class Cross : public Node {
 public:
-	Cross(SM_Manager *smm, Node &left, Node &right, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
+	Cross(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, Node &right, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
 	~Cross();
 	RC execute();
 };
+// No children
 class Relation : public Node {
 public:
 	Relation(SM_Manager *smm, const char *relName, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
@@ -131,7 +147,6 @@ public:
 
 	SM_Manager *smm;
 };
-// TODO: End
 
 void QL_PrintError(RC rc);
 

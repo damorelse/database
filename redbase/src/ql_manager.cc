@@ -516,7 +516,7 @@ RC QL_Manager::Update(const char *relName,
 		}
 
 		// Print 
-		printer.Print(cout, pData + sizeof(RID));
+		printer.Print(cout, pData + ridsSize);
 	}
 	if (rc != RM_EOF){
 		smm->DropTable(qPlan.output);
@@ -768,7 +768,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 		if (rel.rc)
 			return rel.rc;
 
-		Node sel = Selection (smm, rel, nConditions, &myConds[0], calcProj, projVector.size(), &projVector[0]);
+		Node sel = Selection (smm, rmm, ixm, rel, nConditions, &myConds[0], calcProj, projVector.size(), &projVector[0]);
 		if (sel.rc)
 			relSelNodes[(char*)relations[i]] = rel;
 		else 
@@ -778,7 +778,9 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 	for (int i = 0; i < joinGroups.size; ++i){
 		// Join ordering (byte size / index joins)
 		// TODO
-		// Condition ordering (indexed-selectivity, all unindexed)
+		// Condition ordering 
+		// SELECTION: indexed-selectivity, all unindexed/attributeConditions (selectivity doesn't matter)
+		// JOIN: both indexed-selectivity, , both unindexed
 		// TODO
 	}
 	// Cross ordering (byte size)
@@ -797,9 +799,9 @@ RC QL_Manager::GetResults(Node qPlan)
 			 count += 1;
 			 nextNodes.push(nextNodes.front()->child);
 		 }
-		 if (nextNodes.front()->otherchild){
+		 if (nextNodes.front()->otherChild){
 			 count += 1;
-			 nextNodes.push(nextNodes.front()->otherchild);
+			 nextNodes.push(nextNodes.front()->otherChild);
 		 }
 
 		 if (count == 0)
