@@ -209,7 +209,20 @@ RC Node::CreateTmpOutput(){
 		return rc;
 	return 0;
 }
-RC Node::WriteToOutput(RM_Record record, RM_Record otherRecord, char* outPData, RM_FileHandle &outFile){
+RC Node::DeleteTmpInput(){
+	// Delete input files (if NOT relations)
+	if (child->numRids != 0){
+		if (rc = smm->DropTable(child->output))
+			return rc;
+	}
+	if (otherChild && otherChild->numRids != 0){
+		if (rc = smm->DropTable(otherChild->output))
+			return rc;
+	}
+}
+
+RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAttrs, map<pair<char*, char*>, Attrcat> &attrcats, map<pair<char*, char*>, Attrcat> &otherAttrcats, RM_Record record, RM_Record otherRecord, char* outPData, RM_FileHandle &outFile){
+	RC rc;
 	char* pData;
 	if (rc = record.GetData(pData))
 		return rc;
@@ -246,19 +259,7 @@ RC Node::WriteToOutput(RM_Record record, RM_Record otherRecord, char* outPData, 
 			outItr += otherChild->numRids * sizeof(RID);
 		}
 	}
-	// Other attributes
-	map<pair<char*, char*>, Attrcat> attrcats;
-	for (int i = 0; i < child->numOutAttrs; ++i){
-		pair<char*, char*> key = make_pair(child->outAttrs[i].relName, child->outAttrs[i].attrName);
-		attrcats[key] = child->outAttrs[i];
-	}
-	map<pair<char*, char*>, Attrcat> otherAttrcats;
-	if (otherChild){
-		for (int i = 0; i < otherChild->numOutAttrs; ++i){
-			pair<char*, char*> key = make_pair(otherChild->outAttrs[i].relName, otherChild->outAttrs[i].attrName);
-			attrcats[key] = otherChild->outAttrs[i];
-		}
-	}
+	
 	for (int i = 0; i < numOutAttrs; ++i){
 		pair<char*, char*> key = make_pair(outAttrs[i].relName, outAttrs[i].attrName);
 		if (attrcats.find(key) != attrcats.end())
@@ -271,19 +272,7 @@ RC Node::WriteToOutput(RM_Record record, RM_Record otherRecord, char* outPData, 
 	RID tmp;
 	outFile.InsertRec(outPData, tmp);
 }
-RC Node::DeleteTmpInput(){
-	// Delete input files (if NOT relations)
-	if (child->numRids != 0){
-		if (rc = smm->DropTable(child->output))
-			return rc;
-	}
-	if (otherChild && otherChild->numRids != 0){
-		if (rc = smm->DropTable(otherChild->output))
-			return rc;
-	}
-}
-
-bool CheckCondition(char* pData, Condition cond, map<pair<char*, char*>, Attrcat> &attrcats){
+bool CheckSelectionCondition(char* pData, Condition cond, map<pair<char*, char*>, Attrcat> &attrcats){
 	pair<char*, char*> leftKey = make_pair(cond.lhsAttr.relName, cond.lhsAttr.attrName);
 	Attrcat leftAttrcat = attrcats[leftKey];
 	int leftLen = leftAttrcat.attrLen;
@@ -394,6 +383,10 @@ bool CheckCondition(char* pData, Condition cond, map<pair<char*, char*>, Attrcat
         break;
 	}
 }
+bool CheckJoinCondition(char* pData, char* otherPData, Condition cond, map<pair<char*, char*>, Attrcat> &attrcats, map<pair<char*, char*>, Attrcat> &otherAttrcats)
+{
+	// TODO
+}
 
 Selection::Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals){
 	// set parent for children
@@ -436,7 +429,7 @@ bool SelectionUseIndex(Condition cond, map<pair<char*, char*>, Attrcat> &attrcat
 	pair<char*, char*> key = make_pair(cond.lhsAttr.relName, cond.lhsAttr.attrName);
 	if (attrcats[key].indexNo == -1)
 		return false;
-	// TODO: check if selectivity warrants index scan
+	// TODO: check if relation size/selectivity warrants index scan (est. indexscan IOs < filescan IOs)
 	return true;
 }
 RC Selection::execute(){
@@ -456,13 +449,14 @@ RC Selection::execute(){
 	char* outPData = new char[len];
 	memset(outPData, '\0', len);
 
+	// Make attribute-attrcat maps
 	map<pair<char*, char*>, Attrcat> attrcats;
 	for (int i = 0; i < child->numOutAttrs; ++i){
 		pair<char*, char*> key = make_pair(child->outAttrs[i].relName, child->outAttrs[i].attrName);
 		attrcats[key] = child->outAttrs[i];
 	}
-
-	// If no indexing at all...
+	
+	// No index scan
 	if (!SelectionUseIndex(conditions[0], attrcats)){
 		RM_FileScan scan;
 		if (rc = scan.OpenScan(file, INT, 4, 0, NO_OP, NULL))
@@ -477,10 +471,10 @@ RC Selection::execute(){
 			bool insert = true;
 			for (int k = 0; insert && k < numConditions; ++k){
 				pair<char*, char*> key = make_pair(conditions[k].lhsAttr.relName, conditions[k].lhsAttr.attrName);
-				insert = CheckCondition(pData, conditions[k], attrcats);
+				insert = CheckSelectionCondition(pData, conditions[k], attrcats);
 			}
 			if (insert){
-				if (rc = WriteToOutput(record, record, outPData, outFile))
+				if (rc = WriteToOutput(child, otherChild, numOutAttrs, outAttrs, attrcats, attrcats, record, record, outPData, outFile))
 					return rc;
 			}
 		}
@@ -489,40 +483,47 @@ RC Selection::execute(){
 		if (rc = scan.CloseScan())
 			return rc;
 	}
-	// Perform index scan
+	// Use index scan
 	else {
-		//Check index condition
 		pair<char*, char*> key = make_pair(conditions[0].lhsAttr.relName, conditions[0].lhsAttr.attrName);
-
 		IX_IndexHandle index;
 		if (rc = ixm->OpenIndex(attrcats[key].relName, attrcats[key].indexNo, index))
 			return rc;
 		IX_IndexScan indexScan;
-		if (rc = indexScan.OpenScan(index, conditions[0].op, conditions[0].rhsValue.data))
-			return rc;
-
-		RID rid;
-		while(OK_RC == (rc = indexScan.GetNextEntry(rid))){
-			RM_Record record;
-			if (rc = file.GetRec(rid, record))
-				return rc;
-			char* pData;
-			if (rc = record.GetData(pData))
-				return rc;
-
-			// Check rest of conditions
-			bool insert = true;
-			for (int k = 1; insert && k < numConditions; ++k)
-				insert = CheckCondition(pData, conditions[k], attrcats);
-			if (insert){
-				if (rc = WriteToOutput(record, record, outPData, outFile))
-					return rc;
-			}
+		// Check if operation is Not Equal (which is not implemented in ix scan)
+		CompOp op = conditions[0].op;
+		if (conditions[0].op == NE_OP){
+			op = LT_OP;
 		}
-		if (rc != IX_EOF)
-			return rc;
-		if (rc = indexScan.CloseScan())
-			return rc;
+		for (int i = 0; i < 1 || (conditions[0].op == NE_OP && i < 2); ++i){
+			if (rc = indexScan.OpenScan(index, op, conditions[0].rhsValue.data))
+				return rc;
+
+			RID rid;
+			while(OK_RC == (rc = indexScan.GetNextEntry(rid))){
+				RM_Record record;
+				if (rc = file.GetRec(rid, record))
+					return rc;
+				char* pData;
+				if (rc = record.GetData(pData))
+					return rc;
+
+				// Check rest of conditions
+				bool insert = true;
+				for (int k = 1; insert && k < numConditions; ++k)
+					insert = CheckSelectionCondition(pData, conditions[k], attrcats);
+				if (insert){
+					if (rc = WriteToOutput(child, otherChild, numOutAttrs, outAttrs, attrcats, attrcats, record, record, outPData, outFile))
+						return rc;
+				}
+			}
+			if (rc != IX_EOF)
+				return rc;
+			if (rc = indexScan.CloseScan())
+				return rc;
+
+			op = GT_OP;
+		}
 	}
 
 	// Delete pData
@@ -546,7 +547,26 @@ bool Selection::ConditionApplies(Condition &cond){
 	return true;
 }
 
-// TODO bool JoinUseIndex(Condition cond, 
+// Assume conditions ordered by 1. at least one attribute has index 2. selectivity
+bool JoinUseIndex(Condition cond, map<pair<char*, char*>, Attrcat> &attrcats, map<pair<char*, char*>, Attrcat> &otherAttrcats){
+	pair<char*, char*> key = make_pair(cond.lhsAttr.relName, cond.lhsAttr.attrName);
+	pair<char*, char*> otherKey = make_pair(cond.rhsAttr.relName, cond.rhsAttr.attrName);
+	
+	map<pair<char*, char*>, Attrcat>* keyAttrcats = &attrcats;
+	map<pair<char*, char*>, Attrcat>* otherKeyAttrcats = &otherAttrcats;
+	if (attrcats.find(key) == attrcats.end()){
+		keyAttrcats = &otherAttrcats;
+		otherKeyAttrcats = &attrcats;
+	}
+
+	// No indexed attributes
+	if (keyAttrcats->at(key).indexNo == -1 && otherKeyAttrcats->at(otherKey).indexNo == -1)
+		return false;
+
+	// TODO: check if relation sizes/most selective condition is selective enough to warrant index scan
+
+	return true;
+}
 Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& right, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals){
 	// set parent for both children
 	left.parent = this;
@@ -600,7 +620,77 @@ RC Join::execute(){
 	char* outPData = new char[len];
 	memset(outPData, '\0', len);
 
-	// TODO
+	// Make attribute-attrcat maps
+	map<pair<char*, char*>, Attrcat> attrcats;
+	for (int i = 0; i < child->numOutAttrs; ++i){
+		pair<char*, char*> key = make_pair(child->outAttrs[i].relName, child->outAttrs[i].attrName);
+		attrcats[key] = child->outAttrs[i];
+	}
+	map<pair<char*, char*>, Attrcat> otherAttrcats;
+	for (int i = 0; i < otherChild->numOutAttrs; ++i){
+		pair<char*, char*> key = make_pair(otherChild->outAttrs[i].relName, otherChild->outAttrs[i].attrName);
+		attrcats[key] = otherChild->outAttrs[i];
+	}
+
+	// No index scan
+	if (!JoinUseIndex(conditions[0], attrcats, otherAttrcats))
+	{
+		RM_FileScan scan;
+		if (rc = scan.OpenScan(file, INT, 4, 0, NO_OP, NULL))
+			return rc;
+		RM_FileScan otherScan;
+		if (rc = otherScan.OpenScan(otherFile, INT, 4, 0, NO_OP, NULL))
+			return rc;
+
+		// Iterate over files
+		RM_Record record;
+		while(OK_RC == (rc = scan.GetNextRec(record))){
+			char* pData;
+			if (rc = record.GetData(pData))
+				return rc;
+
+			RM_Record otherRecord;
+			while (OK_RC == (rc = otherScan.GetNextRec(otherRecord))){
+				char* otherPData;
+				if (rc = otherRecord.GetData(otherPData))
+					return rc;
+
+				// Check rest of conditions
+				bool insert = true;
+				for (int k = 0; insert && k < numConditions; ++k){
+					insert = CheckJoinCondition(pData, otherPData, conditions[k], attrcats, otherAttrcats);
+				}
+				if (insert){
+					if (rc = WriteToOutput(child, otherChild, numOutAttrs, outAttrs, attrcats, otherAttrcats, record, otherRecord, outPData, outFile))
+						return rc;
+				}
+			}
+			if (rc != RM_EOF)
+				return rc;
+		}
+		if (rc != RM_EOF)
+			return rc;
+
+		if (rc = otherScan.CloseScan())
+			return rc;
+		if (rc = scan.CloseScan())
+			return rc;
+	}
+	// Index scan
+	else 
+	{
+		// TODO
+	}
+
+	delete [] outPData;
+
+	// Close filescans and files
+	if (rc = rmm->CloseFile(otherFile))
+		return rc;
+	if (rc = rmm->CloseFile(file))
+		return rc;
+	if (rc = rmm->CloseFile(outFile))
+		return rc;
 
 	if (rc = DeleteTmpInput())
 		return rc;
@@ -661,16 +751,29 @@ RC Cross::execute(){
 	if (rc = otherScan.OpenScan(otherFile, INT, 4, 0, NO_OP, NULL))
 		return rc;
 
-	// Iterate over files
+	// Make outPData
 	int len = outAttrs[numOutAttrs-1].offset + outAttrs[numOutAttrs-1].attrLen;
 	char* outPData = new char[len];
 	memset(outPData, '\0', len);
 
+	// Make attribute-attrcat maps
+	map<pair<char*, char*>, Attrcat> attrcats;
+	for (int i = 0; i < child->numOutAttrs; ++i){
+		pair<char*, char*> key = make_pair(child->outAttrs[i].relName, child->outAttrs[i].attrName);
+		attrcats[key] = child->outAttrs[i];
+	}
+	map<pair<char*, char*>, Attrcat> otherAttrcats;
+	for (int i = 0; i < otherChild->numOutAttrs; ++i){
+		pair<char*, char*> key = make_pair(otherChild->outAttrs[i].relName, otherChild->outAttrs[i].attrName);
+		attrcats[key] = otherChild->outAttrs[i];
+	}
+
+	// Iterate over files
 	RM_Record record;
 	while(OK_RC == (rc = scan.GetNextRec(record))){
 		RM_Record otherRecord;
 		while (OK_RC == (rc = otherScan.GetNextRec(otherRecord))){
-			if (rc = WriteToOutput(record, otherRecord, outPData, outFile))
+			if (rc = WriteToOutput(child, otherChild, numOutAttrs, outAttrs, attrcats, otherAttrcats, record, otherRecord, outPData, outFile))
 				return rc;
 		}
 		if (rc != RM_EOF)

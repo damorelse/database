@@ -112,7 +112,6 @@ protected:
 	void Project(bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
 	// Execution
 	RC CreateTmpOutput();
-	RC WriteToOutput(RM_Record record, RM_Record otherRecord, char* outPData, RM_FileHandle &outFile);
 	RC DeleteTmpInput();
 };
 // Child must be a relation
