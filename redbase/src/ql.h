@@ -112,7 +112,6 @@ protected:
 	void Project(bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
 	// Execution
 	RC CreateTmpOutput();
-	bool CheckCondition(char* pData, Condition cond);
 	RC WriteToOutput(RM_Record record, RM_Record otherRecord, char* outPData, RM_FileHandle &outFile);
 	RC DeleteTmpInput();
 };
@@ -121,7 +120,6 @@ class Selection : public Node {
 public:
 	Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
 	~Selection();
-	bool UseIndex(Condition cond);
 	RC execute();
 	bool ConditionApplies(Condition &cond);
 }; 

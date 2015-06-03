@@ -775,12 +775,12 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 			relSelNodes[(char*)relations[i]] = sel;
 	}
 
+	// SELECTION condition ordering: if indexed, by selectivity + # IOs
+	for (map<char*, Node>::iterator it=relSelNodes.begin(); it != relSelNodes.end(); ++it){
+		// TODO: order it->second.conditions;
+	}
 	for (int i = 0; i < joinGroups.size; ++i){
-		// Join ordering (byte size / index joins)
-		// TODO
-		// Condition ordering 
-		// SELECTION: indexed-selectivity, all unindexed/attributeConditions (selectivity doesn't matter)
-		// JOIN: both indexed-selectivity, , both unindexed
+		// Join ordering (byte size + access costs) + Condition ordering (both or one indexed-selectivity)
 		// TODO
 	}
 	// Cross ordering (byte size)

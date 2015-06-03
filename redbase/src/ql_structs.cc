@@ -5,6 +5,7 @@
 #include <fstream>
 #include <algorithm>
 #include <utility>
+#include <string>
 #include "ql.h"
 #include "sm.h"
 
@@ -208,9 +209,6 @@ RC Node::CreateTmpOutput(){
 		return rc;
 	return 0;
 }
-bool Node::CheckCondition(char* pData, Condition cond){
-	// TODO
-}
 RC Node::WriteToOutput(RM_Record record, RM_Record otherRecord, char* outPData, RM_FileHandle &outFile){
 	char* pData;
 	if (rc = record.GetData(pData))
@@ -285,6 +283,117 @@ RC Node::DeleteTmpInput(){
 	}
 }
 
+bool CheckCondition(char* pData, Condition cond, map<pair<char*, char*>, Attrcat> &attrcats){
+	pair<char*, char*> leftKey = make_pair(cond.lhsAttr.relName, cond.lhsAttr.attrName);
+	Attrcat leftAttrcat = attrcats[leftKey];
+	int leftLen = leftAttrcat.attrLen;
+	char* leftPtr = pData + leftAttrcat.offset;
+
+	char* rightPtr = (char*)cond.rhsValue.data;
+	if (cond.bRhsIsAttr){
+		pair<char*, char*> rightKey = make_pair(cond.rhsAttr.relName, cond.rhsAttr.attrName);
+		rightPtr = pData + attrcats[rightKey].offset;
+	}
+
+	int a_i, v_i;
+	float a_f, v_f;
+	string a_s, v_s;
+	switch(leftAttrcat.attrType) {
+	case INT:
+		memcpy(&a_i, leftPtr, 4);
+		memcpy(&v_i, rightPtr, 4);
+        break;
+	case FLOAT:
+		memcpy(&a_f, leftPtr, 4);
+		memcpy(&v_f, rightPtr, 4);
+        break;
+	case STRING:
+		a_s = string(leftPtr, leftPtr+leftLen);
+		v_s = string(rightPtr);
+        break;
+	}
+	// Check if fulfills condition
+	switch(cond.op) {
+	case EQ_OP:
+		switch(leftAttrcat.attrType) {
+		case INT:
+			return a_i == v_i;
+            break;
+		case FLOAT:
+			return a_f == v_f;
+            break;
+		case STRING:
+			return a_s == v_s;
+            break;
+		}
+        break;
+	case LT_OP:
+		switch(leftAttrcat.attrType) {
+		case INT:
+			return a_i < v_i;
+            break;
+		case FLOAT:
+			return a_f < v_f;
+            break;
+		case STRING:
+			return a_s < v_s;
+            break;
+		}
+        break;
+	case GT_OP:
+		switch(leftAttrcat.attrType) {
+		case INT:
+			return a_i > v_i;
+            break;
+		case FLOAT:
+			return a_f > v_f;
+            break;
+		case STRING:
+			return a_s > v_s;
+            break;
+		}
+        break;
+	case LE_OP:
+		switch(leftAttrcat.attrType) {
+		case INT:
+			return a_i <= v_i;
+            break;
+		case FLOAT:
+			return a_f <= v_f;
+            break;
+		case STRING:
+			return a_s <= v_s;
+            break;
+		}
+        break;
+	case GE_OP:
+		switch(leftAttrcat.attrType) {
+		case INT:
+			return a_i >= v_i;
+            break;
+		case FLOAT:
+			return a_f >= v_f;
+            break;
+		case STRING:
+			return a_s >= v_s;
+            break;
+		}
+        break;
+	case NE_OP:
+		switch(leftAttrcat.attrType) {
+		case INT:
+			return a_i != v_i;
+            break;
+		case FLOAT:
+			return a_f != v_f;
+            break;
+		case STRING:
+			return a_s != v_s;
+            break;
+		}
+        break;
+	}
+}
 
 Selection::Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals){
 	// set parent for children
@@ -318,12 +427,16 @@ Selection::Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& le
 	SetOutAttrs();
 	Project(calcProj, numTotalPairs, pTotals);
 }
-bool compareRID(const RID& lhs, const RID& rhs)
-{
-  return lhs.pageNum < rhs.pageNum;
-}
-bool Selection::UseIndex(Condition cond){
-	// TODO
+// Assume conditions ordered by 1. value conditions 2. has index 3. selectivity
+bool SelectionUseIndex(Condition cond, map<pair<char*, char*>, Attrcat> &attrcats){
+	// Not a value condition
+	if (cond.bRhsIsAttr)
+		return false;
+	// Not an indexed attribute
+	pair<char*, char*> key = make_pair(cond.lhsAttr.relName, cond.lhsAttr.attrName);
+	if (attrcats[key].indexNo == -1)
+		return false;
+	// TODO: check if selectivity warrants index scan
 	return true;
 }
 RC Selection::execute(){
@@ -338,12 +451,19 @@ RC Selection::execute(){
 	if(rc = rmm->OpenFile(child->output, file))
 		return rc;
 	
+	// Make outPData
 	int len = outAttrs[numOutAttrs-1].offset + outAttrs[numOutAttrs-1].attrLen;
 	char* outPData = new char[len];
 	memset(outPData, '\0', len);
 
-	// If no index-merging at all...
-	if (!UseIndex(conditions[0])){
+	map<pair<char*, char*>, Attrcat> attrcats;
+	for (int i = 0; i < child->numOutAttrs; ++i){
+		pair<char*, char*> key = make_pair(child->outAttrs[i].relName, child->outAttrs[i].attrName);
+		attrcats[key] = child->outAttrs[i];
+	}
+
+	// If no indexing at all...
+	if (!SelectionUseIndex(conditions[0], attrcats)){
 		RM_FileScan scan;
 		if (rc = scan.OpenScan(file, INT, 4, 0, NO_OP, NULL))
 			return rc;
@@ -355,8 +475,10 @@ RC Selection::execute(){
 
 			// Check rest of conditions
 			bool insert = true;
-			for (int k = 0; insert && k < numConditions; ++k)
-				insert = CheckCondition(pData, conditions[k]);
+			for (int k = 0; insert && k < numConditions; ++k){
+				pair<char*, char*> key = make_pair(conditions[k].lhsAttr.relName, conditions[k].lhsAttr.attrName);
+				insert = CheckCondition(pData, conditions[k], attrcats);
+			}
 			if (insert){
 				if (rc = WriteToOutput(record, record, outPData, outFile))
 					return rc;
@@ -364,20 +486,25 @@ RC Selection::execute(){
 		}
 		if (rc != RM_EOF)
 			return rc;
+		if (rc = scan.CloseScan())
+			return rc;
 	}
-	// Perform index merging
+	// Perform index scan
 	else {
-		set<RID> currRids;
-		int firstNonIndexed;
-		for (int i = 0; i < numConditions && UseIndex(conditions[i]); ++i){
-			// TODO: Perform index condition
-		}
-		// Get data of rids
-		vector<RID> ridVector(currRids.begin(), currRids.end());
-		sort(ridVector.begin(), ridVector.end(), compareRID);
-		RM_Record record;
-		for (int i = 0; i < ridVector.size(); ++i){
-			if (rc = file.GetRec(ridVector[i], record))
+		//Check index condition
+		pair<char*, char*> key = make_pair(conditions[0].lhsAttr.relName, conditions[0].lhsAttr.attrName);
+
+		IX_IndexHandle index;
+		if (rc = ixm->OpenIndex(attrcats[key].relName, attrcats[key].indexNo, index))
+			return rc;
+		IX_IndexScan indexScan;
+		if (rc = indexScan.OpenScan(index, conditions[0].op, conditions[0].rhsValue.data))
+			return rc;
+
+		RID rid;
+		while(OK_RC == (rc = indexScan.GetNextEntry(rid))){
+			RM_Record record;
+			if (rc = file.GetRec(rid, record))
 				return rc;
 			char* pData;
 			if (rc = record.GetData(pData))
@@ -385,15 +512,20 @@ RC Selection::execute(){
 
 			// Check rest of conditions
 			bool insert = true;
-			for (int k = firstNonIndexed; insert && k < numConditions; ++k)
-				insert = CheckCondition(pData, conditions[k]);
+			for (int k = 1; insert && k < numConditions; ++k)
+				insert = CheckCondition(pData, conditions[k], attrcats);
 			if (insert){
 				if (rc = WriteToOutput(record, record, outPData, outFile))
 					return rc;
 			}
 		}
+		if (rc != IX_EOF)
+			return rc;
+		if (rc = indexScan.CloseScan())
+			return rc;
 	}
 
+	// Delete pData
 	delete [] outPData;
 
 	// Close files
@@ -414,6 +546,7 @@ bool Selection::ConditionApplies(Condition &cond){
 	return true;
 }
 
+// TODO bool JoinUseIndex(Condition cond, 
 Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& right, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals){
 	// set parent for both children
 	left.parent = this;
@@ -447,11 +580,26 @@ Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& 
 	SetOutAttrs();
 	Project(calcProj, numTotalPairs, pTotals);
 }
-// Assume typical case is one joining condition
 RC Join::execute(){
 	if (rc = CreateTmpOutput())
 		return rc;
 	
+	// Open files and filescans
+	RM_FileHandle outFile;
+	if (rc = rmm->OpenFile(output, outFile))
+		return rc;
+	RM_FileHandle file;
+	if(rc = rmm->OpenFile(child->output, file))
+		return rc;
+	RM_FileHandle otherFile;
+	if(rc = rmm->OpenFile(otherChild->output, otherFile))
+		return rc;
+	
+	// Make outPData
+	int len = outAttrs[numOutAttrs-1].offset + outAttrs[numOutAttrs-1].attrLen;
+	char* outPData = new char[len];
+	memset(outPData, '\0', len);
+
 	// TODO
 
 	if (rc = DeleteTmpInput())
