@@ -69,6 +69,10 @@ private:
 	void RecursivePrint(Node qPlan, int indent);
 };
 
+#define FILE 0
+#define INDEX 1
+#define INDEXES 2
+
 class Node {
 public:
 	Node();
@@ -102,6 +106,8 @@ public:
 	bool project;
 
 	RC rc; // set optionally
+	int execution; //set during query plan building
+	int cost; //set during query plan building
 
 protected:
 	// Constructor

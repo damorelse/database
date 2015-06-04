@@ -33,6 +33,8 @@ Node::Node(){
 	project = false;
 
 	rc = 0;
+	execution = FILE;
+	cost = 0;
 }
 Node::~Node(){
 	delete [] conditions;
@@ -274,6 +276,7 @@ RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAtt
 }
 bool CheckSelectionCondition(char* pData, Condition cond, map<pair<char*, char*>, Attrcat> &attrcats){
 	pair<char*, char*> leftKey = make_pair(cond.lhsAttr.relName, cond.lhsAttr.attrName);
+
 	Attrcat leftAttrcat = attrcats[leftKey];
 	int leftLen = leftAttrcat.attrLen;
 	char* leftPtr = pData + leftAttrcat.offset;
@@ -284,10 +287,47 @@ bool CheckSelectionCondition(char* pData, Condition cond, map<pair<char*, char*>
 		rightPtr = pData + attrcats[rightKey].offset;
 	}
 
+	return CheckCondition(cond.op, leftAttrcat.attrType, leftPtr, leftLen, rightPtr, -1);
+}
+bool CheckJoinCondition(char* pData, char* otherPData, Condition cond, map<pair<char*, char*>, Attrcat> &attrcats, map<pair<char*, char*>, Attrcat> &otherAttrcats)
+{
+	pair<char*, char*> leftKey = make_pair(cond.lhsAttr.relName, cond.lhsAttr.attrName);
+	pair<char*, char*> rightKey = make_pair(cond.rhsAttr.relName, cond.rhsAttr.attrName);
+
+	int leftLen, rightLen;
+	char* leftPtr; 
+	char* rightPtr;
+	AttrType attrType;
+	if (attrcats.find(leftKey) != attrcats.end()){
+		Attrcat leftAttrcat = attrcats[leftKey];
+		leftLen = leftAttrcat.attrLen;
+		leftPtr = pData + leftAttrcat.offset;
+
+		Attrcat rightAttrcat = otherAttrcats[rightKey];
+		rightLen = rightAttrcat.attrLen;
+		rightPtr = otherPData + rightAttrcat.offset;
+
+		attrType = leftAttrcat.attrType;
+	}
+	else {
+		Attrcat leftAttrcat = otherAttrcats[leftKey];
+		leftLen = leftAttrcat.attrLen;
+		leftPtr = otherPData + leftAttrcat.offset;
+
+		Attrcat rightAttrcat = attrcats[rightKey];
+		rightLen = rightAttrcat.attrLen;
+		rightPtr = pData + rightAttrcat.offset;
+
+		attrType = leftAttrcat.attrType;
+	}
+	
+	return CheckCondition(cond.op, attrType, leftPtr, leftLen, rightPtr, rightLen);
+}
+bool CheckCondition(CompOp op, AttrType attrType, char* leftPtr, const int leftLen, char* rightPtr, const int rightLen){
 	int a_i, v_i;
 	float a_f, v_f;
 	string a_s, v_s;
-	switch(leftAttrcat.attrType) {
+	switch(attrType) {
 	case INT:
 		memcpy(&a_i, leftPtr, 4);
 		memcpy(&v_i, rightPtr, 4);
@@ -297,14 +337,28 @@ bool CheckSelectionCondition(char* pData, Condition cond, map<pair<char*, char*>
 		memcpy(&v_f, rightPtr, 4);
         break;
 	case STRING:
-		a_s = string(leftPtr, leftPtr+leftLen);
-		v_s = string(rightPtr);
+		char*  tmp = new char [leftLen + 1];
+		tmp[leftLen] = '\0';
+		memcpy(tmp, leftPtr, leftLen);
+		a_s = string(tmp);
+		delete [] tmp;
+
+		if (rightLen == -1)
+			v_s = string(rightPtr);
+		else 
+		{
+			tmp = new char [rightLen + 1];
+			tmp[rightLen] = '\0';
+			memcpy(tmp, rightPtr, rightLen);
+			v_s = string(tmp);
+			delete [] tmp;
+		}
         break;
 	}
 	// Check if fulfills condition
-	switch(cond.op) {
+	switch(op) {
 	case EQ_OP:
-		switch(leftAttrcat.attrType) {
+		switch(attrType) {
 		case INT:
 			return a_i == v_i;
             break;
@@ -317,7 +371,7 @@ bool CheckSelectionCondition(char* pData, Condition cond, map<pair<char*, char*>
 		}
         break;
 	case LT_OP:
-		switch(leftAttrcat.attrType) {
+		switch(attrType) {
 		case INT:
 			return a_i < v_i;
             break;
@@ -330,7 +384,7 @@ bool CheckSelectionCondition(char* pData, Condition cond, map<pair<char*, char*>
 		}
         break;
 	case GT_OP:
-		switch(leftAttrcat.attrType) {
+		switch(attrType) {
 		case INT:
 			return a_i > v_i;
             break;
@@ -343,7 +397,7 @@ bool CheckSelectionCondition(char* pData, Condition cond, map<pair<char*, char*>
 		}
         break;
 	case LE_OP:
-		switch(leftAttrcat.attrType) {
+		switch(attrType) {
 		case INT:
 			return a_i <= v_i;
             break;
@@ -356,7 +410,7 @@ bool CheckSelectionCondition(char* pData, Condition cond, map<pair<char*, char*>
 		}
         break;
 	case GE_OP:
-		switch(leftAttrcat.attrType) {
+		switch(attrType) {
 		case INT:
 			return a_i >= v_i;
             break;
@@ -369,7 +423,7 @@ bool CheckSelectionCondition(char* pData, Condition cond, map<pair<char*, char*>
 		}
         break;
 	case NE_OP:
-		switch(leftAttrcat.attrType) {
+		switch(attrType) {
 		case INT:
 			return a_i != v_i;
             break;
@@ -382,10 +436,6 @@ bool CheckSelectionCondition(char* pData, Condition cond, map<pair<char*, char*>
 		}
         break;
 	}
-}
-bool CheckJoinCondition(char* pData, char* otherPData, Condition cond, map<pair<char*, char*>, Attrcat> &attrcats, map<pair<char*, char*>, Attrcat> &otherAttrcats)
-{
-	// TODO
 }
 
 Selection::Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals){
@@ -420,18 +470,6 @@ Selection::Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& le
 	SetOutAttrs();
 	Project(calcProj, numTotalPairs, pTotals);
 }
-// Assume conditions ordered by 1. value conditions 2. has index 3. selectivity
-bool SelectionUseIndex(Condition cond, map<pair<char*, char*>, Attrcat> &attrcats){
-	// Not a value condition
-	if (cond.bRhsIsAttr)
-		return false;
-	// Not an indexed attribute
-	pair<char*, char*> key = make_pair(cond.lhsAttr.relName, cond.lhsAttr.attrName);
-	if (attrcats[key].indexNo == -1)
-		return false;
-	// TODO: check if relation size/selectivity warrants index scan (est. indexscan IOs < filescan IOs)
-	return true;
-}
 RC Selection::execute(){
 	if (rc = CreateTmpOutput())
 		return rc;
@@ -457,7 +495,7 @@ RC Selection::execute(){
 	}
 	
 	// No index scan
-	if (!SelectionUseIndex(conditions[0], attrcats)){
+	if (execution == FILE){
 		RM_FileScan scan;
 		if (rc = scan.OpenScan(file, INT, 4, 0, NO_OP, NULL))
 			return rc;
@@ -483,8 +521,8 @@ RC Selection::execute(){
 		if (rc = scan.CloseScan())
 			return rc;
 	}
-	// Use index scan
-	else {
+	// Use index scan (for value conditions only, with an index on lhs attribute)
+	else if (execution == INDEX) {
 		pair<char*, char*> key = make_pair(conditions[0].lhsAttr.relName, conditions[0].lhsAttr.attrName);
 		IX_IndexHandle index;
 		if (rc = ixm->OpenIndex(attrcats[key].relName, attrcats[key].indexNo, index))
@@ -525,6 +563,11 @@ RC Selection::execute(){
 			op = GT_OP;
 		}
 	}
+	// Attribute conditions with indexes on both attributes
+	else if (execution == INDEXES)
+	{
+		// TODO: index scans on both attributes
+	}
 
 	// Delete pData
 	delete [] outPData;
@@ -547,26 +590,6 @@ bool Selection::ConditionApplies(Condition &cond){
 	return true;
 }
 
-// Assume conditions ordered by 1. at least one attribute has index 2. selectivity
-bool JoinUseIndex(Condition cond, map<pair<char*, char*>, Attrcat> &attrcats, map<pair<char*, char*>, Attrcat> &otherAttrcats){
-	pair<char*, char*> key = make_pair(cond.lhsAttr.relName, cond.lhsAttr.attrName);
-	pair<char*, char*> otherKey = make_pair(cond.rhsAttr.relName, cond.rhsAttr.attrName);
-	
-	map<pair<char*, char*>, Attrcat>* keyAttrcats = &attrcats;
-	map<pair<char*, char*>, Attrcat>* otherKeyAttrcats = &otherAttrcats;
-	if (attrcats.find(key) == attrcats.end()){
-		keyAttrcats = &otherAttrcats;
-		otherKeyAttrcats = &attrcats;
-	}
-
-	// No indexed attributes
-	if (keyAttrcats->at(key).indexNo == -1 && otherKeyAttrcats->at(otherKey).indexNo == -1)
-		return false;
-
-	// TODO: check if relation sizes/most selective condition is selective enough to warrant index scan
-
-	return true;
-}
 Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& right, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals){
 	// set parent for both children
 	left.parent = this;
@@ -599,6 +622,12 @@ Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& 
 	SetRids();
 	SetOutAttrs();
 	Project(calcProj, numTotalPairs, pTotals);
+}
+Attrcat GetAttrcat(RelAttr relAttr, map<pair<char*, char*>, Attrcat> &attrcats, map<pair<char*, char*>, Attrcat> &otherAttrcats){
+	pair<char*, char*> key = make_pair(relAttr.relName, relAttr.attrName);
+	if (attrcats.find(key) != attrcats.end())
+		return attrcats[key];
+	return otherAttrcats[key];
 }
 RC Join::execute(){
 	if (rc = CreateTmpOutput())
@@ -633,7 +662,7 @@ RC Join::execute(){
 	}
 
 	// No index scan
-	if (!JoinUseIndex(conditions[0], attrcats, otherAttrcats))
+	if (execution == FILE)
 	{
 		RM_FileScan scan;
 		if (rc = scan.OpenScan(file, INT, 4, 0, NO_OP, NULL))
@@ -676,9 +705,108 @@ RC Join::execute(){
 		if (rc = scan.CloseScan())
 			return rc;
 	}
-	// Index scan
-	else 
+	// Index scan of one attribute 
+	// (AB join C with index on C's attribute, A join B with index on one attribute)
+	else if (execution == INDEX)
 	{
+		// Assumes rhsAttr is the indexed one
+		Attrcat left = GetAttrcat(conditions[0].lhsAttr, attrcats, otherAttrcats);
+		Attrcat right = GetAttrcat(conditions[0].rhsAttr, attrcats, otherAttrcats);
+		bool swap = (attrcats.find(pair<char*, char*>(left.relName, left.attrName)) == attrcats.end());
+
+		RM_FileScan fileScan;
+		if (!swap)
+			rc = fileScan.OpenScan(file, INT, 4, 0, NO_OP, NULL);
+		else
+			rc = fileScan.OpenScan(otherFile, INT, 4, 0, NO_OP, NULL);
+		if (rc)
+			return rc;
+
+		// Iterate over files
+		RM_Record fileRecord;
+		while(OK_RC == (rc = fileScan.GetNextRec(fileRecord))){
+			char* fileData;
+			if (rc = fileRecord.GetData(fileData))
+				return rc;
+			char * value = fileData + left.offset;
+
+			IX_IndexHandle index;
+			if (rc = ixm->OpenIndex(conditions[0].rhsAttr.relName, right.indexNo,index))
+				return rc;
+			IX_IndexScan indexScan;
+			// Flip OP
+			CompOp flipOp;
+			switch(conditions[0].op){
+			case LT_OP:
+				flipOp = GT_OP;
+				break;
+			case LE_OP:
+				flipOp = GE_OP;
+				break;
+			case GT_OP:
+				flipOp = LT_OP;
+				break;
+			case GE_OP:
+				flipOp = LE_OP;
+				break;
+			default:
+				flipOp = conditions[0].op;
+				break;
+			}
+
+			if (flipOp == NE_OP){
+				flipOp = LT_OP;
+			}
+			for (int i = 0; i < 1 || (conditions[0].op == NE_OP && i < 2); ++i){
+				if (rc = indexScan.OpenScan(index, flipOp, value))
+					return rc;
+
+				RID rid;
+				while (OK_RC == (rc = indexScan.GetNextEntry(rid))){
+					RM_Record indexRecord;
+					if (!swap)
+						rc = otherFile.GetRec(rid,indexRecord);
+					else 
+						rc = file.GetRec(rid, indexRecord);
+					if (rc)
+						return rc;
+
+					char* indexData;
+					if (rc = indexRecord.GetData(indexData))
+						return rc;
+
+					// Check rest of conditions
+					bool insert = true;
+					for (int k = 1; insert && k < numConditions; ++k){
+						if (!swap)
+							insert = CheckJoinCondition(fileData, indexData, conditions[k], attrcats, otherAttrcats);
+						else
+							insert = CheckJoinCondition(indexData, fileData, conditions[k], attrcats, otherAttrcats);
+					}
+					if (insert){
+						if (!swap)
+							rc = WriteToOutput(child, otherChild, numOutAttrs, outAttrs, attrcats, otherAttrcats, fileRecord, indexRecord, outPData, outFile);
+						else
+							rc = WriteToOutput(child, otherChild, numOutAttrs, outAttrs, attrcats, otherAttrcats, indexRecord, fileRecord, outPData, outFile);
+						if (rc)
+							return rc;
+					}
+				}
+				if (rc != RM_EOF)
+					return rc;
+				if (rc = indexScan.CloseScan())
+				return rc;
+
+				flipOp = GT_OP;
+			}
+		}
+		if (rc != RM_EOF)
+			return rc;
+		if (rc = fileScan.CloseScan())
+			return rc;
+	}
+	// Index scan of both attributes (must be A join B)
+	else if (execution == INDEXES) {
 		// TODO
 	}
 
@@ -834,5 +962,5 @@ Relation::Relation(SM_Manager *smm, const char *relName, bool calcProj, int numT
 		return;
 	}
 
-	Project(calcProj, numTotalPairs, pTotals);
+	// NO projection since no execution function to generate new output
 }

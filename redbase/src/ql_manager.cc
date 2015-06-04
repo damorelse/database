@@ -880,3 +880,39 @@ void QL_Manager::RecursivePrint(Node node, int indent){
 
 	RecursivePrint(*node.child, indent);
 }
+
+// Assume conditions ordered by 1. value conditions 2. has index 3. selectivity
+//bool SelectionUseIndex(Condition cond, map<pair<char*, char*>, Attrcat> &attrcats){
+//	// Not a value condition
+//	if (cond.bRhsIsAttr)
+//		return false;
+//	// Not an indexed attribute
+//	pair<char*, char*> key = make_pair(cond.lhsAttr.relName, cond.lhsAttr.attrName);
+//	if (attrcats[key].indexNo == -1)
+//		return false;
+//	// TODO: Remove requirement is a val condition?
+//	// TODO: check if relation size/selectivity warrants index scan (est. indexscan IOs < filescan IOs)
+//	return true;
+//}
+
+// Assume conditions ordered by 1. at least one attribute has index 2. selectivity
+//bool JoinUseIndex(Condition cond, map<pair<char*, char*>, Attrcat> &attrcats, map<pair<char*, char*>, Attrcat> &otherAttrcats){
+//	pair<char*, char*> key = make_pair(cond.lhsAttr.relName, cond.lhsAttr.attrName);
+//	pair<char*, char*> otherKey = make_pair(cond.rhsAttr.relName, cond.rhsAttr.attrName);
+//	
+//	map<pair<char*, char*>, Attrcat>* keyAttrcats = &attrcats;
+//	map<pair<char*, char*>, Attrcat>* otherKeyAttrcats = &otherAttrcats;
+//	if (attrcats.find(key) == attrcats.end()){
+//		keyAttrcats = &otherAttrcats;
+//		otherKeyAttrcats = &attrcats;
+//	}
+//
+//	// No indexed attributes
+//	if (keyAttrcats->at(key).indexNo == -1 && otherKeyAttrcats->at(otherKey).indexNo == -1)
+//		return false;
+//
+//	// TODO: check if relation sizes/most selective condition is selective enough to warrant index scan
+//	// TODO: flip condition attributes/op if necessary so rhsAttr is the indexed one
+//
+//	return true;
+//}
