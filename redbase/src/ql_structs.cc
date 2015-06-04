@@ -295,7 +295,7 @@ RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAtt
 	}
 	
 	for (int i = 0; i < numOutAttrs; ++i){
-		pair<string, string> key = make_pair(outAttrs[i].relName, outAttrs[i].attrName);
+		pair<string, string> key(outAttrs[i].relName, outAttrs[i].attrName);
 		if (attrcats.find(key) != attrcats.end())
 			memcpy(outPData + outAttrs[i].offset, pData + attrcats[key].offset, outAttrs[i].attrLen);
 		else
@@ -308,7 +308,7 @@ RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAtt
 }
 // Value condition OR condition's attributes from same relation
 bool CheckSelectionCondition(char* pData, Condition cond, map<pair<string, string>, Attrcat> &attrcats){
-	pair<string, string> leftKey = make_pair(cond.lhsAttr.relName, cond.lhsAttr.attrName);
+	pair<string, string> leftKey(cond.lhsAttr.relName, cond.lhsAttr.attrName);
 
 	Attrcat leftAttrcat = attrcats[leftKey];
 	int leftLen = leftAttrcat.attrLen;
@@ -316,7 +316,7 @@ bool CheckSelectionCondition(char* pData, Condition cond, map<pair<string, strin
 
 	char* rightPtr = (char*)cond.rhsValue.data;
 	if (cond.bRhsIsAttr){
-		pair<string, string> rightKey = make_pair(cond.rhsAttr.relName, cond.rhsAttr.attrName);
+		pair<string, string> rightKey(cond.rhsAttr.relName, cond.rhsAttr.attrName);
 		rightPtr = pData + attrcats[rightKey].offset;
 	}
 
@@ -325,7 +325,7 @@ bool CheckSelectionCondition(char* pData, Condition cond, map<pair<string, strin
 // Condition's attributes from different relations
 bool CheckJoinCondition(char* pData, char* otherPData, Condition cond, map<pair<string, string>, Attrcat> &attrcats, map<pair<string, string>, Attrcat> &otherAttrcats)
 {
-	pair<string, string> leftKey = make_pair(cond.lhsAttr.relName, cond.lhsAttr.attrName);
+	pair<string, string> leftKey(cond.lhsAttr.relName, cond.lhsAttr.attrName);
 
 	if (!isJoinCondition(cond)){
 		if (attrcats.find(leftKey) != attrcats.end())
@@ -334,7 +334,7 @@ bool CheckJoinCondition(char* pData, char* otherPData, Condition cond, map<pair<
 			return CheckSelectionCondition(otherPData, cond, otherAttrcats);
 	}
 
-	pair<string, string> rightKey = make_pair(cond.rhsAttr.relName, cond.rhsAttr.attrName);
+	pair<string, string> rightKey(cond.rhsAttr.relName, cond.rhsAttr.attrName);
 
 	int leftLen, rightLen;
 	char* leftPtr; 
@@ -539,7 +539,7 @@ RC Selection::execute(){
 	// Make attribute-attrcat maps
 	map<pair<string, string>, Attrcat> attrcats;
 	for (int i = 0; i < child->numOutAttrs; ++i){
-		pair<string, string> key = make_pair(child->outAttrs[i].relName, child->outAttrs[i].attrName);
+		pair<string, string> key(child->outAttrs[i].relName, child->outAttrs[i].attrName);
 		attrcats[key] = child->outAttrs[i];
 	}
 	
@@ -570,7 +570,7 @@ RC Selection::execute(){
 	}
 	// Use index scan (for value conditions only, with an index on lhs attribute)
 	else if (execution == INDEX) {
-		pair<string, string> key = make_pair(conditions[0].lhsAttr.relName, conditions[0].lhsAttr.attrName);
+		pair<string, string> key(conditions[0].lhsAttr.relName, conditions[0].lhsAttr.attrName);
 		IX_IndexHandle index;
 		if (rc = ixm->OpenIndex(attrcats[key].relName, attrcats[key].indexNo, index))
 			return rc;
@@ -702,12 +702,12 @@ RC Join::execute(){
 	// Make attribute-attrcat maps
 	map<pair<string, string>, Attrcat> attrcats;
 	for (int i = 0; i < child->numOutAttrs; ++i){
-		pair<string, string> key = make_pair(child->outAttrs[i].relName, child->outAttrs[i].attrName);
+		pair<string, string> key(child->outAttrs[i].relName, child->outAttrs[i].attrName);
 		attrcats[key] = child->outAttrs[i];
 	}
 	map<pair<string, string>, Attrcat> otherAttrcats;
 	for (int i = 0; i < otherChild->numOutAttrs; ++i){
-		pair<string, string> key = make_pair(otherChild->outAttrs[i].relName, otherChild->outAttrs[i].attrName);
+		pair<string, string> key(otherChild->outAttrs[i].relName, otherChild->outAttrs[i].attrName);
 		attrcats[key] = otherChild->outAttrs[i];
 	}
 
@@ -871,7 +871,7 @@ bool JoinConditionApplies(Condition &cond, set<string> &myRelations){
 	return true;
 }
 Attrcat GetAttrcat(RelAttr relAttr, map<pair<string, string>, Attrcat> &attrcats, map<pair<string, string>, Attrcat> &otherAttrcats){
-	pair<string, string> key = make_pair(relAttr.relName, relAttr.attrName);
+	pair<string, string> key(relAttr.relName, relAttr.attrName);
 	if (attrcats.find(key) != attrcats.end())
 		return attrcats[key];
 	return otherAttrcats[key];
@@ -930,12 +930,12 @@ RC Cross::execute(){
 	// Make attribute-attrcat maps
 	map<pair<string, string>, Attrcat> attrcats;
 	for (int i = 0; i < child->numOutAttrs; ++i){
-		pair<string, string> key = make_pair(child->outAttrs[i].relName, child->outAttrs[i].attrName);
+		pair<string, string> key(child->outAttrs[i].relName, child->outAttrs[i].attrName);
 		attrcats[key] = child->outAttrs[i];
 	}
 	map<pair<string, string>, Attrcat> otherAttrcats;
 	for (int i = 0; i < otherChild->numOutAttrs; ++i){
-		pair<string, string> key = make_pair(otherChild->outAttrs[i].relName, otherChild->outAttrs[i].attrName);
+		pair<string, string> key(otherChild->outAttrs[i].relName, otherChild->outAttrs[i].attrName);
 		attrcats[key] = otherChild->outAttrs[i];
 	}
 

@@ -861,7 +861,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 		for (int i = 0; i < groupNodes.size(); ++i){
 			set<int> tmp;
 			tmp.insert(i);
-			tables[1][tmp] = make_pair(0, groupNodes[i]);
+			tables[1][tmp](0, groupNodes[i]);
 		}
 		// Dynamic alg for crosses
 		for (int i = 2; i <= groupNodes.size(); ++i){
@@ -899,7 +899,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 						cross.numTuples = left.numTuples * right.numTuples;
 						cross.tupleSize = left.tupleSize + right.tupleSize;
 
-						tables[i][setKey] = make_pair(cost, cross);
+						tables[i][setKey] = pair<int, Node>(cost, cross);
 					}
 				}
 			}
@@ -1061,7 +1061,7 @@ void QL_Manager::RecursivePrint(Node node, int indent){
 //	if (cond.bRhsIsAttr)
 //		return false;
 //	// Not an indexed attribute
-//	pair<char*, char*> key = make_pair(cond.lhsAttr.relName, cond.lhsAttr.attrName);
+//	pair<char*, char*> key(cond.lhsAttr.relName, cond.lhsAttr.attrName);
 //	if (attrcats[key].indexNo == -1)
 //		return false;
 //	// TODO: Remove requirement is a val condition?
@@ -1071,8 +1071,8 @@ void QL_Manager::RecursivePrint(Node node, int indent){
 
 // Assume conditions ordered by 1. at least one attribute has index 2. selectivity
 //bool JoinUseIndex(Condition cond, map<pair<char*, char*>, Attrcat> &attrcats, map<pair<char*, char*>, Attrcat> &otherAttrcats){
-//	pair<char*, char*> key = make_pair(cond.lhsAttr.relName, cond.lhsAttr.attrName);
-//	pair<char*, char*> otherKey = make_pair(cond.rhsAttr.relName, cond.rhsAttr.attrName);
+//	pair<char*, char*> key(cond.lhsAttr.relName, cond.lhsAttr.attrName);
+//	pair<char*, char*> otherKey(cond.rhsAttr.relName, cond.rhsAttr.attrName);
 //	
 //	map<pair<char*, char*>, Attrcat>* keyAttrcats = &attrcats;
 //	map<pair<char*, char*>, Attrcat>* otherKeyAttrcats = &otherAttrcats;
