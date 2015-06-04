@@ -13,6 +13,7 @@
 #include <queue>
 #include <list>
 #include <utility>
+#include <algorithm>
 #include "redbase.h"
 #include "ql.h"
 #include "sm.h"

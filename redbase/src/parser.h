@@ -30,6 +30,7 @@ struct RelAttr{
 	RelAttr(const RelAttr &other);
 	~RelAttr();
 	RelAttr& operator=(const RelAttr &other);
+	bool operator<(const RelAttr &other);
 
     // Print function
     friend std::ostream &operator<<(std::ostream &s, const RelAttr &ra);

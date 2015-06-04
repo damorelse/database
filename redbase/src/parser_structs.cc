@@ -1,3 +1,5 @@
+#include <string>
+#include <cstring>
 #include "parser.h"
 
 AttrInfo::AttrInfo(){
@@ -54,6 +56,13 @@ RelAttr& RelAttr::operator=(const RelAttr &other){
 	}
 	return *this;
 }
+bool RelAttr::operator<(const RelAttr &other){
+	int diff = strcmp(relName, other.relName);
+	if (diff == 0)
+		return (strcmp(attrName, other.attrName) < 0);
+	return (diff < 0);
+}
+
 
 Value::Value(const Value &other){
 	type = other.type;
