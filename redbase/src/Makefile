@@ -40,7 +40,7 @@ RM_SOURCES     = rm_error.cc rm_filehandle.cc rm_filescan.cc \
 IX_SOURCES     = ix_error.cc ix_indexhandle.cc ix_indexscan.cc \
                  ix_manager.cc
 SM_SOURCES     = sm_error.cc sm_manager.cc printer.cc relcat.cc attrcat.cc
-QL_SOURCES     = ql_manager_stub.cc
+QL_SOURCES     = ql_error.cc ql_manager.cc ql_structs.cc parser_structs.cc
 UTILS_SOURCES  = dbcreate.cc dbdestroy.cc redbase.cc
 PARSER_SOURCES = scan.c parse.c nodes.c interp.c
 TESTER_SOURCES = pf_test1.cc pf_test2.cc pf_test3.cc rm_test.cc ix_test.cc ix_testkpg_2.cc ix_tester.cc parser_test.cc
