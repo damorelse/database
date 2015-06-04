@@ -80,6 +80,7 @@ public:
 	virtual RC execute();
 	void printType();
 	Attrcat getAttrcat(const char *relName, char* attrName);
+	CompOp FlipOp(CompOp op);
 
 	// Returns early in join/select if no conditions apply
 	int numConditions;
@@ -111,7 +112,6 @@ public:
 
 protected:
 	// Constructor
-	virtual bool ConditionApplies(Condition &cond);
 	void SetRelations();
 	void SetRids();
 	void SetOutAttrs();
@@ -120,13 +120,12 @@ protected:
 	RC CreateTmpOutput();
 	RC DeleteTmpInput();
 };
-// Child must be a relation
+// Child must be join or relation
 class Selection : public Node {
 public:
 	Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
 	~Selection();
 	RC execute();
-	bool ConditionApplies(Condition &cond);
 }; 
 // Children must be join, selection, or relation
 class Join : public Node {
@@ -134,7 +133,6 @@ public:
 	Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, Node &right, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
 	~Join();
 	RC execute();
-	bool ConditionApplies(Condition &cond);
 }; 
 class Cross : public Node {
 public:
@@ -147,8 +145,6 @@ class Relation : public Node {
 public:
 	Relation(SM_Manager *smm, const char *relName, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
 	~Relation();
-
-	SM_Manager *smm;
 };
 
 void QL_PrintError(RC rc);

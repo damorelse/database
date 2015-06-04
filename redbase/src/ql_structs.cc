@@ -11,6 +11,7 @@
 
 using namespace std;
 
+// Public
 Node::Node(){
 	numConditions = 0;
 	conditions = NULL;
@@ -90,10 +91,30 @@ Attrcat Node::getAttrcat(const char *relName, char* attrName){
 	}
 	return NULL;
 }
-
-bool ConditionApplies(Condition &cond){
-	return false;
+CompOp Node::FlipOp(CompOp op){
+	CompOp flipOp;
+	switch(op){
+	case LT_OP:
+		flipOp = GT_OP;
+		break;
+	case LE_OP:
+		flipOp = GE_OP;
+		break;
+	case GT_OP:
+		flipOp = LT_OP;
+		break;
+	case GE_OP:
+		flipOp = LE_OP;
+		break;
+	default:
+		flipOp = op;
+		break;
+	}
+	return flipOp;
 }
+
+
+// Protected
 void Node::SetRelations(){
 	numRelations = child->numRelations;
 	if (otherChild)
@@ -223,7 +244,9 @@ RC Node::DeleteTmpInput(){
 	}
 }
 
-RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAttrs, map<pair<char*, char*>, Attrcat> &attrcats, map<pair<char*, char*>, Attrcat> &otherAttrcats, RM_Record record, RM_Record otherRecord, char* outPData, RM_FileHandle &outFile){
+
+// Local functions
+RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAttrs, map<pair<string, string>, Attrcat> &attrcats, map<pair<string, string>, Attrcat> &otherAttrcats, RM_Record record, RM_Record otherRecord, char* outPData, RM_FileHandle &outFile){
 	RC rc;
 	char* pData;
 	if (rc = record.GetData(pData))
@@ -263,7 +286,7 @@ RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAtt
 	}
 	
 	for (int i = 0; i < numOutAttrs; ++i){
-		pair<char*, char*> key = make_pair(outAttrs[i].relName, outAttrs[i].attrName);
+		pair<string, string> key = make_pair(outAttrs[i].relName, outAttrs[i].attrName);
 		if (attrcats.find(key) != attrcats.end())
 			memcpy(outPData + outAttrs[i].offset, pData + attrcats[key].offset, outAttrs[i].attrLen);
 		else
@@ -274,8 +297,9 @@ RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAtt
 	RID tmp;
 	outFile.InsertRec(outPData, tmp);
 }
-bool CheckSelectionCondition(char* pData, Condition cond, map<pair<char*, char*>, Attrcat> &attrcats){
-	pair<char*, char*> leftKey = make_pair(cond.lhsAttr.relName, cond.lhsAttr.attrName);
+// Value condition OR condition's attributes from same relation
+bool CheckSelectionCondition(char* pData, Condition cond, map<pair<string, string>, Attrcat> &attrcats){
+	pair<string, string> leftKey = make_pair(cond.lhsAttr.relName, cond.lhsAttr.attrName);
 
 	Attrcat leftAttrcat = attrcats[leftKey];
 	int leftLen = leftAttrcat.attrLen;
@@ -283,16 +307,25 @@ bool CheckSelectionCondition(char* pData, Condition cond, map<pair<char*, char*>
 
 	char* rightPtr = (char*)cond.rhsValue.data;
 	if (cond.bRhsIsAttr){
-		pair<char*, char*> rightKey = make_pair(cond.rhsAttr.relName, cond.rhsAttr.attrName);
+		pair<string, string> rightKey = make_pair(cond.rhsAttr.relName, cond.rhsAttr.attrName);
 		rightPtr = pData + attrcats[rightKey].offset;
 	}
 
 	return CheckCondition(cond.op, leftAttrcat.attrType, leftPtr, leftLen, rightPtr, -1);
 }
-bool CheckJoinCondition(char* pData, char* otherPData, Condition cond, map<pair<char*, char*>, Attrcat> &attrcats, map<pair<char*, char*>, Attrcat> &otherAttrcats)
+// Condition's attributes from different relations
+bool CheckJoinCondition(char* pData, char* otherPData, Condition cond, map<pair<string, string>, Attrcat> &attrcats, map<pair<string, string>, Attrcat> &otherAttrcats)
 {
-	pair<char*, char*> leftKey = make_pair(cond.lhsAttr.relName, cond.lhsAttr.attrName);
-	pair<char*, char*> rightKey = make_pair(cond.rhsAttr.relName, cond.rhsAttr.attrName);
+	pair<string, string> leftKey = make_pair(cond.lhsAttr.relName, cond.lhsAttr.attrName);
+
+	if (!isJoinCondition(cond)){
+		if (attrcats.find(leftKey) != attrcats.end())
+			return CheckSelectionCondition(pData, cond, attrcats);
+		else
+			return CheckSelectionCondition(otherPData, cond, otherAttrcats);
+	}
+
+	pair<string, string> rightKey = make_pair(cond.rhsAttr.relName, cond.rhsAttr.attrName);
 
 	int leftLen, rightLen;
 	char* leftPtr; 
@@ -437,15 +470,22 @@ bool CheckCondition(CompOp op, AttrType attrType, char* leftPtr, const int leftL
         break;
 	}
 }
+bool isJoinCondition(Condition &cond){
+	return cond.bRhsIsAttr && strcmp(cond.lhsAttr.relName, cond.rhsAttr.relName) != 0;
+}
 
+// Only selection conditions
 Selection::Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals){
 	// set parent for children
 	left.parent = this;
 
 	// numConditions and conditions
+	set<string> myRelations;
+	for (int i = 0; i < left.numRelations; ++i)
+		myRelations.insert(left.relations + i * (MAXNAME + 1));
 	vector<Condition> condVector;
 	for (int i = 0; i < numConds; ++i){
-		if (ConditionApplies(conds[i]))
+		if (SelectionConditionApplies(conds[i], myRelations))
 			condVector.push_back(conds[i]);
 	}
 	numConditions = condVector.size();
@@ -488,9 +528,9 @@ RC Selection::execute(){
 	memset(outPData, '\0', len);
 
 	// Make attribute-attrcat maps
-	map<pair<char*, char*>, Attrcat> attrcats;
+	map<pair<string, string>, Attrcat> attrcats;
 	for (int i = 0; i < child->numOutAttrs; ++i){
-		pair<char*, char*> key = make_pair(child->outAttrs[i].relName, child->outAttrs[i].attrName);
+		pair<string, string> key = make_pair(child->outAttrs[i].relName, child->outAttrs[i].attrName);
 		attrcats[key] = child->outAttrs[i];
 	}
 	
@@ -507,10 +547,8 @@ RC Selection::execute(){
 
 			// Check rest of conditions
 			bool insert = true;
-			for (int k = 0; insert && k < numConditions; ++k){
-				pair<char*, char*> key = make_pair(conditions[k].lhsAttr.relName, conditions[k].lhsAttr.attrName);
+			for (int k = 0; insert && k < numConditions; ++k)
 				insert = CheckSelectionCondition(pData, conditions[k], attrcats);
-			}
 			if (insert){
 				if (rc = WriteToOutput(child, otherChild, numOutAttrs, outAttrs, attrcats, attrcats, record, record, outPData, outFile))
 					return rc;
@@ -523,7 +561,7 @@ RC Selection::execute(){
 	}
 	// Use index scan (for value conditions only, with an index on lhs attribute)
 	else if (execution == INDEX) {
-		pair<char*, char*> key = make_pair(conditions[0].lhsAttr.relName, conditions[0].lhsAttr.attrName);
+		pair<string, string> key = make_pair(conditions[0].lhsAttr.relName, conditions[0].lhsAttr.attrName);
 		IX_IndexHandle index;
 		if (rc = ixm->OpenIndex(attrcats[key].relName, attrcats[key].indexNo, index))
 			return rc;
@@ -581,24 +619,33 @@ RC Selection::execute(){
 	if (rc = DeleteTmpInput())
 		return rc;
 }
-bool Selection::ConditionApplies(Condition &cond){
-	if (strcmp(relations, cond.lhsAttr.relName) != 0)
+// Assumes condition not yet applied
+bool SelectionConditionApplies(Condition &cond, set<string> &myRelations){
+	// Check left attribute is in relations
+	if (myRelations.find(cond.lhsAttr.relName)  == myRelations.end())
 		return false;
-	if (cond.bRhsIsAttr && 
-		strcmp(relations, cond.rhsAttr.relName) != 0)
+	// Check is not a join condition
+	if (isJoinCondition(cond))
 		return false;
 	return true;
 }
 
+
+// Both selection and join conditions
 Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& right, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals){
 	// set parent for both children
 	left.parent = this;
 	right.parent = this;
 
 	// numConditions and conditions
+	set<string> myRelations;
+	for (int i = 0; i < left.numRelations; ++i)
+		myRelations.insert(left.relations + i * (MAXNAME + 1));
+	for (int i = 0; i < right.numRelations; ++i)
+		myRelations.insert(right.relations + i * (MAXNAME + 1));
 	vector<Condition> condVector;
 	for (int i = 0; i < numConds; ++i){
-		if (ConditionApplies(conds[i]))
+		if (JoinConditionApplies(conds[i], myRelations))
 			condVector.push_back(conds[i]);
 	}
 	numConditions = condVector.size();
@@ -623,12 +670,6 @@ Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& 
 	SetOutAttrs();
 	Project(calcProj, numTotalPairs, pTotals);
 }
-Attrcat GetAttrcat(RelAttr relAttr, map<pair<char*, char*>, Attrcat> &attrcats, map<pair<char*, char*>, Attrcat> &otherAttrcats){
-	pair<char*, char*> key = make_pair(relAttr.relName, relAttr.attrName);
-	if (attrcats.find(key) != attrcats.end())
-		return attrcats[key];
-	return otherAttrcats[key];
-}
 RC Join::execute(){
 	if (rc = CreateTmpOutput())
 		return rc;
@@ -650,14 +691,14 @@ RC Join::execute(){
 	memset(outPData, '\0', len);
 
 	// Make attribute-attrcat maps
-	map<pair<char*, char*>, Attrcat> attrcats;
+	map<pair<string, string>, Attrcat> attrcats;
 	for (int i = 0; i < child->numOutAttrs; ++i){
-		pair<char*, char*> key = make_pair(child->outAttrs[i].relName, child->outAttrs[i].attrName);
+		pair<string, string> key = make_pair(child->outAttrs[i].relName, child->outAttrs[i].attrName);
 		attrcats[key] = child->outAttrs[i];
 	}
-	map<pair<char*, char*>, Attrcat> otherAttrcats;
+	map<pair<string, string>, Attrcat> otherAttrcats;
 	for (int i = 0; i < otherChild->numOutAttrs; ++i){
-		pair<char*, char*> key = make_pair(otherChild->outAttrs[i].relName, otherChild->outAttrs[i].attrName);
+		pair<string, string> key = make_pair(otherChild->outAttrs[i].relName, otherChild->outAttrs[i].attrName);
 		attrcats[key] = otherChild->outAttrs[i];
 	}
 
@@ -709,10 +750,10 @@ RC Join::execute(){
 	// (AB join C with index on C's attribute, A join B with index on one attribute)
 	else if (execution == INDEX)
 	{
-		// Assumes rhsAttr is the indexed one
+		// Assumes lhsAttr is the indexed one
 		Attrcat left = GetAttrcat(conditions[0].lhsAttr, attrcats, otherAttrcats);
 		Attrcat right = GetAttrcat(conditions[0].rhsAttr, attrcats, otherAttrcats);
-		bool swap = (attrcats.find(pair<char*, char*>(left.relName, left.attrName)) == attrcats.end());
+		bool swap = (attrcats.find(pair<string, string>(right.relName, right.attrName)) == attrcats.end());
 
 		RM_FileScan fileScan;
 		if (!swap)
@@ -728,37 +769,20 @@ RC Join::execute(){
 			char* fileData;
 			if (rc = fileRecord.GetData(fileData))
 				return rc;
-			char * value = fileData + left.offset;
+			char * value = fileData + right.offset;
 
 			IX_IndexHandle index;
-			if (rc = ixm->OpenIndex(conditions[0].rhsAttr.relName, right.indexNo,index))
+			if (rc = ixm->OpenIndex(conditions[0].lhsAttr.relName, left.indexNo, index))
 				return rc;
 			IX_IndexScan indexScan;
-			// Flip OP
-			CompOp flipOp;
-			switch(conditions[0].op){
-			case LT_OP:
-				flipOp = GT_OP;
-				break;
-			case LE_OP:
-				flipOp = GE_OP;
-				break;
-			case GT_OP:
-				flipOp = LT_OP;
-				break;
-			case GE_OP:
-				flipOp = LE_OP;
-				break;
-			default:
-				flipOp = conditions[0].op;
-				break;
-			}
+			
+			CompOp op = conditions[0].op;
 
-			if (flipOp == NE_OP){
-				flipOp = LT_OP;
+			if (op == NE_OP){
+				op = LT_OP;
 			}
 			for (int i = 0; i < 1 || (conditions[0].op == NE_OP && i < 2); ++i){
-				if (rc = indexScan.OpenScan(index, flipOp, value))
+				if (rc = indexScan.OpenScan(index, op, value))
 					return rc;
 
 				RID rid;
@@ -797,7 +821,7 @@ RC Join::execute(){
 				if (rc = indexScan.CloseScan())
 				return rc;
 
-				flipOp = GT_OP;
+				op = GT_OP;
 			}
 		}
 		if (rc != RM_EOF)
@@ -823,19 +847,27 @@ RC Join::execute(){
 	if (rc = DeleteTmpInput())
 		return rc;
 }
-bool Join::ConditionApplies(Condition &cond){
-	if (!cond.bRhsIsAttr)
+// Assumes condition not yet applied
+bool JoinConditionApplies(Condition &cond, set<string> &myRelations){
+	// Selection condition
+	if (!isJoinCondition(cond)){
+		return SelectionConditionApplies(cond, myRelations);
+	}
+	// Check both attributes included in relations
+	if (myRelations.find(cond.lhsAttr.relName) == myRelations.end() ||
+		myRelations.find(cond.rhsAttr.relName) == myRelations.end()){
 		return false;
-	set<char*> leftRel(child->relations, child->relations+child->numRelations);
-	set<char*> rightRel(otherChild->relations, otherChild->relations+otherChild->numRelations);
-	if (leftRel.find(cond.lhsAttr.relName) != leftRel.end() &&
-		rightRel.find(cond.rhsAttr.relName) != rightRel.end())
-		return true;
-	if (leftRel.find(cond.rhsAttr.relName) != leftRel.end() &&
-		rightRel.find(cond.lhsAttr.relName) != rightRel.end())
-		return true;
-	return false;
+	}
+	// Join condition
+	return true;
 }
+Attrcat GetAttrcat(RelAttr relAttr, map<pair<string, string>, Attrcat> &attrcats, map<pair<string, string>, Attrcat> &otherAttrcats){
+	pair<string, string> key = make_pair(relAttr.relName, relAttr.attrName);
+	if (attrcats.find(key) != attrcats.end())
+		return attrcats[key];
+	return otherAttrcats[key];
+}
+
 
 Cross::Cross(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, Node &right, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals){
 	// set parent for both children
@@ -885,14 +917,14 @@ RC Cross::execute(){
 	memset(outPData, '\0', len);
 
 	// Make attribute-attrcat maps
-	map<pair<char*, char*>, Attrcat> attrcats;
+	map<pair<string, string>, Attrcat> attrcats;
 	for (int i = 0; i < child->numOutAttrs; ++i){
-		pair<char*, char*> key = make_pair(child->outAttrs[i].relName, child->outAttrs[i].attrName);
+		pair<string, string> key = make_pair(child->outAttrs[i].relName, child->outAttrs[i].attrName);
 		attrcats[key] = child->outAttrs[i];
 	}
-	map<pair<char*, char*>, Attrcat> otherAttrcats;
+	map<pair<string, string>, Attrcat> otherAttrcats;
 	for (int i = 0; i < otherChild->numOutAttrs; ++i){
-		pair<char*, char*> key = make_pair(otherChild->outAttrs[i].relName, otherChild->outAttrs[i].attrName);
+		pair<string, string> key = make_pair(otherChild->outAttrs[i].relName, otherChild->outAttrs[i].attrName);
 		attrcats[key] = otherChild->outAttrs[i];
 	}
 
@@ -928,10 +960,12 @@ RC Cross::execute(){
 		return rc;
 }
 
+
 Relation::Relation(SM_Manager *smm, const char *relName, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals){
 	// numConditions/conditions set by default
 
 	this->smm = smm;
+	// rmm and ixm set by default
 	strcpy(type, relName);
 	// child/otherChild set by default
 	// parent set by parent node

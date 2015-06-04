@@ -651,8 +651,8 @@ RC QL_Manager::CheckCondition(Condition &condition, const char * const relations
 	return 0;
 }
 
-list<set<char*>>::iterator GetJoinSet(list<set<char*>>joinGroups, char* relName){
-	for (list<set<char*>>::iterator  it = joinGroups.begin(); it!=joinGroups.end(); ++it)
+list<set<string>>::iterator GetJoinSet(list<set<string>>joinGroups, char* relName){
+	for (list<set<string>>::iterator  it = joinGroups.begin(); it!=joinGroups.end(); ++it)
 		if (it->find(relName) != it->end())
 			return it;
 	return joinGroups.end();
@@ -722,7 +722,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
     copy(projMap.begin(), projMap.end(), back_inserter(projVector));
 
 	// Make join lists
-	map<char*, set<char*>> joinLists;
+	map<string, set<string>> joinLists;
 	for (int i = 0; i < myAttrConds.size(); ++i){
 		if (strcmp(myAttrConds[i].lhsAttr.relName, myAttrConds[i].rhsAttr.relName) != 0){
 			joinLists[myAttrConds[i].lhsAttr.relName].insert(myAttrConds[i].rhsAttr.relName);
@@ -731,8 +731,8 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 	}
 
 	// Make join groups
-	vector<set<char*>> joinGroups;
-	set<char*> processed;
+	vector<set<string>> joinGroups;
+	set<string> processed;
 	while (processed.size() < nRelations){
 		// Initialize, find first member of new group
 		int i = 0;
@@ -741,13 +741,13 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 				break;
 
 		// Find rest of members
-		queue<char*> toProcess;
+		queue<string> toProcess;
 		toProcess.push((char*)relations[i]);
-		set<char*> currProcessed;
+		set<string> currProcessed;
 		while(!toProcess.empty()){
 			currProcessed.insert(toProcess.front());
 			if (joinLists.find(toProcess.front()) != joinLists.end()){
-				for (set<char*>::iterator it = joinLists[toProcess.front()].begin(); 
+				for (set<string>::iterator it = joinLists[toProcess.front()].begin(); 
 					 it != joinLists[toProcess.front()].end(); ++it){
 					if (currProcessed.find(*it) == currProcessed.end())
 						toProcess.push(*it);
@@ -761,31 +761,51 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 		processed.insert(currProcessed.begin(), currProcessed.end());
 	}
 
-	// Create relation/selection nodes
-	map<char*, Node> relSelNodes;
-	for(int i = 0; i < nRelations; ++i){
+	// Create relation nodes
+	map<string, Node> relNodes;
+	for (int i = 0; i < nRelations; ++i){
 		Node rel = Relation (smm, (char*)relations[i], calcProj, projVector.size(), &projVector[0]);
 		if (rel.rc)
 			return rel.rc;
-
-		Node sel = Selection (smm, rmm, ixm, rel, nConditions, &myConds[0], calcProj, projVector.size(), &projVector[0]);
-		if (sel.rc)
-			relSelNodes[(char*)relations[i]] = rel;
-		else 
-			relSelNodes[(char*)relations[i]] = sel;
+		relNodes[(char*)relations[i]] = rel;
 	}
 
-	// SELECTION condition ordering: if indexed, by selectivity + # IOs
-	for (map<char*, Node>::iterator it=relSelNodes.begin(); it != relSelNodes.end(); ++it){
-		// TODO: order it->second.conditions;
+	// Create join/selection nodes
+	vector<pair<int, int>> joinId_byteSize;
+	map<int, Node> groupNodes;
+	for (int i = 0; i < joinGroups.size(); ++i){
+		// Join/selection ordering
+		// Join cost = byte size + access costs
+		// Selection cost = selectivity + #IOs
+
+		// TODO: set groupNodes[i]
 	}
-	for (int i = 0; i < joinGroups.size; ++i){
-		// Join ordering (byte size + access costs) + Condition ordering (both or one indexed-selectivity)
-		// TODO
+
+	// Create cross nodes 
+	// No cross needed
+	if (joinGroups.size() == 1){
+		qPlan = groupNodes[0];
+		return 0;
 	}
-	// Cross ordering (byte size)
-	// TODO
+	// TODO: replace with dynamic determining of cross 
+	// Sort join groups by byte size
+	sort(joinId_byteSize.begin(), joinId_byteSize.end(), sortJoins);
+	// Create crosses smallest->largest 
+	Node left = groupNodes[joinId_byteSize[0].first];
+	Node right = groupNodes[joinId_byteSize[1].first];
+	qPlan = Cross(smm, rmm, ixm, left, right, calcProj, projVector.size(), &projVector[0]);
+	for (int i = 2; i < joinId_byteSize.size(); ++i){
+		left = qPlan;
+		right = groupNodes[joinId_byteSize[i].first];
+		qPlan = Cross(smm, rmm, ixm, left, right, calcProj, projVector.size(), &projVector[0]);
+	}
+
+	return 0;
 }
+bool sortJoins(const pair<int, int> left, const pair<int, int> right){
+	return left.second < right.second;
+}
+
 RC QL_Manager::GetResults(Node qPlan)
 {
 	 map<Node*, int> counts;
@@ -880,6 +900,9 @@ void QL_Manager::RecursivePrint(Node node, int indent){
 
 	RecursivePrint(*node.child, indent);
 }
+
+
+
 
 // Assume conditions ordered by 1. value conditions 2. has index 3. selectivity
 //bool SelectionUseIndex(Condition cond, map<pair<char*, char*>, Attrcat> &attrcats){
