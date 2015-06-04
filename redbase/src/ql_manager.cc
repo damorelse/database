@@ -678,15 +678,15 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 
 	// Check attributes valid (and make copies)
 	bool calcProj = true;
-	vector<RelAttr> mySelAttrs(nSelAttrs);
-	vector<Condition> myConds(nConditions);
+	vector<RelAttr> mySelAttrs;
+	vector<Condition> myConds;
 	vector<Condition> myAttrConds;
 	vector<Condition> myValConds;
 	if (nSelAttrs == 0)
 		calcProj = false;
 	else {
 		for (int i = 0; i < nSelAttrs; ++i){
-			mySelAttrs[i] = selAttrs[i];
+			mySelAttrs.push_back(selAttrs[i]);
 			if (rc = CheckAttribute(mySelAttrs[i], relations, nRelations))
 				return rc;
 		}
@@ -785,7 +785,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 			// Initialize list, create relation/selection nodes
 			list<Node> needToJoin;
 			for (set<string>::iterator it = relGroups[k].begin(); it != relGroups[k].end(); ++it){
-				Node rel = Relation (smm, it->c_str, calcProj, projVector.size(), &projVector[0]);
+				Node rel = Relation (smm, it->c_str(), calcProj, projVector.size(), &projVector[0]);
 				Node sel = Selection(smm, rmm, ixm, rel, condGroups[k].size(), &condGroups[k][0], calcProj, projVector.size(), &projVector[0]);
 				if (!sel.rc)
 					needToJoin.push_back(sel);
@@ -927,9 +927,11 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 }
 int QL_Manager::SelectCost(Node left){
 	// TODO: determine selectivity of each condition + best access path ->cost
+	return 0;
 }
 int QL_Manager::JoinCost(Node left, Node right){
 	// TODO: determine selectivity of each condition + best access path ->cost
+	return 0;
 }
 int QL_Manager::CrossCost(Node left, Node right){
 	int leftNumTuples = left.numTuples;
