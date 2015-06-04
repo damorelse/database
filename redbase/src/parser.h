@@ -30,7 +30,8 @@ struct RelAttr{
 	RelAttr(const RelAttr &other);
 	~RelAttr();
 	RelAttr& operator=(const RelAttr &other);
-	bool operator<(const RelAttr &other);
+	bool operator==(const RelAttr &other) const;
+	bool operator<(const RelAttr &other) const;
 
     // Print function
     friend std::ostream &operator<<(std::ostream &s, const RelAttr &ra);
@@ -42,6 +43,8 @@ struct Value{
 			   /* print function              */
 	Value(const Value &other);
 	~Value();
+	bool operator==(const Value &other) const;
+	bool operator<(const Value &other) const;
     friend std::ostream &operator<<(std::ostream &s, const Value &v);
 };
 
@@ -56,7 +59,9 @@ struct Condition{
 			 /* print function                               */
 
 	Condition(const RelAttr lhsAttr, CompOp op, const int isAttr, const RelAttr rhsAttr, const Value rhsValue);
-    friend std::ostream &operator<<(std::ostream &s, const Condition &c);
+    bool operator==(const Condition &other) const;
+	bool operator<(const Condition &other) const;
+	friend std::ostream &operator<<(std::ostream &s, const Condition &c);
 
 };
 

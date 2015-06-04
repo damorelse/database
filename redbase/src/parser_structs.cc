@@ -56,7 +56,10 @@ RelAttr& RelAttr::operator=(const RelAttr &other){
 	}
 	return *this;
 }
-bool RelAttr::operator<(const RelAttr &other){
+bool RelAttr::operator==(const RelAttr &other) const{
+	return strcmp(relName, other.relName) && strcmp(attrName, other.attrName);
+}
+bool RelAttr::operator<(const RelAttr &other) const{
 	int diff = strcmp(relName, other.relName);
 	if (diff == 0)
 		return (strcmp(attrName, other.attrName) < 0);
@@ -81,7 +84,67 @@ Value::~Value(){
 	delete [] data;
 	data = NULL;
 }
+bool Value::operator==(const Value &other) const{
+	if (type != other.type)
+		return false;
 
+	int a_i, v_i;
+	float a_f, v_f;
+	switch(type) {
+	case INT:
+		memcpy(&a_i, data, 4);
+		memcpy(&v_i, other.data, 4);
+		return a_i == v_i;
+        break;
+	case FLOAT:
+		memcpy(&a_f, data, 4);
+		memcpy(&v_f, other.data, 4);
+		return a_f == v_f;
+        break;
+	case STRING:
+		return (0 == strcmp((char*)data, (char*)other.data));
+		break;
+	}
+}
+bool Value::operator<(const Value &other) const{
+	if (type != other.type)
+		return type < other.type;
+	int a_i, v_i;
+	float a_f, v_f;
+	switch(type) {
+	case INT:
+		memcpy(&a_i, data, 4);
+		memcpy(&v_i, other.data, 4);
+		return a_i < v_i;
+        break;
+	case FLOAT:
+		memcpy(&a_f, data, 4);
+		memcpy(&v_f, other.data, 4);
+		return a_f < v_f;
+        break;
+	case STRING:
+		return (strcmp((char*)data, (char*)other.data) < 0);
+		break;
+	}
+}
 Condition::Condition(const RelAttr lhsAttr, CompOp op, const int isAttr, 
 					 const RelAttr rhsAttr, const Value rhsValue)
 					 : lhsAttr(lhsAttr), op(op), bRhsIsAttr(isAttr), rhsAttr(rhsAttr), rhsValue(rhsValue){}
+bool Condition::operator==(const Condition &other) const{
+	if (!(lhsAttr == other.lhsAttr) || op != other.op || bRhsIsAttr != other.bRhsIsAttr)
+		return false;
+	if (bRhsIsAttr)
+		return rhsAttr == other.rhsAttr;
+	return rhsValue == other.rhsValue;
+}
+bool Condition::operator<(const Condition &other) const{
+	if (!((lhsAttr == other.lhsAttr)))
+		return lhsAttr < other.lhsAttr;
+	if (op != other.op)
+		return op < other.op;
+	if (bRhsIsAttr != other.bRhsIsAttr)
+		return bRhsIsAttr < other.bRhsIsAttr;
+	if (bRhsIsAttr)
+		return rhsAttr < other.rhsAttr;
+	return rhsValue < other.rhsValue;
+}
