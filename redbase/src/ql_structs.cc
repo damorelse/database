@@ -23,9 +23,7 @@ Attrcat GetAttrcat(RelAttr relAttr, map<pair<string, string>, Attrcat> &attrcats
 
 RelAttrCount::RelAttrCount( const RelAttr& relAttr, const int& count): first(relAttr), second(count){}
 bool RelAttrCount::operator==(const RelAttrCount &other) const{
-	return (strcmp(first.relName, other.first.relName) == 0 &&
-		    strcmp(first.attrName, other.first.attrName) == 0 &&
-			second == other.second);
+	return (first == other.first && second == other.second);
 }
 
 
@@ -204,7 +202,8 @@ void Node::Project(bool calcProj, int numTotalPairs, RelAttrCount *pTotals){
 	numCountPairs = projCounts.size();
 	if (numCountPairs > 0){
 		vector<RelAttrCount > tmp;
-		copy(projCounts.begin(), projCounts.end(), back_inserter(tmp));
+		for (map<RelAttr, int>::iterator it = projCounts.begin(); it != projCounts.end(); ++it)
+			tmp.push_back(RelAttrCount(it->first, it->second));
 		pCounts = &tmp[0];
 	}
 
