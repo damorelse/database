@@ -11,12 +11,21 @@
 
 using namespace std;
 
+RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAttrs, map<pair<string, string>, Attrcat> &attrcats, map<pair<string, string>, Attrcat> &otherAttrcats, RM_Record record, RM_Record otherRecord, char* outPData, RM_FileHandle &outFile);
+bool CheckSelectionCondition(char* pData, Condition cond, map<pair<string, string>, Attrcat> &attrcats);
+bool CheckJoinCondition(char* pData, char* otherPData, Condition cond, map<pair<string, string>, Attrcat> &attrcats, map<pair<string, string>, Attrcat> &otherAttrcats);
+bool CheckCondition(CompOp op, AttrType attrType, char* leftPtr, const int leftLen, char* rightPtr, const int rightLen);
+bool isJoinCondition(Condition &cond);
+bool SelectionConditionApplies(Condition &cond, set<string> &myRelations);
+bool JoinConditionApplies(Condition &cond, set<string> &myRelations);
+Attrcat GetAttrcat(RelAttr relAttr, map<pair<string, string>, Attrcat> &attrcats, map<pair<string, string>, Attrcat> &otherAttrcats);
 
-template<class Type1, class Type2>
-pair::pair( const Type1& f, const Type2& s): first(f), second(s){}
-template<class Type1, class Type2>
-bool pair::operator==(const pair &other) const{
-	return (first == other.first && second == other.second);
+
+RelAttrCount::RelAttrCount( const RelAttr& relAttr, const int& count): first(relAttr), second(count){}
+bool RelAttrCount::operator==(const RelAttrCount &other) const{
+	return (strcmp(first.relName, other.first.relName) == 0 &&
+		    strcmp(first.attrName, other.first.attrName) == 0 &&
+			second == other.second);
 }
 
 
@@ -170,7 +179,7 @@ void Node::SetOutAttrs(){
 		offset += outAttrs[i].attrLen;
 	}
 }
-void Node::Project(bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals){
+void Node::Project(bool calcProj, int numTotalPairs, RelAttrCount *pTotals){
 	// Create projection counts map
 	map<RelAttr, int> projCounts;
 	// Include children counts
@@ -194,7 +203,7 @@ void Node::Project(bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals
 	// Update numPairs / projCount
 	numCountPairs = projCounts.size();
 	if (numCountPairs > 0){
-		vector<pair<RelAttr, int> > tmp;
+		vector<RelAttrCount > tmp;
 		copy(projCounts.begin(), projCounts.end(), back_inserter(tmp));
 		pCounts = &tmp[0];
 	}
@@ -484,7 +493,7 @@ bool isJoinCondition(Condition &cond){
 }
 
 // Only selection conditions
-Selection::Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals){
+Selection::Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, int numConds, Condition *conds, bool calcProj, int numTotalPairs, RelAttrCount *pTotals){
 	// set parent for children
 	left.parent = this;
 
@@ -641,7 +650,7 @@ bool SelectionConditionApplies(Condition &cond, set<string> &myRelations){
 
 
 // Both selection and join conditions
-Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& right, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals){
+Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& right, int numConds, Condition *conds, bool calcProj, int numTotalPairs, RelAttrCount *pTotals){
 	// set parent for both children
 	left.parent = this;
 	right.parent = this;
@@ -878,7 +887,7 @@ Attrcat GetAttrcat(RelAttr relAttr, map<pair<string, string>, Attrcat> &attrcats
 }
 
 
-Cross::Cross(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, Node &right, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals){
+Cross::Cross(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, Node &right, bool calcProj, int numTotalPairs, RelAttrCount *pTotals){
 	// set parent for both children
 	left.parent = this;
 	right.parent = this;
@@ -972,7 +981,7 @@ RC Cross::execute(){
 }
 
 
-Relation::Relation(SM_Manager *smm, const char *relName, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals){
+Relation::Relation(SM_Manager *smm, const char *relName, bool calcProj, int numTotalPairs, RelAttrCount *pTotals){
 	// numConditions/conditions set by default
 
 	this->smm = smm;

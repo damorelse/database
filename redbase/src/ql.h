@@ -22,13 +22,12 @@
 #define INDEXES 2
 
 
-template<class Type1, class Type2>
-struct pair {
-   Type1 first;
-   Type2 second;
+struct RelAttrCount {
+   RelAttr first;
+   int second;
 
-	pair( const Type1& f, const Type2& s);
-	bool operator==(const pair &other) const;
+	RelAttrCount( const RelAttr& relAttr, const int& count);
+	bool operator==(const RelAttrCount &other) const;
 };
 
 class Node {
@@ -61,7 +60,7 @@ public:
 	int numOutAttrs;
 	Attrcat *outAttrs;
 	int numCountPairs;
-	pair<RelAttr, int> *pCounts;
+	RelAttrCount *pCounts;
 	bool project;
 
 	RC rc; // set optionally
@@ -75,7 +74,7 @@ protected:
 	void SetRelations();
 	void SetRids();
 	void SetOutAttrs();
-	void Project(bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
+	void Project(bool calcProj, int numTotalPairs, RelAttrCount *pTotals);
 	// Execution
 	RC CreateTmpOutput();
 	RC DeleteTmpInput();
@@ -84,27 +83,27 @@ protected:
 // Child must be join or relation
 class Selection : public Node {
 public:
-	Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
+	Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, int numConds, Condition *conds, bool calcProj, int numTotalPairs, RelAttrCount *pTotals);
 	~Selection();
 	RC execute();
 }; 
 // Children must be join, selection, or relation
 class Join : public Node {
 public:
-	Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, Node &right, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
+	Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, Node &right, int numConds, Condition *conds, bool calcProj, int numTotalPairs, RelAttrCount *pTotals);
 	~Join();
 	RC execute();
 }; 
 class Cross : public Node {
 public:
-	Cross(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, Node &right, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
+	Cross(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, Node &right, bool calcProj, int numTotalPairs, RelAttrCount *pTotals);
 	~Cross();
 	RC execute();
 };
 // No children
 class Relation : public Node {
 public:
-	Relation(SM_Manager *smm, const char *relName, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
+	Relation(SM_Manager *smm, const char *relName, bool calcProj, int numTotalPairs, RelAttrCount *pTotals);
 	~Relation();
 };
 

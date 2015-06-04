@@ -12,6 +12,7 @@
 #include <map>
 #include <queue>
 #include <list>
+#include <utility>
 #include "redbase.h"
 #include "ql.h"
 #include "sm.h"
@@ -185,7 +186,7 @@ RC QL_Manager::Insert(const char *relName,
 		return QL_FILEERROR;
 	}
 	// Write tuple to temp file (and construct pData to print to screen)
-	char* pData = new char[relcat.tupleLen];
+	pData = new char[relcat.tupleLen];
 	for (int i = 0; i < nValues; ++i){
 		char* attribute = pData + attributes[i].offset;
 		memcpy(attribute, values[i].data, attributes[i].attrLen);
@@ -307,7 +308,7 @@ RC QL_Manager::Delete(const char *relName,
 				smm->DropTable(qPlan.output);
 				return rc;
 			}
-			indexes.push_back(make_pair(qPlan.outAttrs[i], indexHandle));
+			indexes.push_back(pair<Attrcat, IX_IndexHandle>(qPlan.outAttrs[i], indexHandle));
 		}
 	}
 	// Start Printer
@@ -718,8 +719,9 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 	}
 	for (int i = 0; i < myValConds.size(); ++i)
 		projMap[RelAttr(myValConds[i].lhsAttr.relName, myValConds[i].lhsAttr.attrName)] += 1;
-	vector<pair<RelAttr, int> > projVector;
-    copy(projMap.begin(), projMap.end(), back_inserter(projVector));
+	vector<RelAttrCount> projVector;
+	for(map<RelAttr, int>::iterator it = projMap.begin(); it != projMap.end(); ++it)
+		projVector.push_back(RelAttrCount(it->first, it->second));
 
 	// Make join lists
 	map<string, set<string> > joinLists;
@@ -861,7 +863,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 		for (int i = 0; i < groupNodes.size(); ++i){
 			set<int> tmp;
 			tmp.insert(i);
-			tables[1][tmp](0, groupNodes[i]);
+			tables[1][tmp] = pair<int, Node>(0, groupNodes[i]);
 		}
 		// Dynamic alg for crosses
 		for (int i = 2; i <= groupNodes.size(); ++i){
