@@ -796,10 +796,12 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 
 			// Joins
 			Node left = *needToJoin.begin();
-			set<Condition> allConds(condGroups[k].begin(), condGroups[k].end());
 			set<Condition> leftConds(left.conditions, left.conditions + left.numConditions);
 			vector<Condition> currConds;
-			set_difference( allConds.begin(), allConds.end(), leftConds.begin(), leftConds.end(), back_inserter(currConds));
+			for (vector<Condition>::iterator it = condGroups[k].begin(); it != condGroups[k].end(); ++it){
+				if (leftConds.find(*it) == leftConds.end())
+					currConds.push_back(*it);
+			}
 			while (needToJoin.size() > 1){
 				for (list<Node>::iterator it = (++needToJoin.begin()); it != needToJoin.end(); ++it){
 					Node right = *it;
@@ -810,7 +812,10 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 
 						vector<Condition> newConds;
 						set<Condition> tmpConds (join.conditions, join.conditions+join.numConditions);
-						set_difference(currConds.begin(), currConds.end(), tmpConds.begin(), tmpConds.end(), back_inserter(newConds));
+						for (vector<Condition>::iterator it = currConds.begin(); it != currConds.end(); ++it){
+							if (tmpConds.find(*it) == tmpConds.end())
+								newConds.push_back(*it);
+						}
 						currConds = newConds;
 						break;
 					}

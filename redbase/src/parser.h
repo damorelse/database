@@ -56,6 +56,7 @@ struct Condition{
 			 /* print function                               */
 
 	Condition(const RelAttr lhsAttr, CompOp op, const int isAttr, const RelAttr rhsAttr, const Value rhsValue);
+	bool operator<(const Condition &other);
     friend std::ostream &operator<<(std::ostream &s, const Condition &c);
 
 };

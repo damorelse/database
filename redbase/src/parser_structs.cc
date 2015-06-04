@@ -85,4 +85,3 @@ Value::~Value(){
 Condition::Condition(const RelAttr lhsAttr, CompOp op, const int isAttr, 
 					 const RelAttr rhsAttr, const Value rhsValue)
 					 : lhsAttr(lhsAttr), op(op), bRhsIsAttr(isAttr), rhsAttr(rhsAttr), rhsValue(rhsValue){}
-// TODO?
