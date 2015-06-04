@@ -109,7 +109,9 @@ public:
 
 	RC rc; // set optionally
 	int execution; //set during query plan building
-	int cost; //set during query plan building
+	int cost;
+	int numTuples;
+	int tupleSize;
 
 protected:
 	// Constructor
