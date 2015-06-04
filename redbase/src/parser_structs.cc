@@ -81,7 +81,7 @@ Value::Value(const Value &other){
 
 }
 Value::~Value(){
-	delete [] data;
+	delete [] (char*)data;
 	data = NULL;
 }
 bool Value::operator==(const Value &other) const{
