@@ -16,6 +16,7 @@
 #include "ix.h"
 #include "sm.h"
 
+#define EXT false
 //
 // QL_Manager: query language (DML)
 //

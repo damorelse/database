@@ -888,7 +888,9 @@ Cross::Cross(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, Node
 	SetRelations();
 	SetRids();
 	SetOutAttrs();
-	Project(calcProj, numTotalPairs, pTotals);
+
+	// NO projection needed
+	// Project(calcProj, numTotalPairs, pTotals);
 }
 RC Cross::execute(){
 	if (rc = CreateTmpOutput())
