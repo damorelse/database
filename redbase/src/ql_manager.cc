@@ -923,13 +923,13 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 	}
 	return 0;
 }
-int SelectCost(Node left){
+int QL_Manager::SelectCost(Node left){
 	// TODO: determine selectivity of each condition + best access path ->cost
 }
-int JoinCost(Node left, Node right){
+int QL_Manager::JoinCost(Node left, Node right){
 	// TODO: determine selectivity of each condition + best access path ->cost
 }
-int CrossCost(Node left, Node right){
+int QL_Manager::CrossCost(Node left, Node right){
 	int leftNumTuples = left.numTuples;
 	int leftLen = left.tupleSize;
 	int rightNumTuples = right.numTuples;
@@ -939,7 +939,7 @@ int CrossCost(Node left, Node right){
 	total += (leftNumTuples * rightNumTuples) * (leftLen + rightLen); // write
 	return total;
 }
-void SetParents(Node node){
+void QL_Manager::SetParents(Node node){
 	if (node.child){
 		node.child->parent = &node;
 		SetParents(*node.child);

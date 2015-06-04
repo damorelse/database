@@ -11,6 +11,15 @@
 
 using namespace std;
 
+
+template<class Type1, class Type2>
+pair::pair( const Type1& f, const Type2& s): first(f), second(s){}
+template<class Type1, class Type2>
+bool pair::operator==(const pair &other) const{
+	return (first == other.first && second == other.second);
+}
+
+
 // Public
 Node::Node(){
 	numConditions = 0;

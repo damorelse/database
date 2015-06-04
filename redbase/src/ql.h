@@ -22,11 +22,14 @@
 #define INDEXES 2
 
 
-template <typename F, typename S> 
-struct pair{ 
-  F first; 
-  S second; 
-}; 
+template<class Type1, class Type2>
+struct pair {
+   Type1 first;
+   Type2 second;
+
+	pair( const Type1& f, const Type2& s);
+	bool operator==(const pair &other) const;
+};
 
 class Node {
 public:
@@ -151,8 +154,11 @@ private:
                        int nRelations, const char * const relations[],
                        int nConditions, const Condition conditions[],
 					   Node &qPlan);
-	// Store's relation's rid first, then tuple
-	// Store attribute offsets without sizeof(RID)
+	int SelectCost(Node left);
+	int JoinCost(Node left, Node right);
+	int CrossCost(Node left, Node right);
+	void SetParents(Node node);
+
 	RC GetResults(Node qPlan);
 	void PrintQueryPlan(Node qPlan);
 	void RecursivePrint(Node qPlan, int indent);
