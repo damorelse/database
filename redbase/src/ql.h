@@ -22,7 +22,7 @@
 #define INDEXES 2
 
 template <typename F, typename S> 
-struct pair <F, S>{ 
+struct pair{ 
   F first; 
   S second; 
 }; 
