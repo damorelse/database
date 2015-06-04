@@ -777,7 +777,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 	if (!EXT){
 		// Applies selections as deeply as possible
 		// No condition ordering
-		// Only does file iteration?
+		// Only does file iteration for now...
 
 		for (int k = 0; k < relGroups.size(); ++k){
 			// Initialize list, create relation/selection nodes

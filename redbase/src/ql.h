@@ -17,6 +17,93 @@
 #include "sm.h"
 
 #define EXT false
+#define FILE 0
+#define INDEX 1
+#define INDEXES 2
+
+template <typename F, typename S> 
+struct pair <F, S>{ 
+  F first; 
+  S second; 
+}; 
+
+class Node {
+public:
+	Node();
+	virtual ~Node();
+	virtual RC execute();
+	void printType();
+	Attrcat getAttrcat(const char *relName, char* attrName);
+	CompOp FlipOp(CompOp op);
+
+	// Returns early in join/select if no conditions apply
+	int numConditions;
+	Condition *conditions;
+
+	SM_Manager *smm;
+	RM_Manager *rmm;
+	IX_Manager *ixm;
+	char type[MAXNAME+1];
+	Node *child;
+	Node *otherChild;
+	Node *parent; // set by parent node
+	char output[MAXNAME+1]; // set during execution
+	
+	int numRelations;
+	char *relations;
+	int numRids;
+	Attrcat *rids;
+
+	int numOutAttrs;
+	Attrcat *outAttrs;
+	int numCountPairs;
+	pair<RelAttr, int> *pCounts;
+	bool project;
+
+	RC rc; // set optionally
+	int execution; //set during query plan building
+	int cost;
+	int numTuples;
+	int tupleSize;
+
+protected:
+	// Constructor
+	void SetRelations();
+	void SetRids();
+	void SetOutAttrs();
+	void Project(bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
+	// Execution
+	RC CreateTmpOutput();
+	RC DeleteTmpInput();
+};
+
+// Child must be join or relation
+class Selection : public Node {
+public:
+	Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
+	~Selection();
+	RC execute();
+}; 
+// Children must be join, selection, or relation
+class Join : public Node {
+public:
+	Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, Node &right, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
+	~Join();
+	RC execute();
+}; 
+class Cross : public Node {
+public:
+	Cross(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, Node &right, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
+	~Cross();
+	RC execute();
+};
+// No children
+class Relation : public Node {
+public:
+	Relation(SM_Manager *smm, const char *relName, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
+	~Relation();
+};
+
 //
 // QL_Manager: query language (DML)
 //
@@ -68,86 +155,6 @@ private:
 	RC GetResults(Node qPlan);
 	void PrintQueryPlan(Node qPlan);
 	void RecursivePrint(Node qPlan, int indent);
-};
-
-#define FILE 0
-#define INDEX 1
-#define INDEXES 2
-
-class Node {
-public:
-	Node();
-	virtual ~Node();
-	virtual RC execute();
-	void printType();
-	Attrcat getAttrcat(const char *relName, char* attrName);
-	CompOp FlipOp(CompOp op);
-
-	// Returns early in join/select if no conditions apply
-	int numConditions;
-	Condition *conditions;
-
-	SM_Manager *smm;
-	RM_Manager *rmm;
-	IX_Manager *ixm;
-	char type[MAXNAME+1];
-	Node *child;
-	Node *otherChild;
-	Node *parent; // set by parent node
-	char output[MAXNAME+1]; // set during execution
-	
-	int numRelations;
-	char *relations;
-	int numRids;
-	Attrcat *rids;
-
-	int numOutAttrs;
-	Attrcat *outAttrs;
-	int numCountPairs;
-	pair<RelAttr, int> *pCounts;
-	bool project;
-
-	RC rc; // set optionally
-	int execution; //set during query plan building
-	int cost;
-	int numTuples;
-	int tupleSize;
-
-protected:
-	// Constructor
-	void SetRelations();
-	void SetRids();
-	void SetOutAttrs();
-	void Project(bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
-	// Execution
-	RC CreateTmpOutput();
-	RC DeleteTmpInput();
-};
-// Child must be join or relation
-class Selection : public Node {
-public:
-	Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
-	~Selection();
-	RC execute();
-}; 
-// Children must be join, selection, or relation
-class Join : public Node {
-public:
-	Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, Node &right, int numConds, Condition *conds, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
-	~Join();
-	RC execute();
-}; 
-class Cross : public Node {
-public:
-	Cross(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, Node &right, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
-	~Cross();
-	RC execute();
-};
-// No children
-class Relation : public Node {
-public:
-	Relation(SM_Manager *smm, const char *relName, bool calcProj, int numTotalPairs, pair<RelAttr, int> *pTotals);
-	~Relation();
 };
 
 void QL_PrintError(RC rc);
