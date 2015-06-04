@@ -651,8 +651,8 @@ RC QL_Manager::CheckCondition(Condition &condition, const char * const relations
 	return 0;
 }
 
-list<set<string>>::iterator GetJoinSet(list<set<string>>joinGroups, char* relName){
-	for (list<set<string>>::iterator  it = joinGroups.begin(); it!=joinGroups.end(); ++it)
+list<set<string> >::iterator GetJoinSet(list<set<string> >joinGroups, char* relName){
+	for (list<set<string> >::iterator  it = joinGroups.begin(); it!=joinGroups.end(); ++it)
 		if (it->find(relName) != it->end())
 			return it;
 	return joinGroups.end();
@@ -722,7 +722,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
     copy(projMap.begin(), projMap.end(), back_inserter(projVector));
 
 	// Make join lists
-	map<string, set<string>> joinLists;
+	map<string, set<string> > joinLists;
 	for (int i = 0; i < myAttrConds.size(); ++i){
 		if (strcmp(myAttrConds[i].lhsAttr.relName, myAttrConds[i].rhsAttr.relName) != 0){
 			joinLists[myAttrConds[i].lhsAttr.relName].insert(myAttrConds[i].rhsAttr.relName);
@@ -731,7 +731,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 	}
 
 	// Make relation groups
-	vector<set<string>> relGroups;
+	vector<set<string> > relGroups;
 	set<string> processed;
 	while (processed.size() < nRelations){
 		// Initialize, find first member of new group
@@ -762,7 +762,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 	}
 
 	// Make condition groups
-	vector<vector<Condition>> condGroups(relGroups.size());
+	vector<vector<Condition> > condGroups(relGroups.size());
 	for (int i = 0; i < myConds.size(); ++i){
 		for (int k = 0; k < relGroups.size(); ++k){
 			if (relGroups[k].find(myConds[i].lhsAttr.relName) != relGroups[k].end()){
@@ -820,7 +820,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 		// TODO
 		for (int i = 0; i < relGroups.size(); ++i){
 			// [set size] [condition set] . (cost | Node)
-			vector<map<set<Condition>, pair<int, Node>>> tables;
+			vector<map<set<Condition>, pair<int, Node> > > tables;
 
 
 			// Reset parent field in each node of min cost tree
@@ -857,7 +857,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 	}
 	else {
 		// Initialize tables
-		vector<map<set<int>, pair<int, Node>>> tables;
+		vector<map<set<int>, pair<int, Node> > > tables;
 		for (int i = 0; i < groupNodes.size(); ++i){
 			set<int> tmp;
 			tmp.insert(i);
@@ -866,8 +866,8 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 		// Dynamic alg for crosses
 		for (int i = 2; i <= groupNodes.size(); ++i){
 			// Generate subsets of size i
-			vector<vector<int>> subsets; 
-			for(map<set<int>, pair<int, Node>>::iterator it = tables[i-1].begin(); it != tables[i-1].end(); ++it){
+			vector<vector<int> > subsets; 
+			for(map<set<int>, pair<int, Node> >::iterator it = tables[i-1].begin(); it != tables[i-1].end(); ++it){
 				vector<int> tmp(it->first.begin(), it->first.end());
 				for (int i = 0; i < groupNodes.size(); ++i){
 					if (it->first.find(i) == it->first.end()){;

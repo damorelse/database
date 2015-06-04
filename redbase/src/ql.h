@@ -21,12 +21,6 @@
 #define INDEX 1
 #define INDEXES 2
 
-template <typename F, typename S> 
-struct pair <F, S>{ 
-  F first; 
-  S second; 
-}; 
-
 class Node {
 public:
 	Node();
