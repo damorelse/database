@@ -1069,6 +1069,10 @@ void QL_Manager::RecursivePrint(Node &node, int indent){
 			cout << "|   ";
 		cout << endl;
 	}
+	cerr << "Reached here" << endl;
+	cerr << "Should print type";
+	node.printType();
+	cerr << endl;
 
 	// Print node
 	for (int i = 0; i < indent; ++i)

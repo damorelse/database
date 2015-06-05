@@ -171,7 +171,7 @@ Node& Node::operator=(const Node& other){
 }
 RC Node::execute(){/*nothing; should set output*/}
 void Node::printType(){
-	cout << type;
+	cout << (string)type;
 	if (numConditions == 0)
 		return;
 
