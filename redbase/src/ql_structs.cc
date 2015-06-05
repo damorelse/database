@@ -1148,8 +1148,7 @@ void QueryTree::RecursiveDelete(Node* node){
 Node* QueryTree::RecursiveClone(Node* node){
 	if (!node)
 		return NULL;
-	Node* newNode = new Node();
-	newNode = node;
+	Node* newNode = new Node(*node);
 
 	newNode->child = RecursiveClone(node->child);
 	if (newNode->child)
