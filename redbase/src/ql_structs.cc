@@ -381,6 +381,7 @@ RC Node::CreateTmpOutput(){
 	// Set output
 	char tmp[MAXNAME];
 	tmpnam(tmp);
+	cerr << "Temp file " << tmp << endl;
 	memcpy(output, tmp, MAXNAME);
 	// Create output relation
 	vector<AttrInfo> attributes;
