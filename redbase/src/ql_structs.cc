@@ -392,8 +392,9 @@ RC Node::CreateTmpOutput(){
 	char tmp[MAXNAME+5];
 	tmpnam(tmp);
 	memcpy(output, tmp+5, MAXNAME);
-	cerr << "Temp file " << output << endl;
-
+    remove(tmp);
+	cerr << "Temp file " << output << "   " << output[0] << "    " << isalpha(output[0]) << endl;
+	
 	// Create output relation
 	vector<AttrInfo> attributes;
 	for (int i = 0; i < numRids; ++i)
