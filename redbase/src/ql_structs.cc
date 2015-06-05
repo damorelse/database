@@ -21,7 +21,10 @@ bool SelectionConditionApplies(Condition &cond, set<string> &myRelations);
 bool JoinConditionApplies(Condition &cond, set<string> &myRelations);
 Attrcat GetAttrcat(RelAttr relAttr, map<pair<string, string>, Attrcat> &attrcats, map<pair<string, string>, Attrcat> &otherAttrcats);
 
-
+RelAttrCount::RelAttrCount(){
+	first = RelAttr();
+	second = 0;
+}
 RelAttrCount::RelAttrCount( const RelAttr& relAttr, const int& count): first(relAttr), second(count){}
 bool RelAttrCount::operator==(const RelAttrCount &other) const{
 	return (first == other.first && second == other.second);
@@ -33,6 +36,9 @@ Node::Node(){
 	numConditions = 0;
 	conditions = NULL;
 
+	smm = NULL;
+	rmm = NULL;
+	ixm = NULL;
 	memset(type, '\0', MAXNAME+1);
 	child = NULL;
 	otherChild = NULL;
@@ -53,6 +59,8 @@ Node::Node(){
 	rc = 0;
 	execution = QL_FILE;
 	cost = 0;
+	numTuples = 0;
+	tupleSize = 0;
 }
 Node::~Node(){
 	cerr << type << relations << endl;
@@ -76,6 +84,56 @@ Node::~Node(){
 	if (pCounts)
 		delete [] pCounts;
 	pCounts = NULL;
+}
+Node& Node::operator=(const Node& other){
+	numConditions = other.numConditions;
+	if (conditions)
+		delete [] conditions;
+	conditions = new Condition[numConditions];
+	memcpy(conditions, other.conditions, numConditions * sizeof(Condition));
+
+	smm = other.smm;
+	rmm = other.rmm;
+	ixm = other.ixm;
+	memset(type, '\0', MAXNAME+1);
+	strcpy(type, other.type);
+	child = other.child;
+	otherChild = other.otherChild;
+	parent = other.parent;
+	memset(output, '\0', MAXNAME+1);
+	memcpy(output, other.output, MAXNAME+1);
+
+	numRelations = other.numRelations;
+	if (relations)
+		delete [] relations;
+	relations = new char[numRelations * (MAXNAME+1)];
+	memcpy(relations, other.relations,numRelations * (MAXNAME+1));
+
+	numRids = other.numRids;
+	if (rids)
+		delete [] rids;
+	rids = new Attrcat[numRids];
+	memcpy(rids, other.rids, numRids * sizeof(Attrcat));
+
+	numOutAttrs = other.numOutAttrs;
+	if (outAttrs)
+		delete [] outAttrs;
+	outAttrs = new Attrcat[numOutAttrs];
+	memcpy(outAttrs, other.outAttrs, numOutAttrs * sizeof(Attrcat));
+	numCountPairs = other.numCountPairs;
+	if (pCounts)
+		delete [] pCounts;
+	pCounts = new RelAttrCount[numCountPairs];
+	memcpy(pCounts, other.pCounts, numCountPairs * sizeof(RelAttrCount));
+	project = other.project;
+
+	rc = other.rc;
+	execution = other.execution;
+	cost = other.cost;
+	numTuples = other.numTuples;
+	tupleSize = other.tupleSize;
+
+	return *this;
 }
 RC Node::execute(){/*nothing; should set output*/}
 void Node::printType(){
@@ -518,6 +576,7 @@ Selection::Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& le
 			condVector.push_back(conds[i]);
 	}
 	numConditions = condVector.size();
+	conditions = new Condition[numConditions];
 	copy(condVector.begin(), condVector.end(), conditions);
 	// Early exit
 	if (numConditions == 0){
@@ -679,6 +738,7 @@ Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& 
 			condVector.push_back(conds[i]);
 	}
 	numConditions = condVector.size();
+	conditions = new Condition[numConditions];
 	copy(condVector.begin(), condVector.end(), conditions);
 	// Early exit
 	if (numConditions == 0){
@@ -1014,12 +1074,12 @@ Relation::Relation(SM_Manager *smm, const char *relName, bool calcProj, int numT
 	RM_Record record;
 	char* pData;
 	if (smm->GetRelcatRecord(relName, record)){
-		//rc = QL_RELNODE; // TEST
-		//return;
+		rc = QL_RELNODE;
+		return;
 	}
 	if (record.GetData(pData)){
-		//rc = QL_RELNODE; // TEST
-		//return;
+		rc = QL_RELNODE; // TEST
+		return;
 	}
 	Relcat relcat(pData);
 	numOutAttrs = relcat.attrCount;
@@ -1033,3 +1093,38 @@ Relation::Relation(SM_Manager *smm, const char *relName, bool calcProj, int numT
 	// NO projection since no execution function to generate new output
 }
 Relation::~Relation(){}
+
+
+QueryTree::QueryTree(): root(NULL){}
+QueryTree::~QueryTree(){
+	if (root)
+		RecursiveDelete(root);
+}
+QueryTree& QueryTree::operator=(Node& node){
+	if (root)
+		RecursiveDelete(root);
+	root = RecursiveClone(&node);
+}
+void RecursiveDelete(Node* node){
+	if (!node)
+		return;
+	RecursiveDelete(node->child);
+	RecursiveDelete(node->otherChild);
+	delete node;
+}
+Node* RecursiveClone(Node* node){
+	if (!node)
+		return NULL;
+	Node* newNode = new Node();
+	newNode = node;
+
+	newNode->child = RecursiveClone(node->child);
+	if (newNode->child)
+		newNode->child->parent = newNode;
+
+	newNode->otherChild = RecursiveClone(node->otherChild);
+	if (newNode->otherChild)
+		newNode->otherChild->parent = newNode;
+
+	return newNode;
+}

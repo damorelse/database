@@ -26,6 +26,7 @@ struct RelAttrCount {
    RelAttr first;
    int second;
 
+   RelAttrCount();
 	RelAttrCount( const RelAttr& relAttr, const int& count);
 	bool operator==(const RelAttrCount &other) const;
 };
@@ -34,6 +35,7 @@ class Node {
 public:
 	Node();
 	virtual ~Node();
+	Node& operator=(const Node& other);
 	virtual RC execute();
 	void printType();
 	Attrcat getAttrcat(const char *relName, char* attrName);
@@ -78,6 +80,18 @@ protected:
 	// Execution
 	RC CreateTmpOutput();
 	RC DeleteTmpInput();
+};
+
+class QueryTree {
+public:
+	QueryTree();
+	~QueryTree();
+	QueryTree& operator=(Node& node);
+
+	Node* root;
+private:
+	void RecursiveDelete(Node* node);
+	Node* RecursiveClone(Node* node);
 };
 
 // Child must be join or relation
@@ -152,15 +166,15 @@ private:
 	RC MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
                        int nRelations, const char * const relations[],
                        int nConditions, const Condition conditions[],
-					   Node &qPlan);
-	int SelectCost(Node left);
-	int JoinCost(Node left, Node right);
-	int CrossCost(Node left, Node right);
-	void SetParents(Node node);
+					   QueryTree &qPlan);
+	int SelectCost(Node &left);
+	int JoinCost(Node &left, Node &right);
+	int CrossCost(Node &left, Node &right);
+	void SetParents(Node &node);
 
-	RC GetResults(Node qPlan);
-	void PrintQueryPlan(Node qPlan);
-	void RecursivePrint(Node qPlan, int indent);
+	RC GetResults(QueryTree &qPlan);
+	void PrintQueryPlan(QueryTree &qPlan);
+	void RecursivePrint(QueryTree &qPlan, int indent);
 };
 
 void QL_PrintError(RC rc);
