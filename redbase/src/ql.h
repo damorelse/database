@@ -17,9 +17,9 @@
 #include "sm.h"
 
 #define EXT false
-#define FILE 0
-#define INDEX 1
-#define INDEXES 2
+#define QL_FILE 0
+#define QL_INDEX 1
+#define QL_INDEXES 2
 
 
 struct RelAttrCount {
@@ -177,9 +177,9 @@ void QL_PrintError(RC rc);
 #define QL_RELNODE				(START_QL_WARN + 9)
 #define QL_SELNODE				(START_QL_WARN + 10)
 #define QL_JOINNODE				(START_QL_WARN + 11)
-#define QL_LASTWARN		QL_JOINNODE			// TODO
+#define QL_LASTWARN		QL_JOINNODE
 
 #define QL_FILEERROR           (START_QL_ERR - 0)
-#define QL_LASTERROR	QL_FILEERROR			// TODO
+#define QL_LASTERROR	QL_FILEERROR
 
 #endif

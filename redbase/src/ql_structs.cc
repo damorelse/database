@@ -50,7 +50,7 @@ Node::Node(){
 	project = false;
 
 	rc = 0;
-	execution = FILE;
+	execution = QL_FILE;
 	cost = 0;
 }
 Node::~Node(){
@@ -552,7 +552,7 @@ RC Selection::execute(){
 	}
 	
 	// No index scan
-	if (execution == FILE){
+	if (execution == QL_FILE){
 		RM_FileScan scan;
 		if (rc = scan.OpenScan(file, INT, 4, 0, NO_OP, NULL))
 			return rc;
@@ -577,7 +577,7 @@ RC Selection::execute(){
 			return rc;
 	}
 	// Use index scan (for value conditions only, with an index on lhs attribute)
-	else if (execution == INDEX) {
+	else if (execution == QL_INDEX) {
 		pair<string, string> key(conditions[0].lhsAttr.relName, conditions[0].lhsAttr.attrName);
 		IX_IndexHandle index;
 		if (rc = ixm->OpenIndex(attrcats[key].relName, attrcats[key].indexNo, index))
@@ -619,7 +619,7 @@ RC Selection::execute(){
 		}
 	}
 	// Attribute conditions with indexes on both attributes
-	else if (execution == INDEXES)
+	else if (execution == QL_INDEXES)
 	{
 		// TODO: index scans on both attributes
 	}
@@ -720,7 +720,7 @@ RC Join::execute(){
 	}
 
 	// No index scan
-	if (execution == FILE)
+	if (execution == QL_FILE)
 	{
 		RM_FileScan scan;
 		if (rc = scan.OpenScan(file, INT, 4, 0, NO_OP, NULL))
@@ -765,7 +765,7 @@ RC Join::execute(){
 	}
 	// Index scan of one attribute 
 	// (AB join C with index on C's attribute, A join B with index on one attribute)
-	else if (execution == INDEX)
+	else if (execution == QL_INDEX)
 	{
 		// Assumes lhsAttr is the indexed one
 		Attrcat left = GetAttrcat(conditions[0].lhsAttr, attrcats, otherAttrcats);
@@ -847,7 +847,7 @@ RC Join::execute(){
 			return rc;
 	}
 	// Index scan of both attributes (must be A join B)
-	else if (execution == INDEXES) {
+	else if (execution == QL_INDEXES) {
 		// TODO
 	}
 
