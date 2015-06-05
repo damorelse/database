@@ -12,6 +12,14 @@ AttrInfo::~AttrInfo(){
 	delete [] attrName;
 	attrName = NULL;
 }
+AttrInfo& AttrInfo::operator=(const AttrInfo& other){
+	if (this != &other){
+		strcpy(attrName, other.attrName);
+		attrType = other.attrType;
+		attrLength = other.attrLength;
+	}
+	return *this;
+}
 AttrInfo::AttrInfo(Attrcat attrcat){
 	attrName = new char[MAXNAME+1];
 	memset(attrName, '\0', MAXNAME+1);
@@ -55,16 +63,7 @@ RelAttr::~RelAttr(){
 }
 RelAttr& RelAttr::operator=(const RelAttr &other){
 	if (this != &other){
-		if (!relName){
-			relName = new char[MAXNAME+1];
-			memset(relName, '\0', MAXNAME+1);
-		}
 		strcpy(relName, other.relName);
-
-		if (!attrName){
-			attrName = new char[MAXNAME+1];
-			memset(attrName, '\0', MAXNAME+1);
-		}
 		strcpy(attrName, other.attrName);
 	}
 	return *this;

@@ -21,6 +21,7 @@ struct AttrInfo{
 	AttrInfo();
 	~AttrInfo();
 	AttrInfo(Attrcat attrcat);
+	AttrInfo& operator=(const AttrInfo& other);
 };
 
 struct RelAttr{
