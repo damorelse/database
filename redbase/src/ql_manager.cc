@@ -820,6 +820,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 				Selection sel(smm, rmm, ixm, rel, condGroups[k].size(), &condGroups[k][0], calcProj, projVector.size(), &projVector[0]);
 				if (sel.rc){
 					cerr << "sel" << endl;
+					cerr << sel.numConditions << endl;
 					needToJoin.push_back((Node)sel);
 					needToJoin.back().clone(sel);
 				}
@@ -831,12 +832,11 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 			}
 			
 			cerr << needToJoin.begin()->type << endl;
+			cerr << needToJoin.begin()->numConditions << endl;
 			cerr << needToJoin.begin()->child << endl;
 			cerr << needToJoin.begin()->otherChild << endl;
 			cerr << needToJoin.begin()->numRelations << endl;
-			cerr << needToJoin.begin()->numRids << endl;
-			cerr << needToJoin.begin()->numOutAttrs << endl;
-			cerr << needToJoin.begin()->numCountPairs << endl;
+
 			cerr << "TESTING " << endl;
 			PrintQueryPlan(*needToJoin.begin());
 

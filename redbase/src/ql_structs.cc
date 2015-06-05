@@ -652,10 +652,11 @@ Selection::Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& le
 	copy(condVector.begin(), condVector.end(), conditions);
 	// Early exit
 	if (numConditions == 0){
+		cerr << "reached here IN SELECTION correctly" << endl;
 		rc = QL_SELNODE;
 		return;
 	}
-
+	
 	this->smm = smm;
 	this->rmm = rmm;
 	this->ixm = ixm;
