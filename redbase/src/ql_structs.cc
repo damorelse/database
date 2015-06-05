@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <utility>
 #include <string>
+#include <cerrno>
 #include "ql.h"
 #include "sm.h"
 
@@ -54,18 +55,24 @@ Node::Node(){
 	cost = 0;
 }
 Node::~Node(){
+	cerr << type << relations << endl;
+	cerr << "numConditions " << numConditions << endl;
 	if (conditions)
 		delete [] conditions;
 	conditions = NULL;
+	cerr << "numRelations " << numRelations << endl;
 	if (relations)
 		delete [] relations;
 	relations = NULL;
+	cerr << "numRids " << numRids << endl;
 	if (rids)
 		delete [] rids;
 	rids = NULL;
+	cerr << "outAttrs " << numOutAttrs << endl;
 	if (outAttrs)
 		delete [] outAttrs;
 	outAttrs = NULL;
+	cerr << "numCountPairs " << numCountPairs << endl;
 	if (pCounts)
 		delete [] pCounts;
 	pCounts = NULL;
