@@ -8,6 +8,14 @@ AttrInfo::AttrInfo(){
 	attrType = INT;
 	attrLength = 4;
 }
+AttrInfo::AttrInfo(const AttrInfo& other){
+	attrName = new char[MAXNAME+1];
+	memset(attrName, '\0', MAXNAME+1);
+    del = true;	
+	strcpy(attrName, other.attrName);
+	attrType = other.attrType;
+	attrLength = other.attrLength;
+}
 AttrInfo::~AttrInfo(){
 	if (del && attrName)
 		delete [] attrName;

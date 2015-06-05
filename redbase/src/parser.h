@@ -20,6 +20,7 @@ struct AttrInfo{
 	bool del;
 
 	AttrInfo();
+	AttrInfo(const AttrInfo& other);
 	~AttrInfo();
 	AttrInfo(Attrcat attrcat);
 	AttrInfo& operator=(const AttrInfo& other);
