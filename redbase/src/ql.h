@@ -76,6 +76,10 @@ public:
 	int numTuples;
 	int tupleSize;
 
+private:
+	RC SelectionExecute();
+	RC JoinExecute();
+	RC CrossExecute();
 protected:
 	// Constructor
 	void SetRelations();
@@ -105,20 +109,17 @@ class Selection : public Node {
 public:
 	Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, int numConds, Condition *conds, bool calcProj, int numTotalPairs, RelAttrCount *pTotals);
 	~Selection();
-	RC execute();
 }; 
 // Children must be join, selection, or relation
 class Join : public Node {
 public:
 	Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, Node &right, int numConds, Condition *conds, bool calcProj, int numTotalPairs, RelAttrCount *pTotals);
 	~Join();
-	RC execute();
 }; 
 class Cross : public Node {
 public:
 	Cross(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, Node &right, bool calcProj, int numTotalPairs, RelAttrCount *pTotals);
 	~Cross();
-	RC execute();
 };
 // No children
 class Relation : public Node {

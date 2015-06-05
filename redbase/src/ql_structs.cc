@@ -207,7 +207,16 @@ void Node::clone(const Node& other){
 	numTuples = other.numTuples;
 	tupleSize = other.tupleSize;
 }
-RC Node::execute(){/*nothing; should set output*/ cerr << "generic execute" << endl; return 0;}
+RC Node::execute(){
+	if (strcmp(type, QL_JOIN) == 0)
+		rc = JoinExecute();
+	else if (strcmp(type, QL_CROSS) == 0)
+		rc = CrossExecute();
+	else if (strcmp(type, QL_SEL) == 0)
+		rc = SelectionExecute();
+	else
+		return 0;
+}
 void Node::printType(){
 	cout << type;
 	if (numConditions == 0)
@@ -675,7 +684,7 @@ Selection::Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& le
 	Project(calcProj, numTotalPairs, pTotals);
 }
 Selection::~Selection(){}
-RC Selection::execute(){
+RC Node::SelectionExecute(){
 	cerr << "select execute" << endl;
 	if (rc = CreateTmpOutput())
 		return rc;
@@ -839,7 +848,7 @@ Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& 
 	Project(calcProj, numTotalPairs, pTotals);
 }
 Join::~Join(){}
-RC Join::execute(){
+RC Node::JoinExecute(){
 	cerr << "join execute" << endl;
 	if (rc = CreateTmpOutput())
 		return rc;
@@ -1065,7 +1074,7 @@ Cross::Cross(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, Node
 	// Project(calcProj, numTotalPairs, pTotals);
 }
 Cross::~Cross(){}
-RC Cross::execute(){
+RC Node::CrossExecute(){
 	cerr << "CROSS EXECUTE START" << endl;
 	//if (rc = CreateTmpOutput())
 	//	return rc;
