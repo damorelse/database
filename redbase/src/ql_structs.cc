@@ -101,158 +101,6 @@ Node::Node(const Node& other){
 	numTuples = other.numTuples;
 	tupleSize = other.tupleSize;
 }
-Node::Node(const Selection& other){
-	numConditions = other.numConditions;
-	conditions = new Condition[numConditions];
-	memcpy(conditions, other.conditions, numConditions * sizeof(Condition));
-
-	smm = other.smm;
-	rmm = other.rmm;
-	ixm = other.ixm;
-	memset(type, '\0', MAXNAME+1);
-	strcpy(type, other.type);
-	child = other.child;
-	otherChild = other.otherChild;
-	parent = other.parent;
-	memset(output, '\0', MAXNAME+1);
-	memcpy(output, other.output, MAXNAME+1);
-
-	numRelations = other.numRelations;
-	relations = new char[numRelations * (MAXNAME+1)];
-	memcpy(relations, other.relations,numRelations * (MAXNAME+1));
-
-	numRids = other.numRids;
-	rids = new Attrcat[numRids];
-	memcpy(rids, other.rids, numRids * sizeof(Attrcat));
-
-	numOutAttrs = other.numOutAttrs;
-	outAttrs = new Attrcat[numOutAttrs];
-	memcpy(outAttrs, other.outAttrs, numOutAttrs * sizeof(Attrcat));
-	numCountPairs = other.numCountPairs;
-	pCounts = new RelAttrCount[numCountPairs];
-	memcpy(pCounts, other.pCounts, numCountPairs * sizeof(RelAttrCount));
-	project = other.project;
-
-	rc = other.rc;
-	execution = other.execution;
-	cost = other.cost;
-	numTuples = other.numTuples;
-	tupleSize = other.tupleSize;
-}
-Node::Node(const Cross& other){
-	numConditions = other.numConditions;
-	conditions = new Condition[numConditions];
-	memcpy(conditions, other.conditions, numConditions * sizeof(Condition));
-
-	smm = other.smm;
-	rmm = other.rmm;
-	ixm = other.ixm;
-	memset(type, '\0', MAXNAME+1);
-	strcpy(type, other.type);
-	child = other.child;
-	otherChild = other.otherChild;
-	parent = other.parent;
-	memset(output, '\0', MAXNAME+1);
-	memcpy(output, other.output, MAXNAME+1);
-
-	numRelations = other.numRelations;
-	relations = new char[numRelations * (MAXNAME+1)];
-	memcpy(relations, other.relations,numRelations * (MAXNAME+1));
-
-	numRids = other.numRids;
-	rids = new Attrcat[numRids];
-	memcpy(rids, other.rids, numRids * sizeof(Attrcat));
-
-	numOutAttrs = other.numOutAttrs;
-	outAttrs = new Attrcat[numOutAttrs];
-	memcpy(outAttrs, other.outAttrs, numOutAttrs * sizeof(Attrcat));
-	numCountPairs = other.numCountPairs;
-	pCounts = new RelAttrCount[numCountPairs];
-	memcpy(pCounts, other.pCounts, numCountPairs * sizeof(RelAttrCount));
-	project = other.project;
-
-	rc = other.rc;
-	execution = other.execution;
-	cost = other.cost;
-	numTuples = other.numTuples;
-	tupleSize = other.tupleSize;
-}
-Node::Node(const Join& other){
-	numConditions = other.numConditions;
-	conditions = new Condition[numConditions];
-	memcpy(conditions, other.conditions, numConditions * sizeof(Condition));
-
-	smm = other.smm;
-	rmm = other.rmm;
-	ixm = other.ixm;
-	memset(type, '\0', MAXNAME+1);
-	strcpy(type, other.type);
-	child = other.child;
-	otherChild = other.otherChild;
-	parent = other.parent;
-	memset(output, '\0', MAXNAME+1);
-	memcpy(output, other.output, MAXNAME+1);
-
-	numRelations = other.numRelations;
-	relations = new char[numRelations * (MAXNAME+1)];
-	memcpy(relations, other.relations,numRelations * (MAXNAME+1));
-
-	numRids = other.numRids;
-	rids = new Attrcat[numRids];
-	memcpy(rids, other.rids, numRids * sizeof(Attrcat));
-
-	numOutAttrs = other.numOutAttrs;
-	outAttrs = new Attrcat[numOutAttrs];
-	memcpy(outAttrs, other.outAttrs, numOutAttrs * sizeof(Attrcat));
-	numCountPairs = other.numCountPairs;
-	pCounts = new RelAttrCount[numCountPairs];
-	memcpy(pCounts, other.pCounts, numCountPairs * sizeof(RelAttrCount));
-	project = other.project;
-
-	rc = other.rc;
-	execution = other.execution;
-	cost = other.cost;
-	numTuples = other.numTuples;
-	tupleSize = other.tupleSize;
-}
-Node::Node(const Relation& other){
-	numConditions = other.numConditions;
-	conditions = new Condition[numConditions];
-	memcpy(conditions, other.conditions, numConditions * sizeof(Condition));
-
-	smm = other.smm;
-	rmm = other.rmm;
-	ixm = other.ixm;
-	memset(type, '\0', MAXNAME+1);
-	strcpy(type, other.type);
-	child = other.child;
-	otherChild = other.otherChild;
-	parent = other.parent;
-	memset(output, '\0', MAXNAME+1);
-	memcpy(output, other.output, MAXNAME+1);
-
-	numRelations = other.numRelations;
-	relations = new char[numRelations * (MAXNAME+1)];
-	memcpy(relations, other.relations,numRelations * (MAXNAME+1));
-
-	numRids = other.numRids;
-	rids = new Attrcat[numRids];
-	memcpy(rids, other.rids, numRids * sizeof(Attrcat));
-
-	numOutAttrs = other.numOutAttrs;
-	outAttrs = new Attrcat[numOutAttrs];
-	memcpy(outAttrs, other.outAttrs, numOutAttrs * sizeof(Attrcat));
-	numCountPairs = other.numCountPairs;
-	pCounts = new RelAttrCount[numCountPairs];
-	memcpy(pCounts, other.pCounts, numCountPairs * sizeof(RelAttrCount));
-	project = other.project;
-
-	rc = other.rc;
-	execution = other.execution;
-	cost = other.cost;
-	numTuples = other.numTuples;
-	tupleSize = other.tupleSize;
-}
 Node::~Node(){
 	cerr << "DELETE " << type << endl;
 	if (conditions)
@@ -321,10 +169,8 @@ Node& Node::operator=(const Node& other){
 
 	return *this;
 }
-Node& Node::operator=(const Selection& other){
+void Node::clone(const Node& other){
 	numConditions = other.numConditions;
-	if (conditions)
-		delete [] conditions;
 	conditions = new Condition[numConditions];
 	memcpy(conditions, other.conditions, numConditions * sizeof(Condition));
 
@@ -340,25 +186,17 @@ Node& Node::operator=(const Selection& other){
 	memcpy(output, other.output, MAXNAME+1);
 
 	numRelations = other.numRelations;
-	if (relations)
-		delete [] relations;
 	relations = new char[numRelations * (MAXNAME+1)];
 	memcpy(relations, other.relations,numRelations * (MAXNAME+1));
 
 	numRids = other.numRids;
-	if (rids)
-		delete [] rids;
 	rids = new Attrcat[numRids];
 	memcpy(rids, other.rids, numRids * sizeof(Attrcat));
 
 	numOutAttrs = other.numOutAttrs;
-	if (outAttrs)
-		delete [] outAttrs;
 	outAttrs = new Attrcat[numOutAttrs];
 	memcpy(outAttrs, other.outAttrs, numOutAttrs * sizeof(Attrcat));
 	numCountPairs = other.numCountPairs;
-	if (pCounts)
-		delete [] pCounts;
 	pCounts = new RelAttrCount[numCountPairs];
 	memcpy(pCounts, other.pCounts, numCountPairs * sizeof(RelAttrCount));
 	project = other.project;
@@ -368,158 +206,6 @@ Node& Node::operator=(const Selection& other){
 	cost = other.cost;
 	numTuples = other.numTuples;
 	tupleSize = other.tupleSize;
-
-	return *this;
-}
-Node& Node::operator=(const Cross& other){
-	numConditions = other.numConditions;
-	if (conditions)
-		delete [] conditions;
-	conditions = new Condition[numConditions];
-	memcpy(conditions, other.conditions, numConditions * sizeof(Condition));
-
-	smm = other.smm;
-	rmm = other.rmm;
-	ixm = other.ixm;
-	memset(type, '\0', MAXNAME+1);
-	strcpy(type, other.type);
-	child = other.child;
-	otherChild = other.otherChild;
-	parent = other.parent;
-	memset(output, '\0', MAXNAME+1);
-	memcpy(output, other.output, MAXNAME+1);
-
-	numRelations = other.numRelations;
-	if (relations)
-		delete [] relations;
-	relations = new char[numRelations * (MAXNAME+1)];
-	memcpy(relations, other.relations,numRelations * (MAXNAME+1));
-
-	numRids = other.numRids;
-	if (rids)
-		delete [] rids;
-	rids = new Attrcat[numRids];
-	memcpy(rids, other.rids, numRids * sizeof(Attrcat));
-
-	numOutAttrs = other.numOutAttrs;
-	if (outAttrs)
-		delete [] outAttrs;
-	outAttrs = new Attrcat[numOutAttrs];
-	memcpy(outAttrs, other.outAttrs, numOutAttrs * sizeof(Attrcat));
-	numCountPairs = other.numCountPairs;
-	if (pCounts)
-		delete [] pCounts;
-	pCounts = new RelAttrCount[numCountPairs];
-	memcpy(pCounts, other.pCounts, numCountPairs * sizeof(RelAttrCount));
-	project = other.project;
-
-	rc = other.rc;
-	execution = other.execution;
-	cost = other.cost;
-	numTuples = other.numTuples;
-	tupleSize = other.tupleSize;
-
-	return *this;
-}
-Node& Node::operator=(const Join& other){
-	numConditions = other.numConditions;
-	if (conditions)
-		delete [] conditions;
-	conditions = new Condition[numConditions];
-	memcpy(conditions, other.conditions, numConditions * sizeof(Condition));
-
-	smm = other.smm;
-	rmm = other.rmm;
-	ixm = other.ixm;
-	memset(type, '\0', MAXNAME+1);
-	strcpy(type, other.type);
-	child = other.child;
-	otherChild = other.otherChild;
-	parent = other.parent;
-	memset(output, '\0', MAXNAME+1);
-	memcpy(output, other.output, MAXNAME+1);
-
-	numRelations = other.numRelations;
-	if (relations)
-		delete [] relations;
-	relations = new char[numRelations * (MAXNAME+1)];
-	memcpy(relations, other.relations,numRelations * (MAXNAME+1));
-
-	numRids = other.numRids;
-	if (rids)
-		delete [] rids;
-	rids = new Attrcat[numRids];
-	memcpy(rids, other.rids, numRids * sizeof(Attrcat));
-
-	numOutAttrs = other.numOutAttrs;
-	if (outAttrs)
-		delete [] outAttrs;
-	outAttrs = new Attrcat[numOutAttrs];
-	memcpy(outAttrs, other.outAttrs, numOutAttrs * sizeof(Attrcat));
-	numCountPairs = other.numCountPairs;
-	if (pCounts)
-		delete [] pCounts;
-	pCounts = new RelAttrCount[numCountPairs];
-	memcpy(pCounts, other.pCounts, numCountPairs * sizeof(RelAttrCount));
-	project = other.project;
-
-	rc = other.rc;
-	execution = other.execution;
-	cost = other.cost;
-	numTuples = other.numTuples;
-	tupleSize = other.tupleSize;
-
-	return *this;
-}
-Node& Node::operator=(const Relation& other){
-	numConditions = other.numConditions;
-	if (conditions)
-		delete [] conditions;
-	conditions = new Condition[numConditions];
-	memcpy(conditions, other.conditions, numConditions * sizeof(Condition));
-
-	smm = other.smm;
-	rmm = other.rmm;
-	ixm = other.ixm;
-	memset(type, '\0', MAXNAME+1);
-	strcpy(type, other.type);
-	child = other.child;
-	otherChild = other.otherChild;
-	parent = other.parent;
-	memset(output, '\0', MAXNAME+1);
-	memcpy(output, other.output, MAXNAME+1);
-
-	numRelations = other.numRelations;
-	if (relations)
-		delete [] relations;
-	relations = new char[numRelations * (MAXNAME+1)];
-	memcpy(relations, other.relations,numRelations * (MAXNAME+1));
-
-	numRids = other.numRids;
-	if (rids)
-		delete [] rids;
-	rids = new Attrcat[numRids];
-	memcpy(rids, other.rids, numRids * sizeof(Attrcat));
-
-	numOutAttrs = other.numOutAttrs;
-	if (outAttrs)
-		delete [] outAttrs;
-	outAttrs = new Attrcat[numOutAttrs];
-	memcpy(outAttrs, other.outAttrs, numOutAttrs * sizeof(Attrcat));
-	numCountPairs = other.numCountPairs;
-	if (pCounts)
-		delete [] pCounts;
-	pCounts = new RelAttrCount[numCountPairs];
-	memcpy(pCounts, other.pCounts, numCountPairs * sizeof(RelAttrCount));
-	project = other.project;
-
-	rc = other.rc;
-	execution = other.execution;
-	cost = other.cost;
-	numTuples = other.numTuples;
-	tupleSize = other.tupleSize;
-
-	return *this;
 }
 RC Node::execute(){/*nothing; should set output*/}
 void Node::printType(){

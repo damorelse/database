@@ -35,16 +35,9 @@ class Node {
 public:
 	Node();
 	Node(const Node& other);
-	Node(const Selection& other);
-	Node(const Cross& other);
-	Node(const Join& other);
-	Node(const Relation& other);
 	virtual ~Node();
 	Node& operator=(const Node& other);
-	Node& operator=(const Selection& other);
-	Node& operator=(const Cross& other);
-	Node& operator=(const Join& other);
-	Node& operator=(const Relation& other);
+	void clone(const Node& other);
 	virtual RC execute();
 	void printType();
 	Attrcat getAttrcat(const char *relName, char* attrName);
