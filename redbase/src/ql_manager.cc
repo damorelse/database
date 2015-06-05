@@ -238,6 +238,7 @@ RC QL_Manager::Insert(const char *relName,
 			}
 		case STRING:
 			{
+				string str((char*)values[i].data, min(MAXNAME, strlen((char*)values[i].data)));
 				file << (string)(char*)values[i].data;
 				if (file.fail()){
 					delete [] pData;
