@@ -1007,12 +1007,12 @@ Relation::Relation(SM_Manager *smm, const char *relName, bool calcProj, int numT
 	RM_Record record;
 	char* pData;
 	if (smm->GetRelcatRecord(relName, record)){
-		rc = QL_RELNODE;
-		return;
+		//rc = QL_RELNODE; // TEST
+		//return;
 	}
 	if (record.GetData(pData)){
-		rc = QL_RELNODE;
-		return;
+		//rc = QL_RELNODE; // TEST
+		//return;
 	}
 	Relcat relcat(pData);
 	numOutAttrs = relcat.attrCount;
