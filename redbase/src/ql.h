@@ -172,9 +172,9 @@ private:
 	int CrossCost(Node &left, Node &right);
 	void SetParents(Node &node);
 
-	RC GetResults(QueryTree &qPlan);
-	void PrintQueryPlan(QueryTree &qPlan);
-	void RecursivePrint(QueryTree &qPlan, int indent);
+	RC GetResults(Node &node);
+	void PrintQueryPlan(Node &node);
+	void RecursivePrint(Node &node, int indent);
 };
 
 void QL_PrintError(RC rc);
