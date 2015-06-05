@@ -1139,6 +1139,15 @@ QueryTree& QueryTree::operator=(Node* node){
 		root = NULL;
 	}
 	root = RecursiveClone(node);
+	cerr << "ROOT " << root << endl;
+	cerr << root->type << endl;
+	cerr << root->child << endl;
+	cerr << root->otherChild << endl;
+	cerr << root->numRelations << endl;
+	cerr << root->numRids << endl;
+	cerr << root->numOutAttrs << endl;
+	cerr << root->numCountPairs << endl;
+
 	return *this;
 }
 void QueryTree::RecursiveDelete(Node* node){
@@ -1152,7 +1161,14 @@ Node* QueryTree::RecursiveClone(Node* node){
 	if (!node)
 		return NULL;
 	Node* newNode = new Node(*node);
-
+	cerr << "ROOT " << qPlan.root << endl;
+	cerr << qPlan.root->type << endl;
+	cerr << qPlan.root->child << endl;
+	cerr << qPlan.root->otherChild << endl;
+	cerr << qPlan.root->numRelations << endl;
+	cerr << qPlan.root->numRids << endl;
+	cerr << qPlan.root->numOutAttrs << endl;
+	cerr << qPlan.root->numCountPairs << endl;
 	newNode->child = RecursiveClone(node->child);
 	if (newNode->child)
 		newNode->child->parent = newNode;
