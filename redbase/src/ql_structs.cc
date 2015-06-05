@@ -77,7 +77,7 @@ Node::Node(const Node& other){
 	otherChild = other.otherChild;
 	parent = other.parent;
 	memset(output, '\0', MAXNAME+1);
-	memcpy(output, other.output, MAXNAME+1);
+	memcpy(output, other.output, MAXNAME);
 
 	numRelations = other.numRelations;
 	relations = new char[numRelations * (MAXNAME+1)];

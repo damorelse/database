@@ -1077,7 +1077,7 @@ RC QL_Manager::GetResults(Node &qPlan)
 		 else if (strcmp(zeroCounts.front()->type, QL_SEL) == 0)
 			 rc = dynamic_cast<Selection*>((zeroCounts.front()))->execute();
 		 else
-			 rc = dynamic_cast<Relation*>((zeroCounts.front()))->execute();
+			 rc = zeroCounts.front()->execute();
 		if (rc)
 			 return rc;
 
