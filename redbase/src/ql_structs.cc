@@ -1098,7 +1098,6 @@ Relation::Relation(SM_Manager *smm, const char *relName, bool calcProj, int numT
 	// child/otherChild set by default
 	// parent set by parent node
 	strcpy(output, relName);
-	cout << "no issue yet" << endl;
 	numRelations = 1;
 	relations = new char[numRelations * (MAXNAME+1)];
 	strcpy(relations, relName);
@@ -1123,7 +1122,6 @@ Relation::Relation(SM_Manager *smm, const char *relName, bool calcProj, int numT
 		rc = QL_RELNODE;
 		return;
 	}
-	cerr << "no issue yet" << endl;
 	// NO projection since no execution function to generate new output
 }
 Relation::~Relation(){}
