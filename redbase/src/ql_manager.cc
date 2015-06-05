@@ -75,7 +75,15 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 		return rc;
 	// TODO TESTING
 	cerr << "ROOT " << qPlan.root << endl;
+	cerr << qPlan.root->type << endl;
+	cerr << qPlan.root->child << endl;
+	cerr << qPlan.root->otherChild << endl;
+	cerr << qPlan.root->numRelations << endl;
+	cerr << qPlan.root->numRids << endl;
+	cerr << qPlan.root->numOutAttrs << endl;
+	cerr << qPlan.root->numCountPairs << endl;
 	PrintQueryPlan(*qPlan.root);
+
 	if (rc = GetResults(*qPlan.root)){
 		smm->DropTable(qPlan.root->output);
 		return rc;
@@ -1069,10 +1077,6 @@ void QL_Manager::RecursivePrint(Node &node, int indent){
 			cout << "|   ";
 		cout << endl;
 	}
-	cerr << "Reached here" << endl;
-	cerr << "Should print type";
-	node.printType();
-	cerr << endl;
 
 	// Print node
 	for (int i = 0; i < indent; ++i)
