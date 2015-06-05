@@ -100,6 +100,7 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	Printer printer(&dataAttrs[0], qPlan.root->numOutAttrs);
 	printer.PrintHeader(cout);
 	cerr << "select A" << endl;
+	cerr << qPlan.root->output << endl;
 	// Print
 	RM_FileHandle tmpFileHandle;
 	RM_FileScan tmpFileScan;

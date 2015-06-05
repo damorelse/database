@@ -1147,6 +1147,7 @@ Relation::Relation(SM_Manager *smm, const char *relName, bool calcProj, int numT
 	strcpy(output, relName);
 	numRelations = 1;
 	relations = new char[numRelations * (MAXNAME+1)];
+	memset(relations, '\0', MAXNAME+1);
 	strcpy(relations, relName);
 	// numRids and rids set by default (0, NULL)
 
