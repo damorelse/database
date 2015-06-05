@@ -379,7 +379,9 @@ void Node::Project(bool calcProj, int numTotalPairs, RelAttrCount *pTotals){
 }
 RC Node::CreateTmpOutput(){
 	// Set output
-	tmpnam(output);
+	char tmp[MAXNAME];
+	tmpnam(tmp);
+	memcpy(output, tmp, MAXNAME);
 	// Create output relation
 	vector<AttrInfo> attributes;
 	for (int i = 0; i < numRids; ++i)
