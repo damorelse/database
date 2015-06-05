@@ -1161,14 +1161,7 @@ Node* QueryTree::RecursiveClone(Node* node){
 	if (!node)
 		return NULL;
 	Node* newNode = new Node(*node);
-	cerr << "ROOT " << qPlan.root << endl;
-	cerr << qPlan.root->type << endl;
-	cerr << qPlan.root->child << endl;
-	cerr << qPlan.root->otherChild << endl;
-	cerr << qPlan.root->numRelations << endl;
-	cerr << qPlan.root->numRids << endl;
-	cerr << qPlan.root->numOutAttrs << endl;
-	cerr << qPlan.root->numCountPairs << endl;
+
 	newNode->child = RecursiveClone(node->child);
 	if (newNode->child)
 		newNode->child->parent = newNode;
