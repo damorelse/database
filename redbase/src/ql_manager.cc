@@ -1073,7 +1073,13 @@ RC QL_Manager::GetResults(Node &qPlan)
 		 if (strcmp(zeroCounts.front()->type, QL_JOIN) == 0)
 			 rc = (dynamic_cast<Join*>(zeroCounts.front()))->execute();
 		 else if (strcmp(zeroCounts.front()->type, QL_CROSS) == 0){
-			 cerr << "getresults A1" << endl;
+			 cerr << "getresults A1 1" << endl;
+			 zeroCounts.front();
+			 cerr << "getresults A1 2" << endl;
+			 dynamic_cast<Cross*>(zeroCounts.front());
+			 cerr << "getresults A1 3" << endl;
+			 (dynamic_cast<Cross*>(zeroCounts.front()))->execute();
+			 cerr << "getresults A1 4" << endl;
 			 rc = (dynamic_cast<Cross*>(zeroCounts.front()))->execute();
 			 cerr << "getresults A2" << endl;
 		 }

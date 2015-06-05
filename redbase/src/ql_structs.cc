@@ -676,6 +676,7 @@ Selection::Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& le
 }
 Selection::~Selection(){}
 RC Selection::execute(){
+	cerr << "select execute" << endl;
 	if (rc = CreateTmpOutput())
 		return rc;
 
@@ -839,6 +840,7 @@ Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& 
 }
 Join::~Join(){}
 RC Join::execute(){
+	cerr << "join execute" << endl;
 	if (rc = CreateTmpOutput())
 		return rc;
 	
