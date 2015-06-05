@@ -724,8 +724,6 @@ RC SM_Manager::CheckName(const char* name){
 		return SM_NULLINPUT;
 	if (strlen(name) < 1 || strlen(name) > MAXNAME)
 		return SM_NAMELEN;
-	if (memcmp("/tmp/", name, 5) == 0) // temp files for queries
-		return 0;
 	if (!isalpha(*name))
 		return SM_INVALIDNAME;
 	return 0;
