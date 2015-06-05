@@ -831,6 +831,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 					needToJoin.push_back((Node)sel);
 				}
 			}
+			cerr << "A make query plan CHECK OFFSET (not 0) : " << needToJoin.begin()->outAttrs[1].offset << endl;
 
 			if (relGroups[k].size() == 1){
 				groupNodes.push_back((Node)*needToJoin.begin());
@@ -885,7 +886,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 			SetParents(groupNodes[i]);
 	}
 	cerr << "makequeryplan G" << endl;
-
+	cerr << "B make query plan CHECK OFFSET (not 0) : " << groupNodes[0].outAttrs[1].offset << endl;
 	// Create cross nodes 
 	// No cross needed
 	if (groupNodes.size() == 1){
