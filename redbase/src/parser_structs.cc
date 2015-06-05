@@ -9,7 +9,8 @@ AttrInfo::AttrInfo(){
 	attrLength = 4;
 }
 AttrInfo::~AttrInfo(){
-	delete [] attrName;
+	if (attrName)
+		delete [] attrName;
 	attrName = NULL;
 }
 AttrInfo& AttrInfo::operator=(const AttrInfo& other){
