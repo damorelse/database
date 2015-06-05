@@ -64,8 +64,6 @@ Node::Node(){
 	tupleSize = 0;
 }
 Node::Node(const Node& other){
-	cerr << "uses copy constructor" << endl;
-
 	numConditions = other.numConditions;
 	conditions = new Condition[numConditions];
 	memcpy(conditions, other.conditions, numConditions * sizeof(Condition));
@@ -696,7 +694,7 @@ RC Selection::execute(){
 		pair<string, string> key(child->outAttrs[i].relName, child->outAttrs[i].attrName);
 		attrcats[key] = child->outAttrs[i];
 	}
-	
+	cout << "selection execute A" << endl;
 	// No index scan
 	if (execution == QL_FILE){
 		RM_FileScan scan;

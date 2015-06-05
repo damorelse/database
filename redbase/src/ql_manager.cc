@@ -23,6 +23,9 @@
 #include "printer.h"
 using namespace std;
 
+bool isRelation(const Node &node){
+	return node.numRids == 0;
+}
 //
 // QL_Manager::QL_Manager(SM_Manager &smm, IX_Manager &ixm, RM_Manager &rmm)
 //
@@ -73,21 +76,16 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	}
 	if (rc = MakeSelectQueryPlan(nSelAttrs, selAttrs, nRelations, relations, nConditions, conditions, qPlan))
 		return rc;
-	// TODO TESTING
-	cerr << "ROOT " << qPlan.root << endl;
-	cerr << qPlan.root->type << endl;
-	cerr << qPlan.root->child << endl;
-	cerr << qPlan.root->otherChild << endl;
-	cerr << qPlan.root->numRelations << endl;
-	cerr << qPlan.root->numRids << endl;
-	cerr << qPlan.root->numOutAttrs << endl;
-	cerr << qPlan.root->numCountPairs << endl;
-	PrintQueryPlan(*qPlan.root);
 
+	PrintQueryPlan(*qPlan.root); //TODO TESTING
+	cerr << "start getResults" << endl;
 	if (rc = GetResults(*qPlan.root)){
-		smm->DropTable(qPlan.root->output);
+		cerr << "BUG IN getResults!!!!!!!!!!!" << endl;
+		if (!isRelation(*qPlan.root))
+			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
+	cerr << "finished getResults" << endl;
 	if (bQueryPlans){
 		PrintQueryPlan(*qPlan.root);
 	}
@@ -101,38 +99,46 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	}
 	Printer printer(&dataAttrs[0], qPlan.root->numOutAttrs);
 	printer.PrintHeader(cout);
-
+	cerr << "select A" << endl;
 	// Print
 	RM_FileHandle tmpFileHandle;
 	RM_FileScan tmpFileScan;
 	if (rc = rmm->OpenFile(qPlan.root->output, tmpFileHandle)){
-		smm->DropTable(qPlan.root->output);
+		if (!isRelation(*qPlan.root))
+			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
 	if (rc = tmpFileScan.OpenScan(tmpFileHandle, INT, 4, 0, NO_OP, NULL)){
-		smm->DropTable(qPlan.root->output);
+		if (!isRelation(*qPlan.root))
+			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
+	cerr << "select B" << endl;
 	RM_Record record;
 	while (OK_RC == (rc = tmpFileScan.GetNextRec(record))){
 		char* pData;
 		if (rc = record.GetData(pData)){
-			smm->DropTable(qPlan.root->output);
+			if (!isRelation(*qPlan.root))
+				smm->DropTable(qPlan.root->output);
 			return rc;
 		}
 		// Print 
 		printer.Print(cout, pData + ridsSize);
 	}
 	if (rc != RM_EOF){
-		smm->DropTable(qPlan.root->output);
+		if (!isRelation(*qPlan.root))
+			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
+	cerr << "select C" << endl;
 	if (rc = tmpFileScan.CloseScan()){
-		smm->DropTable(qPlan.root->output);
+		if (!isRelation(*qPlan.root))
+			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
 	if (rc = rmm->CloseFile(tmpFileHandle)){
-		smm->DropTable(qPlan.root->output);
+		if (!isRelation(*qPlan.root))
+			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
 
@@ -141,8 +147,10 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 
 
 	// Clean up
-	if (rc = smm->DropTable(qPlan.root->output))
-		return rc;
+	if (!isRelation(*qPlan.root)){
+		if (rc = smm->DropTable(qPlan.root->output))
+			return rc;
+	}
 
 	return 0;
 }
@@ -1057,7 +1065,7 @@ RC QL_Manager::GetResults(Node &qPlan)
 
 		 nextNodes.pop();
 	 }
-
+	 cerr << "getresults A" << endl;
 	 RC rc;
 	 while (!zeroCounts.empty()){
 		 if (rc = zeroCounts.front()->execute())
@@ -1073,7 +1081,7 @@ RC QL_Manager::GetResults(Node &qPlan)
 
 		 zeroCounts.pop();
 	 }
-
+	 cerr << "getresults B" << endl;
 	 return 0;
 }
 
