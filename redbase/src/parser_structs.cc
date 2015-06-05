@@ -9,14 +9,14 @@ AttrInfo::AttrInfo(){
 	attrLength = 4;
 }
 AttrInfo::~AttrInfo(){
-	if (attrName && del)
+	if (del)
 		delete [] attrName;
 	attrName = NULL;
     del = false;
 }
 AttrInfo& AttrInfo::operator=(const AttrInfo& other){
 	if (this != &other){
-        if (!attrName){
+        if (!del){
 			attrName = new char[MAXNAME+1];
 			memset(attrName, '\0', MAXNAME+1);
             del = true;
