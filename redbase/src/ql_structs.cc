@@ -54,15 +54,20 @@ Node::Node(){
 	cost = 0;
 }
 Node::~Node(){
-	delete [] conditions;
+	if (conditions)
+		delete [] conditions;
 	conditions = NULL;
-	delete [] relations;
+	if (relations)
+		delete [] relations;
 	relations = NULL;
-	delete [] rids;
+	if (rids)
+		delete [] rids;
 	rids = NULL;
-	delete [] outAttrs;
+	if (outAttrs)
+		delete [] outAttrs;
 	outAttrs = NULL;
-	delete [] pCounts;
+	if (pCounts)
+		delete [] pCounts;
 	pCounts = NULL;
 }
 RC Node::execute(){/*nothing; should set output*/}
