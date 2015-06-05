@@ -808,14 +808,23 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 			list<Node> needToJoin;
 			for (set<string>::iterator it = relGroups[k].begin(); it != relGroups[k].end(); ++it){
 				Relation rel(smm, it->c_str(), calcProj, projVector.size(), &projVector[0]);
+				cerr << rel.type << endl;
+				cerr << rel.child << endl;
+				cerr << rel.otherChild << endl;
+				cerr << rel.numRelations << endl;
+				cerr << rel.numRids << endl;
+				cerr << rel.numOutAttrs << endl;
+				cerr << rel.numCountPairs << endl;
 				if (rel.rc)
 					return rel.rc;
 				Selection sel(smm, rmm, ixm, rel, condGroups[k].size(), &condGroups[k][0], calcProj, projVector.size(), &projVector[0]);
 				if (sel.rc){
+					cerr << "sel" << endl;
 					needToJoin.push_back((Node)sel);
 					needToJoin.back().clone(sel);
 				}
 				else{
+					cerr << "rel" << endl;
 					needToJoin.push_back((Node)rel);
 					needToJoin.back().clone(rel);
 				}
