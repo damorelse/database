@@ -527,6 +527,7 @@ Selection::Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& le
 	SetOutAttrs();
 	Project(calcProj, numTotalPairs, pTotals);
 }
+Selection::~Selection(){}
 RC Selection::execute(){
 	if (rc = CreateTmpOutput())
 		return rc;
@@ -687,6 +688,7 @@ Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& 
 	SetOutAttrs();
 	Project(calcProj, numTotalPairs, pTotals);
 }
+Join::~Join(){}
 RC Join::execute(){
 	if (rc = CreateTmpOutput())
 		return rc;
@@ -909,6 +911,7 @@ Cross::Cross(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, Node
 	// NO projection needed
 	// Project(calcProj, numTotalPairs, pTotals);
 }
+Cross::~Cross(){}
 RC Cross::execute(){
 	if (rc = CreateTmpOutput())
 		return rc;
@@ -1017,3 +1020,4 @@ Relation::Relation(SM_Manager *smm, const char *relName, bool calcProj, int numT
 
 	// NO projection since no execution function to generate new output
 }
+Relation::~Relation(){}
