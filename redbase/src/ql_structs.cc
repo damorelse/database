@@ -64,6 +64,8 @@ Node::Node(){
 	tupleSize = 0;
 }
 Node::Node(const Node& other){
+	cerr << "uses copy constructor" << endl;
+
 	numConditions = other.numConditions;
 	conditions = new Condition[numConditions];
 	memcpy(conditions, other.conditions, numConditions * sizeof(Condition));
@@ -652,7 +654,6 @@ Selection::Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& le
 	copy(condVector.begin(), condVector.end(), conditions);
 	// Early exit
 	if (numConditions == 0){
-		cerr << "reached here IN SELECTION correctly" << endl;
 		rc = QL_SELNODE;
 		return;
 	}

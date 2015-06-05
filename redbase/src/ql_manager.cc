@@ -819,15 +819,15 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 					return rel.rc;
 				Selection sel(smm, rmm, ixm, rel, condGroups[k].size(), &condGroups[k][0], calcProj, projVector.size(), &projVector[0]);
 				if (sel.rc){
+					cerr << "rel" << endl;
+					needToJoin.push_back((Node)rel);
+					//needToJoin.back().clone(rel);
+				}
+				else{
 					cerr << "sel" << endl;
 					cerr << sel.numConditions << endl;
 					needToJoin.push_back((Node)sel);
 					needToJoin.back().clone(sel);
-				}
-				else{
-					cerr << "rel" << endl;
-					needToJoin.push_back((Node)rel);
-					needToJoin.back().clone(rel);
 				}
 			}
 			
