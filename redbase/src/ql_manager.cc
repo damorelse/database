@@ -153,7 +153,7 @@ RC QL_Manager::Insert(const char *relName,
 		return QL_INVALIDCATACTION;
 	if (rc = CheckRelation(relName))
 		return rc;
-
+	cerr << "insert A" << endl;
 	// Check number of values matches relation attribute count
 	RM_Record record;
 	if (rc = smm->GetRelcatRecord(relName, record)){
@@ -168,12 +168,14 @@ RC QL_Manager::Insert(const char *relName,
 	if (nValues != relcat.attrCount)
 		return QL_INVALIDTUPLE;
 
+	cerr << "insert B" << endl;
 	// Check values' types matches relation attribute order
 	Attrcat* attributes = new Attrcat[nValues];
 	if (rc = smm->GetAttrcats(relName, attributes)){
 		delete [] attributes;
 		return rc;
 	}
+	cerr << "insert C" << endl;
 	for (int i = 0; i < nValues; ++i){
 		if (values[i].type != attributes[i].attrType){
 			delete [] attributes;
@@ -181,7 +183,7 @@ RC QL_Manager::Insert(const char *relName,
 		}
 	}
 	// End check input
-	
+	cerr << "insert D" << endl;
 	// Create temp file
 	char* fileName = tmpnam(NULL);
 	ofstream file(fileName);
@@ -190,6 +192,7 @@ RC QL_Manager::Insert(const char *relName,
 		remove(fileName);
 		return QL_FILEERROR;
 	}
+	cerr << "insert E" << endl;
 	// Write tuple to temp file (and construct pData to print to screen)
 	pData = new char[relcat.tupleLen];
 	for (int i = 0; i < nValues; ++i){
@@ -239,7 +242,7 @@ RC QL_Manager::Insert(const char *relName,
 		}
 	}
 	file.close();
-
+	cerr << "insert F" << endl;
 	// Load file tuples
 	if (rc = smm->Load(relName, fileName)){
 		delete [] pData;
@@ -247,13 +250,14 @@ RC QL_Manager::Insert(const char *relName,
 		remove(fileName);
 		return rc;
 	}
+	cerr << "insert G" << endl;
 	// Destroy temp file
 	if (remove(fileName)){
 		delete [] pData;
 		delete [] attributes;
 		return QL_FILEERROR;
 	}
-
+	cerr << "insert H" << endl;
 	// Print result
 	vector<DataAttrInfo> dataAttrs; 
 	for (int i = 0; i < relcat.attrCount; ++i)
@@ -675,7 +679,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 		if (rc = CheckRelation(relations[i]))
 			return rc;
 	}
-
+	cerr << "makequeryplan A" << endl;
 	// Check relation uniqueness
 	set<string> myRels(relations, relations+nRelations);
 	if (myRels.size() != nRelations)
@@ -712,7 +716,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 		}
 	}
 	// End check input
-
+	cerr << "makequeryplan B" << endl;
 	// Make projection map
 	map<RelAttr, int> projMap;
 	for (int i = 0; i < mySelAttrs.size(); ++i){
@@ -727,7 +731,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 	vector<RelAttrCount> projVector;
 	for(map<RelAttr, int>::iterator it = projMap.begin(); it != projMap.end(); ++it)
 		projVector.push_back(RelAttrCount(it->first, it->second));
-
+	cerr << "makequeryplan C" << endl;
 	// Make join lists
 	map<string, set<string> > joinLists;
 	for (int i = 0; i < myAttrConds.size(); ++i){
@@ -736,7 +740,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 			joinLists[myAttrConds[i].rhsAttr.relName].insert(myAttrConds[i].lhsAttr.relName);
 		}
 	}
-
+	cerr << "makequeryplan D" << endl;
 	// Make relation groups
 	vector<set<string> > relGroups;
 	set<string> processed;
@@ -767,6 +771,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 		relGroups.push_back(currProcessed);
 		processed.insert(currProcessed.begin(), currProcessed.end());
 	}
+	cerr << "makequeryplan E" << endl;
 
 	// Make condition groups
 	vector<vector<Condition> > condGroups(relGroups.size());
@@ -779,6 +784,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 		}
 	}
 
+	cerr << "makequeryplan F" << endl;
 	// Create relation/selection/join nodes
 	vector<Node> groupNodes;
 	if (!EXT){
@@ -787,6 +793,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 		// Only does file iteration for now...
 
 		for (int k = 0; k < relGroups.size(); ++k){
+			cerr << "makequeryplan F1" << endl;
 			// Initialize list, create relation/selection nodes
 			list<Node> needToJoin;
 			for (set<string>::iterator it = relGroups[k].begin(); it != relGroups[k].end(); ++it){
@@ -799,7 +806,14 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 				else
 					needToJoin.push_back(rel);
 			}
-
+			if (relGroups[k].size() == 1){
+				groupNodes.push_back(*needToJoin.begin());
+			}
+			if (relGroups[k].size() == 2){
+				Join join(smm, rmm, ixm, *needToJoin.begin(), *(needToJoin.begin()++), condGroups[k].size(), &condGroups[k][0], calcProj, projVector.size(), &projVector[0]);
+				groupNodes.push_back(join);
+			}
+			cerr << "makequeryplan F2" << endl;
 			// Joins
 			Node left = *needToJoin.begin();
 			set<Condition> leftConds(left.conditions, left.conditions + left.numConditions);
@@ -845,22 +859,26 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 		for (int i = 0; i < groupNodes.size(); ++i)
 			SetParents(groupNodes[i]);
 	}
+	cerr << "makequeryplan G" << endl;
 
 	// Create cross nodes 
 	// No cross needed
 	if (relGroups.size() == 1){
+		cerr << "makequeryplan H" << endl;
 		cerr << "reached here " << endl;
 		PrintQueryPlan(groupNodes[0]);
 		qPlan = &groupNodes[0];
 		return 0;
 	}
 	if (relGroups.size() == 2){
+		cerr << "makequeryplan I" << endl;
 		Node left = groupNodes[0];
 		Node right = groupNodes[1];
 		Cross tmp(smm, rmm, ixm, left, right, calcProj, projVector.size(), &projVector[0]);
 		qPlan = &tmp;
 		return 0;
 	}
+	cerr << "makequeryplan J" << endl;
 	if (!EXT){
 		// Arbitrary crossing
 		Node* left = &groupNodes[0];
@@ -939,6 +957,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 		//	qPlan = Cross(smm, rmm, ixm, left, right, calcProj, projVector.size(), &projVector[0]);
 		//}
 	}
+	cerr << "makequeryplan K" << endl;
 	return 0;
 }
 int QL_Manager::SelectCost(Node &left){

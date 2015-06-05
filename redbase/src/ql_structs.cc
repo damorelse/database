@@ -62,6 +62,44 @@ Node::Node(){
 	numTuples = 0;
 	tupleSize = 0;
 }
+Node::Node(const Node& other){
+	numConditions = other.numConditions;
+	conditions = new Condition[numConditions];
+	memcpy(conditions, other.conditions, numConditions * sizeof(Condition));
+
+	smm = other.smm;
+	rmm = other.rmm;
+	ixm = other.ixm;
+	memset(type, '\0', MAXNAME+1);
+	strcpy(type, other.type);
+	child = other.child;
+	otherChild = other.otherChild;
+	parent = other.parent;
+	memset(output, '\0', MAXNAME+1);
+	memcpy(output, other.output, MAXNAME+1);
+
+	numRelations = other.numRelations;
+	relations = new char[numRelations * (MAXNAME+1)];
+	memcpy(relations, other.relations,numRelations * (MAXNAME+1));
+
+	numRids = other.numRids;
+	rids = new Attrcat[numRids];
+	memcpy(rids, other.rids, numRids * sizeof(Attrcat));
+
+	numOutAttrs = other.numOutAttrs;
+	outAttrs = new Attrcat[numOutAttrs];
+	memcpy(outAttrs, other.outAttrs, numOutAttrs * sizeof(Attrcat));
+	numCountPairs = other.numCountPairs;
+	pCounts = new RelAttrCount[numCountPairs];
+	memcpy(pCounts, other.pCounts, numCountPairs * sizeof(RelAttrCount));
+	project = other.project;
+
+	rc = other.rc;
+	execution = other.execution;
+	cost = other.cost;
+	numTuples = other.numTuples;
+	tupleSize = other.tupleSize;
+}
 Node::~Node(){
 	cerr << "DELETE " << type << endl;
 	if (conditions)

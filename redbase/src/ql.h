@@ -34,6 +34,7 @@ struct RelAttrCount {
 class Node {
 public:
 	Node();
+	Node(const Node& other);
 	virtual ~Node();
 	Node& operator=(const Node& other);
 	virtual RC execute();
