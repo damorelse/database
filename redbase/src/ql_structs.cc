@@ -1139,14 +1139,14 @@ QueryTree& QueryTree::operator=(Node* node){
 		root = NULL;
 	}
 	root = RecursiveClone(node);
-	cerr << "ROOT " << root << endl;
-	cerr << root->type << endl;
-	cerr << root->child << endl;
-	cerr << root->otherChild << endl;
-	cerr << root->numRelations << endl;
-	cerr << root->numRids << endl;
-	cerr << root->numOutAttrs << endl;
-	cerr << root->numCountPairs << endl;
+	cerr << "ROOT " << node << endl;
+	cerr << node->type << endl;
+	cerr << node->child << endl;
+	cerr << node->otherChild << endl;
+	cerr << node->numRelations << endl;
+	cerr << node->numRids << endl;
+	cerr << node->numOutAttrs << endl;
+	cerr << node->numCountPairs << endl;
 
 	return *this;
 }
