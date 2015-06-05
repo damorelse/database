@@ -88,6 +88,7 @@ public:
 	QueryTree();
 	~QueryTree();
 	QueryTree& operator=(Node* node);
+	QueryTree(Node* other);
 
 	Node* root;
 private:
@@ -100,6 +101,8 @@ class Selection : public Node {
 public:
 	Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, int numConds, Condition *conds, bool calcProj, int numTotalPairs, RelAttrCount *pTotals);
 	~Selection();
+	Selection(const Node& other);
+	Selection& operator=(const Node& other);
 	RC execute();
 }; 
 // Children must be join, selection, or relation

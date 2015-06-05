@@ -1150,6 +1150,9 @@ QueryTree& QueryTree::operator=(Node* node){
 
 	return *this;
 }
+QueryTree::QueryTree(Node* node){
+	root = RecursiveClone(node);
+}
 void QueryTree::RecursiveDelete(Node* node){
 	if (!node)
 		return;

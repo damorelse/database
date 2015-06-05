@@ -812,9 +812,9 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 					return rel.rc;
 				Selection sel(smm, rmm, ixm, rel, condGroups[k].size(), &condGroups[k][0], calcProj, projVector.size(), &projVector[0]);
 				if (sel.rc)
-					needToJoin.push_back(sel);
+					needToJoin.push_back((Node)sel);
 				else
-					needToJoin.push_back(rel);
+					needToJoin.push_back((Node)rel);
 			}
 			
 			cerr << needToJoin.begin()->type << endl;
@@ -828,7 +828,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 			PrintQueryPlan(*needToJoin.begin());
 
 			if (relGroups[k].size() == 1){
-				groupNodes.push_back(*needToJoin.begin());
+				groupNodes.push_back((Node)*needToJoin.begin());
 				continue;
 			}
 			if (relGroups[k].size() == 2){
