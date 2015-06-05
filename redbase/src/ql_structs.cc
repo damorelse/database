@@ -7,6 +7,7 @@
 #include <utility>
 #include <string>
 #include <cerrno>
+#include <iostream>
 #include "ql.h"
 #include "sm.h"
 
@@ -1097,7 +1098,7 @@ Relation::Relation(SM_Manager *smm, const char *relName, bool calcProj, int numT
 	// child/otherChild set by default
 	// parent set by parent node
 	strcpy(output, relName);
-	cerr << "no issue yet" << endl;
+	cout << "no issue yet" << endl;
 	numRelations = 1;
 	relations = new char[numRelations * (MAXNAME+1)];
 	strcpy(relations, relName);
