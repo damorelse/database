@@ -85,6 +85,7 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
+	cerr << "root output ...." << qPlan.root->output << endl;
 	cerr << "finished getResults" << endl;
 	if (bQueryPlans){
 		PrintQueryPlan(*qPlan.root);

@@ -1066,6 +1066,7 @@ Cross::~Cross(){}
 RC Cross::execute(){
 	if (rc = CreateTmpOutput())
 		return rc;
+	cerr << "Cross output: " << output << endl;
 
 	// Open files and filescans
 	RM_FileHandle outFile;
