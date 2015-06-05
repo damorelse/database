@@ -67,8 +67,11 @@ RC SM_Manager::CreateTable(const char *relName,
 
 	// Check input
 	// Check relation name
-	if (rc = CheckName(relName))
+	if (rc = CheckName(relName)){
+		cerr << "Temp file " << relName << "   " << relName[0] << "    " << isalpha(relName[0]) << endl;
 		return rc;
+	}
+	cerr << "Temp file " << relName << "   " << relName[0] << "    " << isalpha(relName[0]) << endl;
 	if (isCatalog(relName))
 		return SM_INVALIDCATACTION;
 
