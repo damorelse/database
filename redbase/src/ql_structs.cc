@@ -1076,74 +1076,74 @@ Cross::Cross(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, Node
 Cross::~Cross(){}
 RC Node::CrossExecute(){
 	cerr << "CROSS EXECUTE START" << endl;
-	//if (rc = CreateTmpOutput())
-	//	return rc;
-	//cerr << "Cross output: " << output << endl;
+	if (rc = CreateTmpOutput())
+		return rc;
+	cerr << "Cross output: " << output << endl;
 
-	//// Open files and filescans
-	//RM_FileHandle outFile;
-	//if (rc = rmm->OpenFile(output, outFile))
-	//	return rc;
-	//RM_FileHandle file;
-	//if(rc = rmm->OpenFile(child->output, file))
-	//	return rc;
-	//RM_FileHandle otherFile;
-	//if(rc = rmm->OpenFile(otherChild->output, otherFile))
-	//	return rc;
-	//RM_FileScan scan;
-	//if (rc = scan.OpenScan(file, INT, 4, 0, NO_OP, NULL))
-	//	return rc;
-	//RM_FileScan otherScan;
-	//if (rc = otherScan.OpenScan(otherFile, INT, 4, 0, NO_OP, NULL))
-	//	return rc;
+	// Open files and filescans
+	RM_FileHandle outFile;
+	if (rc = rmm->OpenFile(output, outFile))
+		return rc;
+	RM_FileHandle file;
+	if(rc = rmm->OpenFile(child->output, file))
+		return rc;
+	RM_FileHandle otherFile;
+	if(rc = rmm->OpenFile(otherChild->output, otherFile))
+		return rc;
+	RM_FileScan scan;
+	if (rc = scan.OpenScan(file, INT, 4, 0, NO_OP, NULL))
+		return rc;
+	RM_FileScan otherScan;
+	if (rc = otherScan.OpenScan(otherFile, INT, 4, 0, NO_OP, NULL))
+		return rc;
 
-	//// Make outPData
-	//int len = outAttrs[numOutAttrs-1].offset + outAttrs[numOutAttrs-1].attrLen;
-	//char* outPData = new char[len];
-	//memset(outPData, '\0', len);
+	// Make outPData
+	int len = outAttrs[numOutAttrs-1].offset + outAttrs[numOutAttrs-1].attrLen;
+	char* outPData = new char[len];
+	memset(outPData, '\0', len);
 
-	//// Make attribute-attrcat maps
-	//map<pair<string, string>, Attrcat> attrcats;
-	//for (int i = 0; i < child->numOutAttrs; ++i){
-	//	pair<string, string> key(child->outAttrs[i].relName, child->outAttrs[i].attrName);
-	//	attrcats[key] = child->outAttrs[i];
-	//}
-	//map<pair<string, string>, Attrcat> otherAttrcats;
-	//for (int i = 0; i < otherChild->numOutAttrs; ++i){
-	//	pair<string, string> key(otherChild->outAttrs[i].relName, otherChild->outAttrs[i].attrName);
-	//	attrcats[key] = otherChild->outAttrs[i];
-	//}
+	// Make attribute-attrcat maps
+	map<pair<string, string>, Attrcat> attrcats;
+	for (int i = 0; i < child->numOutAttrs; ++i){
+		pair<string, string> key(child->outAttrs[i].relName, child->outAttrs[i].attrName);
+		attrcats[key] = child->outAttrs[i];
+	}
+	map<pair<string, string>, Attrcat> otherAttrcats;
+	for (int i = 0; i < otherChild->numOutAttrs; ++i){
+		pair<string, string> key(otherChild->outAttrs[i].relName, otherChild->outAttrs[i].attrName);
+		attrcats[key] = otherChild->outAttrs[i];
+	}
 
-	//// Iterate over files
-	//RM_Record record;
-	//while(OK_RC == (rc = scan.GetNextRec(record))){
-	//	RM_Record otherRecord;
-	//	while (OK_RC == (rc = otherScan.GetNextRec(otherRecord))){
-	//		if (rc = WriteToOutput(child, otherChild, numOutAttrs, outAttrs, attrcats, otherAttrcats, record, otherRecord, outPData, outFile))
-	//			return rc;
-	//	}
-	//	if (rc != RM_EOF)
-	//		return rc;
-	//}
-	//if (rc != RM_EOF)
-	//	return rc;
+	// Iterate over files
+	RM_Record record;
+	while(OK_RC == (rc = scan.GetNextRec(record))){
+		RM_Record otherRecord;
+		while (OK_RC == (rc = otherScan.GetNextRec(otherRecord))){
+			if (rc = WriteToOutput(child, otherChild, numOutAttrs, outAttrs, attrcats, otherAttrcats, record, otherRecord, outPData, outFile))
+				return rc;
+		}
+		if (rc != RM_EOF)
+			return rc;
+	}
+	if (rc != RM_EOF)
+		return rc;
 
-	//delete [] outPData;
+	delete [] outPData;
 
-	//// Close filescans and files
-	//if (rc = otherScan.CloseScan())
-	//	return rc;
-	//if (rc = scan.CloseScan())
-	//	return rc;
-	//if (rc = rmm->CloseFile(otherFile))
-	//	return rc;
-	//if (rc = rmm->CloseFile(file))
-	//	return rc;
-	//if (rc = rmm->CloseFile(outFile))
-	//	return rc;
+	// Close filescans and files
+	if (rc = otherScan.CloseScan())
+		return rc;
+	if (rc = scan.CloseScan())
+		return rc;
+	if (rc = rmm->CloseFile(otherFile))
+		return rc;
+	if (rc = rmm->CloseFile(file))
+		return rc;
+	if (rc = rmm->CloseFile(outFile))
+		return rc;
 
-	//if (rc = DeleteTmpInput())
-	//	return rc;
+	if (rc = DeleteTmpInput())
+		return rc;
 
 	return 0;
 }
