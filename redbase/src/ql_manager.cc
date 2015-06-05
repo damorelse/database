@@ -852,7 +852,8 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 	if (relGroups.size() == 2){
 		Node left = groupNodes[0];
 		Node right = groupNodes[1];
-		qPlan = &Cross(smm, rmm, ixm, left, right, calcProj, projVector.size(), &projVector[0]);
+		Cross tmp(smm, rmm, ixm, left, right, calcProj, projVector.size(), &projVector[0]);
+		qPlan = &tmp;
 		return 0;
 	}
 	if (!EXT){
