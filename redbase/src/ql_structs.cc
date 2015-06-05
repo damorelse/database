@@ -298,7 +298,7 @@ void Node::SetRids(){
 	// rids
 	rids = new Attrcat[numRids];
 	if (child->numRids == 0)
-		rids[0] = Attrcat(child->output, (char*)".rid", 0, STRING, sizeof(RID), -1);
+		rids[0] = Attrcat(child->output, (char*)"rid.", 0, STRING, sizeof(RID), -1);
 	else
 		memcpy(rids, child->rids, child->numRids * sizeof(Attrcat));
 	if (otherChild){
