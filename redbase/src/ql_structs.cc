@@ -1081,8 +1081,10 @@ Cross::Cross(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, Node
 Cross::~Cross(){}
 RC Node::CrossExecute(){
 	cerr << "CROSS EXECUTE START" << endl;
-	if (rc = CreateTmpOutput())
+	if (rc = CreateTmpOutput()){
+		cerr << "cross execute A" << endl;
 		return rc;
+	}
 	cerr << "Cross output: " << output << endl;
 
 	// Open files and filescans
@@ -1101,7 +1103,7 @@ RC Node::CrossExecute(){
 	RM_FileScan otherScan;
 	if (rc = otherScan.OpenScan(otherFile, INT, 4, 0, NO_OP, NULL))
 		return rc;
-
+	cerr << "cross execute B" << endl;
 	// Make outPData
 	int len = outAttrs[numOutAttrs-1].offset + outAttrs[numOutAttrs-1].attrLen;
 	char* outPData = new char[len];
@@ -1118,7 +1120,7 @@ RC Node::CrossExecute(){
 		pair<string, string> key(otherChild->outAttrs[i].relName, otherChild->outAttrs[i].attrName);
 		attrcats[key] = otherChild->outAttrs[i];
 	}
-
+	cerr << "cross execute C" << endl;
 	// Iterate over files
 	RM_Record record;
 	while(OK_RC == (rc = scan.GetNextRec(record))){
@@ -1132,7 +1134,7 @@ RC Node::CrossExecute(){
 	}
 	if (rc != RM_EOF)
 		return rc;
-
+	cerr << "cross execute D" << endl;
 	delete [] outPData;
 
 	// Close filescans and files
