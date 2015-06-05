@@ -92,16 +92,17 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	}
 
 	// Start Printer
-	int ridsSize = nRelations * sizeof(RID);
+	int ridsSize = qPlan.root->numRids * sizeof(RID); // Changed from numRelations
 	vector<DataAttrInfo> dataAttrs; 
 	for (int i = 0; i < qPlan.root->numOutAttrs; ++i){
 		dataAttrs.push_back(DataAttrInfo (qPlan.root->outAttrs[i]));
 		dataAttrs.back().offset -= ridsSize;
+		cerr << dataAttrs.back().attrName << "   " << dataAttrs.back().offset << endl;
 	}
 	Printer printer(&dataAttrs[0], qPlan.root->numOutAttrs);
 	printer.PrintHeader(cout);
 	cerr << "select A" << endl;
-	cerr << qPlan.root->output << endl;
+
 	// Print
 	RM_FileHandle tmpFileHandle;
 	RM_FileScan tmpFileScan;
