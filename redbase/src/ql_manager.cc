@@ -849,6 +849,8 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 	// Create cross nodes 
 	// No cross needed
 	if (relGroups.size() == 1){
+		cerr << "reached here " << endl;
+		PrintQueryPlan(groupNodes[0]);
 		qPlan = &groupNodes[0];
 		return 0;
 	}

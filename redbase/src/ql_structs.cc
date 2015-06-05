@@ -63,7 +63,7 @@ Node::Node(){
 	tupleSize = 0;
 }
 Node::~Node(){
-	cerr << "DELETE" << type << endl;
+	cerr << "DELETE " << type << endl;
 	if (conditions)
 		delete [] conditions;
 	conditions = NULL;
