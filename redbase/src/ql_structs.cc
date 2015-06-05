@@ -207,7 +207,7 @@ void Node::clone(const Node& other){
 	numTuples = other.numTuples;
 	tupleSize = other.tupleSize;
 }
-RC Node::execute(){/*nothing; should set output*/}
+RC Node::execute(){/*nothing; should set output*/ return 0;}
 void Node::printType(){
 	cout << type;
 	if (numConditions == 0)
@@ -401,6 +401,7 @@ RC Node::DeleteTmpInput(){
 		if (rc = smm->DropTable(otherChild->output))
 			return rc;
 	}
+	return 0;
 }
 
 
@@ -455,6 +456,7 @@ RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAtt
 	// Insert
 	RID tmp;
 	outFile.InsertRec(outPData, tmp);
+	return 0;
 }
 // Value condition OR condition's attributes from same relation
 bool CheckSelectionCondition(char* pData, Condition cond, map<pair<string, string>, Attrcat> &attrcats){
@@ -779,6 +781,7 @@ RC Selection::execute(){
 
 	if (rc = DeleteTmpInput())
 		return rc;
+	return 0;
 }
 // Assumes condition not yet applied
 bool SelectionConditionApplies(Condition &cond, set<string> &myRelations){
@@ -1009,6 +1012,8 @@ RC Join::execute(){
 
 	if (rc = DeleteTmpInput())
 		return rc;
+
+	return 0;
 }
 // Assumes condition not yet applied
 bool JoinConditionApplies(Condition &cond, set<string> &myRelations){
@@ -1124,6 +1129,8 @@ RC Cross::execute(){
 
 	if (rc = DeleteTmpInput())
 		return rc;
+
+	return 0;
 }
 
 
