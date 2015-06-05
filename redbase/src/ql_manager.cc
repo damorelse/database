@@ -806,12 +806,18 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 				else
 					needToJoin.push_back(rel);
 			}
+			
+			cerr << "TESTING " << endl;
+			PrintQueryPlan(*needToJoin.begin());
+
 			if (relGroups[k].size() == 1){
 				groupNodes.push_back(*needToJoin.begin());
+				continue;
 			}
 			if (relGroups[k].size() == 2){
 				Join join(smm, rmm, ixm, *needToJoin.begin(), *(needToJoin.begin()++), condGroups[k].size(), &condGroups[k][0], calcProj, projVector.size(), &projVector[0]);
 				groupNodes.push_back(join);
+				continue;
 			}
 			cerr << "makequeryplan F2" << endl;
 			// Joins
@@ -843,6 +849,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 			}
 			groupNodes.push_back(*needToJoin.begin());
 		}
+		cerr << "makequeryplan F3" << endl;
 	}
 	else {
 		// TODO
