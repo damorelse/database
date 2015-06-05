@@ -3,11 +3,17 @@
 #include "parser.h"
 
 AttrInfo::AttrInfo(){
+	attrName = new char[MAXNAME+1];
 	memset(attrName, '\0', MAXNAME+1);
 	attrType = INT;
 	attrLength = 4;
 }
+AttrInfo::~AttrInfo(){
+	delete [] attrName;
+	attrName = NULL;
+}
 AttrInfo::AttrInfo(Attrcat attrcat){
+	attrName = new char[MAXNAME+1];
 	memset(attrName, '\0', MAXNAME+1);
 	strcpy(attrName, attrcat.attrName);
 

@@ -19,6 +19,7 @@ struct AttrInfo{
     int      attrLength;  /* length of attribute  */
 
 	AttrInfo();
+	~AttrInfo();
 	AttrInfo(Attrcat attrcat);
 };
 
