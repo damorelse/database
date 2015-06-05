@@ -1100,10 +1100,11 @@ QueryTree::~QueryTree(){
 	if (root)
 		RecursiveDelete(root);
 }
-QueryTree& QueryTree::operator=(Node& node){
+QueryTree& QueryTree::operator=(Node* node){
 	if (root)
 		RecursiveDelete(root);
-	root = RecursiveClone(&node);
+	root = RecursiveClone(node);
+	return *this;
 }
 void RecursiveDelete(Node* node){
 	if (!node)

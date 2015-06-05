@@ -86,7 +86,7 @@ class QueryTree {
 public:
 	QueryTree();
 	~QueryTree();
-	QueryTree& operator=(Node& node);
+	QueryTree& operator=(Node* node);
 
 	Node* root;
 private:

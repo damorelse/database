@@ -73,12 +73,12 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	}
 	if (rc = MakeSelectQueryPlan(nSelAttrs, selAttrs, nRelations, relations, nConditions, conditions, qPlan))
 		return rc;
-	if (rc = GetResults(qPlan)){
+	if (rc = GetResults(*qPlan.root)){
 		smm->DropTable(qPlan.root->output);
 		return rc;
 	}
 	if (bQueryPlans){
-		PrintQueryPlan(qPlan);
+		PrintQueryPlan(*qPlan.root);
 	}
 
 	// Start Printer
@@ -285,12 +285,12 @@ RC QL_Manager::Delete(const char *relName,
 	QueryTree qPlan;
 	if (rc = MakeSelectQueryPlan(0, NULL, 1, relations, nConditions, conditions, qPlan))
 		return rc;
-	if (rc = GetResults(qPlan)){
+	if (rc = GetResults(*qPlan.root)){
 		smm->DropTable(qPlan.root->output);
 		return rc;
 	}
 	if (bQueryPlans){
-		PrintQueryPlan(qPlan);
+		PrintQueryPlan(*qPlan.root);
 	}
 
 	// OPEN START
@@ -427,12 +427,12 @@ RC QL_Manager::Update(const char *relName,
 	QueryTree qPlan;
 	if (rc = MakeSelectQueryPlan(0, NULL, 1, relations, nConditions, conditions, qPlan))
 		return rc;
-	if (rc = GetResults(qPlan)){
+	if (rc = GetResults(*qPlan.root)){
 		smm->DropTable(qPlan.root->output);
 		return rc;
 	}
 	if (bQueryPlans){
-		PrintQueryPlan(qPlan);
+		PrintQueryPlan(*qPlan.root);
 	}
 
 	// OPEN START
@@ -846,13 +846,13 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 	// Create cross nodes 
 	// No cross needed
 	if (relGroups.size() == 1){
-		qPlan = groupNodes[0];
+		qPlan = &groupNodes[0];
 		return 0;
 	}
 	if (relGroups.size() == 2){
 		Node left = groupNodes[0];
 		Node right = groupNodes[1];
-		qPlan = Cross(smm, rmm, ixm, left, right, calcProj, projVector.size(), &projVector[0]);
+		qPlan = &Cross(smm, rmm, ixm, left, right, calcProj, projVector.size(), &projVector[0]);
 		return 0;
 	}
 	if (!EXT){
@@ -865,7 +865,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 			right = &groupNodes[i];
 			last = Cross(smm, rmm, ixm, *left, *right, calcProj, projVector.size(), &projVector[0]);
 		}
-		qPlan = last;
+		qPlan = &last;
 	}
 	else {
 		// Initialize tables
@@ -918,7 +918,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 		}
 
 		// Found min cost cross ordering
-		qPlan = tables[groupNodes.size()].begin()->second.second;
+		qPlan = &tables[groupNodes.size()].begin()->second.second;
 		SetParents(*qPlan.root);
 
 		//// Sort join groups by byte size
