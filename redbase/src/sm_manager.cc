@@ -729,8 +729,7 @@ RC SM_Manager::CheckName(const char* name){
 	if (strlen(name) < 1 || strlen(name) > MAXNAME)
 		return SM_NAMELEN;
 	if (isalpha(name[0]) == 0){
-        cerr << "SHOULD THROW SM_INVALID NAME    " << name <<  endl;
-		//return SM_INVALIDNAME;
+		return SM_INVALIDNAME;
 	}
 	return 0;
 }

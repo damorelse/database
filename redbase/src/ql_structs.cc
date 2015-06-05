@@ -303,7 +303,7 @@ void Node::SetRids(){
 		memcpy(rids, child->rids, child->numRids * sizeof(Attrcat));
 	if (otherChild){
 		if (otherChild->numRids == 0)
-			rids[child->numRelations] = Attrcat(otherChild->output, (char*)".rid", 0, STRING, sizeof(RID), -1);
+			rids[child->numRelations] = Attrcat(otherChild->output, (char*)"rid.", 0, STRING, sizeof(RID), -1);
 		else
 			memcpy(rids+child->numRelations, otherChild->rids, otherChild->numRids * sizeof(Attrcat));
 	}
