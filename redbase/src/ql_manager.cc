@@ -95,9 +95,9 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	int ridsSize = qPlan.root->numRids * sizeof(RID); // Changed from numRelations
 	vector<DataAttrInfo> dataAttrs; 
 	for (int i = 0; i < qPlan.root->numOutAttrs; ++i){
+		cerr << qPlan.root->outAttrs[i].attrName << "   " << qPlan.root->outAttrs[i].offset << endl;
 		dataAttrs.push_back(DataAttrInfo (qPlan.root->outAttrs[i]));
 		dataAttrs.back().offset -= ridsSize;
-		cerr << dataAttrs.back().attrName << "   " << dataAttrs.back().offset << endl;
 	}
 	Printer printer(&dataAttrs[0], qPlan.root->numOutAttrs);
 	printer.PrintHeader(cout);
