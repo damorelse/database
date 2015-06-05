@@ -35,8 +35,16 @@ class Node {
 public:
 	Node();
 	Node(const Node& other);
+	Node(const Selection& other);
+	Node(const Cross& other);
+	Node(const Join& other);
+	Node(const Relation& other);
 	virtual ~Node();
 	Node& operator=(const Node& other);
+	Node& operator=(const Selection& other);
+	Node& operator=(const Cross& other);
+	Node& operator=(const Join& other);
+	Node& operator=(const Relation& other);
 	virtual RC execute();
 	void printType();
 	Attrcat getAttrcat(const char *relName, char* attrName);
@@ -101,8 +109,6 @@ class Selection : public Node {
 public:
 	Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, int numConds, Condition *conds, bool calcProj, int numTotalPairs, RelAttrCount *pTotals);
 	~Selection();
-	Selection(const Node& other);
-	Selection& operator=(const Node& other);
 	RC execute();
 }; 
 // Children must be join, selection, or relation
