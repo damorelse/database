@@ -8,6 +8,7 @@
 #include <string>
 #include <cerrno>
 #include <iostream>
+#include <stdio.h>
 #include "ql.h"
 #include "sm.h"
 
@@ -388,10 +389,10 @@ void Node::Project(bool calcProj, int numTotalPairs, RelAttrCount *pTotals){
 }
 RC Node::CreateTmpOutput(){
 	// Set output
-	char tmp[MAXNAME];
+	char tmp[MAXNAME+5];
 	tmpnam(tmp);
-	cerr << "Temp file " << tmp << endl;
-	memcpy(output, tmp, MAXNAME);
+	memcpy(output, tmp+5, MAXNAME);
+	cerr << "Temp file " << output << endl;
 	// Create output relation
 	vector<AttrInfo> attributes;
 	for (int i = 0; i < numRids; ++i)

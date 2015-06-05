@@ -9,7 +9,7 @@ AttrInfo::AttrInfo(){
 	attrLength = 4;
 }
 AttrInfo::~AttrInfo(){
-	if (del)
+	if (del && attrName)
 		delete [] attrName;
 	attrName = NULL;
     del = false;
