@@ -401,6 +401,8 @@ RC Node::CreateTmpOutput(){
 		attributes.push_back(AttrInfo(rids[i]));
 	for (int i = 0; i < numOutAttrs; ++i)
 		attributes.push_back(AttrInfo(outAttrs[i]));
+	cerr << "Temp file " << output << "   " << output[0] << "    " << isalpha(output[0]) << endl;
+
 	if (rc = smm->CreateTable(output, numOutAttrs, &attributes[0]))
 		return rc;
 	return 0;

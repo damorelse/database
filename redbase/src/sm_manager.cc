@@ -63,6 +63,7 @@ RC SM_Manager::CreateTable(const char *relName,
                            AttrInfo   *attributes)
 {
 	RC rc;
+	cerr << "Temp file " << relName << "   " << relName[0] << "    " << isalpha(relName[0]) << endl;
 
 	// Check input
 	// Check relation name
