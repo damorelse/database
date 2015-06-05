@@ -1106,14 +1106,14 @@ QueryTree& QueryTree::operator=(Node* node){
 	root = RecursiveClone(node);
 	return *this;
 }
-void RecursiveDelete(Node* node){
+void QueryTree::RecursiveDelete(Node* node){
 	if (!node)
 		return;
 	RecursiveDelete(node->child);
 	RecursiveDelete(node->otherChild);
 	delete node;
 }
-Node* RecursiveClone(Node* node){
+Node* QueryTree::RecursiveClone(Node* node){
 	if (!node)
 		return NULL;
 	Node* newNode = new Node();
