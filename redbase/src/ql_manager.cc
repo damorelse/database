@@ -1071,11 +1071,14 @@ RC QL_Manager::GetResults(Node &qPlan)
 	 RC rc;
 	 while (!zeroCounts.empty()){
 		 if (strcmp(zeroCounts.front()->type, QL_JOIN) == 0)
-			 rc = dynamic_cast<Join*>((zeroCounts.front()))->execute();
-		 else if (strcmp(zeroCounts.front()->type, QL_CROSS) == 0)
-			 rc = dynamic_cast<Cross*>((zeroCounts.front()))->execute();
+			 rc = (dynamic_cast<Join*>(zeroCounts.front()))->execute();
+		 else if (strcmp(zeroCounts.front()->type, QL_CROSS) == 0){
+			 cerr << "getresults A1" << endl;
+			 rc = (dynamic_cast<Cross*>(zeroCounts.front()))->execute();
+			 cerr << "getresults A2" << endl;
+		 }
 		 else if (strcmp(zeroCounts.front()->type, QL_SEL) == 0)
-			 rc = dynamic_cast<Selection*>((zeroCounts.front()))->execute();
+			 rc = (dynamic_cast<Selection*>(zeroCounts.front()))->execute();
 		 else
 			 rc = zeroCounts.front()->execute();
 		if (rc)

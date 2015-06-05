@@ -207,7 +207,7 @@ void Node::clone(const Node& other){
 	numTuples = other.numTuples;
 	tupleSize = other.tupleSize;
 }
-RC Node::execute(){/*nothing; should set output*/ return 0;}
+RC Node::execute(){/*nothing; should set output*/ cerr << "generic execute" << endl; return 0;}
 void Node::printType(){
 	cout << type;
 	if (numConditions == 0)
@@ -1064,6 +1064,7 @@ Cross::Cross(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, Node
 }
 Cross::~Cross(){}
 RC Cross::execute(){
+	cerr << "CROSS EXECUTE START" << endl;
 	if (rc = CreateTmpOutput())
 		return rc;
 	cerr << "Cross output: " << output << endl;
