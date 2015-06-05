@@ -74,6 +74,7 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	if (rc = MakeSelectQueryPlan(nSelAttrs, selAttrs, nRelations, relations, nConditions, conditions, qPlan))
 		return rc;
 	// TODO TESTING
+	cerr << "ROOT " << qPlan.root << endl;
 	PrintQueryPlan(*qPlan.root);
 	if (rc = GetResults(*qPlan.root)){
 		smm->DropTable(qPlan.root->output);

@@ -63,24 +63,19 @@ Node::Node(){
 	tupleSize = 0;
 }
 Node::~Node(){
-	cerr << type << relations << endl;
-	cerr << "numConditions " << numConditions << endl;
+	cerr << "DELETE" << type << endl;
 	if (conditions)
 		delete [] conditions;
 	conditions = NULL;
-	cerr << "numRelations " << numRelations << endl;
 	if (relations)
 		delete [] relations;
 	relations = NULL;
-	cerr << "numRids " << numRids << endl;
 	if (rids)
 		delete [] rids;
 	rids = NULL;
-	cerr << "outAttrs " << numOutAttrs << endl;
 	if (outAttrs)
 		delete [] outAttrs;
 	outAttrs = NULL;
-	cerr << "numCountPairs " << numCountPairs << endl;
 	if (pCounts)
 		delete [] pCounts;
 	pCounts = NULL;
