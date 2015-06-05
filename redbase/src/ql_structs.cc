@@ -1107,11 +1107,13 @@ Relation::Relation(SM_Manager *smm, const char *relName, bool calcProj, int numT
 	RM_Record record;
 	char* pData;
 	if (smm->GetRelcatRecord(relName, record)){
+		cerr << "relcat" << endl;
 		rc = QL_RELNODE;
 		return;
 	}
 	if (record.GetData(pData)){
-		rc = QL_RELNODE; // TEST
+		cerr << "getdata" << endl;
+		rc = QL_RELNODE;
 		return;
 	}
 	Relcat relcat(pData);
@@ -1119,6 +1121,7 @@ Relation::Relation(SM_Manager *smm, const char *relName, bool calcProj, int numT
 	// outAttrs
 	outAttrs = new Attrcat[relcat.attrCount];
 	if (smm->GetAttrcats(relName, outAttrs)){
+		cerr << "getattrcats" << endl;
 		rc = QL_RELNODE;
 		return;
 	}
