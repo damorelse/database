@@ -798,8 +798,10 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 			list<Node> needToJoin;
 			for (set<string>::iterator it = relGroups[k].begin(); it != relGroups[k].end(); ++it){
 				Relation rel(smm, it->c_str(), calcProj, projVector.size(), &projVector[0]);
-				if (!rel.rc)
+				if (!rel.rc){
+					cerr << "!!!!!relation node issue" << endl;
 					return rel.rc;
+				}
 				Selection sel(smm, rmm, ixm, rel, condGroups[k].size(), &condGroups[k][0], calcProj, projVector.size(), &projVector[0]);
 				if (!sel.rc)
 					needToJoin.push_back(sel);
