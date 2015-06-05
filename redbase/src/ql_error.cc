@@ -5,14 +5,23 @@
 
 using namespace std;
 
-// TODO
-
 static char *QL_WarnMsg[] = {
-  (char*)"",
+  (char*)"relation does not exist",
+  (char*)"invalid number",
+  (char*)"duplicate relations in from clause",
+  (char*)"relation not in from clause",
+  (char*)"attribute does not exist",
+  (char*)"attribute  has ambiguous relation origin",
+  (char*)"type incompatible",
+  (char*)"invalid insert tuple",
+  (char*)"invalid catalog action",
+  (char*)"error while creating relation node",
+  (char*)"error while creating selection node",
+  (char*)"error while creating join node",
 };
 
 static char *QL_ErrorMsg[] = {
-	(char*)"", 
+	(char*)"file error", 
 };
 
 void QL_PrintError(RC rc)

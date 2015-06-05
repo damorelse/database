@@ -177,9 +177,9 @@ void QL_PrintError(RC rc);
 #define QL_RELNODE				(START_QL_WARN + 9)
 #define QL_SELNODE				(START_QL_WARN + 10)
 #define QL_JOINNODE				(START_QL_WARN + 11)
-#define QL_LASTWARN		END_QL_WARN			// TODO
+#define QL_LASTWARN		QL_JOINNODE			// TODO
 
 #define QL_FILEERROR           (START_QL_ERR - 0)
-#define QL_LASTERROR	END_QL_ERR			// TODO
+#define QL_LASTERROR	QL_FILEERROR			// TODO
 
 #endif
