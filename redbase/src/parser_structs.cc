@@ -104,6 +104,7 @@ bool RelAttr::operator<(const RelAttr &other) const{
 Value::Value(){
 	type = INT;
 	data = NULL;
+	del = false;
 }
 Value::Value(const Value &other){
 	type = other.type;
@@ -116,10 +117,12 @@ Value::Value(const Value &other){
 		data = new char[size];
 		strcpy((char*)data, (char*)other.data);
 	}
+	del = true;
 
 }
 Value::~Value(){
-	delete [] (char*)data;
+	if (data && del)
+		delete [] (char*)data;
 	data = NULL;
 }
 bool Value::operator==(const Value &other) const{
@@ -166,10 +169,10 @@ bool Value::operator<(const Value &other) const{
 	}
 }
 Condition::Condition(){
-	lhsAttr = RelAttr();
+	lhsAttr = RelAttr("", "");
 	op = EQ_OP;
 	bRhsIsAttr = true;
-	rhsAttr = RelAttr();
+	rhsAttr = RelAttr("", "");
 	rhsValue = Value();
 }
 Condition::Condition(const RelAttr lhsAttr, CompOp op, const int isAttr, 

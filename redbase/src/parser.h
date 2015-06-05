@@ -45,6 +45,7 @@ struct Value{
     AttrType type;         /* type of value               */
     void     *data;        /* value                       */
 			   /* print function              */
+	bool del;
 	Value();
 	Value(const Value &other);
 	~Value();
