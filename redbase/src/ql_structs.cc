@@ -22,6 +22,17 @@ bool isJoinCondition(Condition &cond);
 bool SelectionConditionApplies(Condition &cond, set<string> &myRelations);
 bool JoinConditionApplies(Condition &cond, set<string> &myRelations);
 Attrcat GetAttrcat(RelAttr relAttr, map<pair<string, string>, Attrcat> &attrcats, map<pair<string, string>, Attrcat> &otherAttrcats);
+string makeNewAttrName(const char* relName, const char* attrName){
+	string result(relName);
+	result += ".";
+	result += attrName;
+	return result;
+}
+pair<string, string> getRelAttrNames(const char* attrName){
+	string str(attrName);
+	int delim = str.find('.');
+	return pair<string, string>(str.substr(0, delim).c_str(), str.substr(delim+1).c_str());
+}
 
 RelAttrCount::RelAttrCount(){
 	first = RelAttr();
@@ -31,6 +42,7 @@ RelAttrCount::RelAttrCount( const RelAttr& relAttr, const int& count): first(rel
 bool RelAttrCount::operator==(const RelAttrCount &other) const{
 	return (first == other.first && second == other.second);
 }
+
 
 
 // Public
@@ -170,44 +182,6 @@ Node& Node::operator=(const Node& other){
 
 	return *this;
 }
-void Node::clone(const Node& other){
-	numConditions = other.numConditions;
-	conditions = new Condition[numConditions];
-	memcpy(conditions, other.conditions, numConditions * sizeof(Condition));
-
-	smm = other.smm;
-	rmm = other.rmm;
-	ixm = other.ixm;
-	memset(type, '\0', MAXNAME+1);
-	strcpy(type, other.type);
-	child = other.child;
-	otherChild = other.otherChild;
-	parent = other.parent;
-	memset(output, '\0', MAXNAME+1);
-	memcpy(output, other.output, MAXNAME+1);
-
-	numRelations = other.numRelations;
-	relations = new char[numRelations * (MAXNAME+1)];
-	memcpy(relations, other.relations,numRelations * (MAXNAME+1));
-
-	numRids = other.numRids;
-	rids = new Attrcat[numRids];
-	memcpy(rids, other.rids, numRids * sizeof(Attrcat));
-
-	numOutAttrs = other.numOutAttrs;
-	outAttrs = new Attrcat[numOutAttrs];
-	memcpy(outAttrs, other.outAttrs, numOutAttrs * sizeof(Attrcat));
-	numCountPairs = other.numCountPairs;
-	pCounts = new RelAttrCount[numCountPairs];
-	memcpy(pCounts, other.pCounts, numCountPairs * sizeof(RelAttrCount));
-	project = other.project;
-
-	rc = other.rc;
-	execution = other.execution;
-	cost = other.cost;
-	numTuples = other.numTuples;
-	tupleSize = other.tupleSize;
-}
 RC Node::execute(){
 	if (strcmp(type, QL_JOIN) == 0)
 		rc = JoinExecute();
@@ -252,9 +226,9 @@ void Node::printType(){
 	cout << ")";
 }
 Attrcat Node::getAttrcat(const char *relName, char* attrName){
+	string str = makeNewAttrName(relName, attrName);
 	for (int i = 0; i < numOutAttrs; ++i){
-		if (strcmp(outAttrs[i].relName, relName) == 0 &&
-			strcmp(outAttrs[i].attrName, attrName) == 0)
+		if (strcmp(outAttrs[i].attrName, str.c_str()) == 0)
 			return outAttrs[i];
 	}
 	return NULL;
@@ -298,12 +272,12 @@ void Node::SetRids(){
 	// rids
 	rids = new Attrcat[numRids];
 	if (child->numRids == 0)
-		rids[0] = Attrcat(child->output, (char*)"rid.", 0, STRING, sizeof(RID), -1);
+		rids[0] = Attrcat(child->output, makeNewAttrName(child->relations, ".rid").c_str(), 0, STRING, sizeof(RID), -1);
 	else
 		memcpy(rids, child->rids, child->numRids * sizeof(Attrcat));
 	if (otherChild){
 		if (otherChild->numRids == 0)
-			rids[child->numRelations] = Attrcat(otherChild->output, (char*)"rid.", 0, STRING, sizeof(RID), -1);
+			rids[child->numRelations] = Attrcat(otherChild->output, makeNewAttrName(otherChild->relations, ".rid").c_str(), 0, STRING, sizeof(RID), -1);
 		else
 			memcpy(rids+child->numRelations, otherChild->rids, otherChild->numRids * sizeof(Attrcat));
 	}
@@ -369,7 +343,8 @@ void Node::Project(bool calcProj, int numTotalPairs, RelAttrCount *pTotals){
 		vector<Attrcat> newOutAttrs;
 		int offset = numRids * sizeof(RID);
 		for (int i = 0; i < numOutAttrs; ++i){
-			RelAttr tmp(outAttrs[i].relName, outAttrs[i].attrName);
+			pair<string, string> key = getRelAttrNames(outAttrs[i].attrName);
+			RelAttr tmp(key.first.c_str(), key.second.c_str());
 			if (projTotals.find(tmp) != projTotals.end() && 
 				(numCountPairs == 0 || projCounts[tmp] < projTotals[tmp])){
 				newOutAttrs.push_back(outAttrs[i]);
@@ -393,18 +368,23 @@ RC Node::CreateTmpOutput(){
 	tmpnam(tmp);
 	memcpy(output, tmp+5, MAXNAME);
     remove(tmp);
-	cerr << "Temp file " << output << "   " << output[0] << "    " << isalpha(output[0]) << endl;
 	
+	// Set outAttr's relation field
+	for (int i = 0; i < numOutAttrs; ++i)
+		strcpy(outAttrs[i].relName, output);
+
 	// Create output relation
 	vector<AttrInfo> attributes;
-	for (int i = 0; i < numRids; ++i)
-		attributes.push_back(AttrInfo(rids[i]));
+	for (int i = 0; i < numRids; ++i){
+		AttrInfo tmp(rids[i]);
+		attributes.push_back(tmp);
+	}
 	for (int i = 0; i < numOutAttrs; ++i)
 		attributes.push_back(AttrInfo(outAttrs[i]));
-	cerr << "Temp file " << output << "   " << output[0] << "    " << isalpha(output[0]) << endl;
-
+	cerr << "create tmp output, BEFORE createtable" << endl;
 	if (rc = smm->CreateTable(output, numOutAttrs, &attributes[0]))
 		return rc;
+	cerr << "create tmp output, AFTER createtable" << endl;
 	return 0;
 }
 RC Node::DeleteTmpInput(){
@@ -462,7 +442,7 @@ RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAtt
 	}
 	
 	for (int i = 0; i < numOutAttrs; ++i){
-		pair<string, string> key(outAttrs[i].relName, outAttrs[i].attrName);
+		pair<string, string> key = getRelAttrNames(outAttrs[i].attrName);
 		if (attrcats.find(key) != attrcats.end())
 			memcpy(outPData + outAttrs[i].offset, pData + attrcats[key].offset, outAttrs[i].attrLen);
 		else
@@ -710,7 +690,7 @@ RC Node::SelectionExecute(){
 	// Make attribute-attrcat maps
 	map<pair<string, string>, Attrcat> attrcats;
 	for (int i = 0; i < child->numOutAttrs; ++i){
-		pair<string, string> key(child->outAttrs[i].relName, child->outAttrs[i].attrName);
+		pair<string, string> key = getRelAttrNames(child->outAttrs[i].attrName);;
 		attrcats[key] = child->outAttrs[i];
 	}
 	cout << "selection execute A" << endl;
@@ -877,12 +857,12 @@ RC Node::JoinExecute(){
 	// Make attribute-attrcat maps
 	map<pair<string, string>, Attrcat> attrcats;
 	for (int i = 0; i < child->numOutAttrs; ++i){
-		pair<string, string> key(child->outAttrs[i].relName, child->outAttrs[i].attrName);
+		pair<string, string> key = getRelAttrNames(child->outAttrs[i].attrName);
 		attrcats[key] = child->outAttrs[i];
 	}
 	map<pair<string, string>, Attrcat> otherAttrcats;
 	for (int i = 0; i < otherChild->numOutAttrs; ++i){
-		pair<string, string> key(otherChild->outAttrs[i].relName, otherChild->outAttrs[i].attrName);
+		pair<string, string> key = getRelAttrNames(otherChild->outAttrs[i].attrName);
 		attrcats[key] = otherChild->outAttrs[i];
 	}
 
@@ -1112,12 +1092,12 @@ RC Node::CrossExecute(){
 	// Make attribute-attrcat maps
 	map<pair<string, string>, Attrcat> attrcats;
 	for (int i = 0; i < child->numOutAttrs; ++i){
-		pair<string, string> key(child->outAttrs[i].relName, child->outAttrs[i].attrName);
+		pair<string, string> key = getRelAttrNames(child->outAttrs[i].attrName);
 		attrcats[key] = child->outAttrs[i];
 	}
 	map<pair<string, string>, Attrcat> otherAttrcats;
 	for (int i = 0; i < otherChild->numOutAttrs; ++i){
-		pair<string, string> key(otherChild->outAttrs[i].relName, otherChild->outAttrs[i].attrName);
+		pair<string, string> key = getRelAttrNames(otherChild->outAttrs[i].attrName);
 		attrcats[key] = otherChild->outAttrs[i];
 	}
 	cerr << "cross execute C" << endl;
@@ -1190,6 +1170,10 @@ Relation::Relation(SM_Manager *smm, const char *relName, bool calcProj, int numT
 		rc = QL_RELNODE;
 		return;
 	}
+	// Update outAttrs.attrName
+	for (int i = 0; i < numOutAttrs; ++i)
+		strcpy(outAttrs[i].attrName, makeNewAttrName(outAttrs[i].relName, outAttrs[i].attrName).c_str());
+
 	// NO projection since no execution function to generate new output
 }
 Relation::~Relation(){}
@@ -1207,14 +1191,6 @@ QueryTree& QueryTree::operator=(Node* node){
 		root = NULL;
 	}
 	root = RecursiveClone(node);
-	cerr << "ROOT " << node << endl;
-	cerr << node->type << endl;
-	cerr << node->child << endl;
-	cerr << node->otherChild << endl;
-	cerr << node->numRelations << endl;
-	cerr << node->numRids << endl;
-	cerr << node->numOutAttrs << endl;
-	cerr << node->numCountPairs << endl;
 
 	return *this;
 }

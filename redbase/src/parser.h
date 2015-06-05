@@ -31,7 +31,7 @@ struct RelAttr{
     char     *attrName;   // Attribute name
 	bool del;
 	RelAttr();
-	RelAttr(char* rel, char*attr);
+	RelAttr(const char* rel, const char*attr);
 	RelAttr(const RelAttr &other);
 	~RelAttr();
 	RelAttr& operator=(const RelAttr &other);

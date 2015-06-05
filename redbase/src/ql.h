@@ -40,7 +40,6 @@ public:
 	Node(const Node& other);
 	virtual ~Node();
 	Node& operator=(const Node& other);
-	void clone(const Node& other);
 	virtual RC execute();
 	void printType();
 	Attrcat getAttrcat(const char *relName, char* attrName);

@@ -51,7 +51,7 @@ RelAttr::RelAttr(){
 	attrName = NULL;
 	del = false;
 }
-RelAttr::RelAttr(char* rel, char* attr){
+RelAttr::RelAttr(const char* rel, const char* attr){
 	relName = new char[MAXNAME+1];
 	memset(relName, '\0', MAXNAME+1);
 	strcpy(relName, rel);

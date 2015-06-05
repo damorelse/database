@@ -124,7 +124,7 @@ struct Relcat {
 // Change sm_manager.cc's Help(const char *relName) with 
 struct Attrcat {
 	char relName[MAXNAME+1];
-	char attrName[MAXNAME+1];
+	char attrName[MAXNAME*2+1+1];
 	int offset;
 	AttrType attrType;
 	int attrLen;
@@ -132,7 +132,7 @@ struct Attrcat {
 
 	Attrcat();
 	Attrcat(char* pData);
-	Attrcat(const char* relName, char* attrName, int offset, AttrType attrType, int attrLen, int indexNo);
+	Attrcat(const char* relName, const char * attrName, int offset, AttrType attrType, int attrLen, int indexNo);
 	Attrcat& operator=(char* pData);
 };
 

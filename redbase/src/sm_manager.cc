@@ -63,23 +63,23 @@ RC SM_Manager::CreateTable(const char *relName,
                            AttrInfo   *attributes)
 {
 	RC rc;
-	cerr << "Temp file " << relName << "   " << relName[0] << "    " << isalpha(relName[0]) << endl;
 
 	// Check input
 	// Check relation name
 	if (rc = CheckName(relName)){
-		cerr << "Temp file " << relName << "   " << relName[0] << "    " << isalpha(relName[0]) << endl;
 		return rc;
 	}
-	cerr << "Temp file " << relName << "   " << relName[0] << "    " << isalpha(relName[0]) << endl;
+
 	if (isCatalog(relName))
 		return SM_INVALIDCATACTION;
 
 	// Check relation name uniqueness
 	RM_Record record;
 	rc = GetRelcatRecord(relName, record);
-	if (rc == 0)
+	if (rc == 0){
+		cerr << "EXITED HERE    A" << endl;
 		return SM_EXISTS;
+	}
 	if (rc != RM_EOF)
 		return rc;
 
@@ -108,8 +108,10 @@ RC SM_Manager::CreateTable(const char *relName,
 			return rc;
 
 		// Check attribute name uniqueness
-		if (attrSet.find((string)attrInfo.attrName) != attrSet.end())
+		if (attrSet.find((string)attrInfo.attrName) != attrSet.end()){
+			cerr << "attribute name uniqueness" << endl;
 			return SM_EXISTS;
+		}
 		attrSet.insert((string)attrInfo.attrName);
 	}
 	// End check input.
@@ -133,9 +135,11 @@ RC SM_Manager::CreateTable(const char *relName,
 	if (rc = relFile.InsertRec((char*)&relcat, rid))
 		return rc;
 
+	cerr << "in sm_manager create table A" << endl;
 	// Create relation file
 	if (rc = rmManager->CreateFile(relName, tupleLen))
 		return rc;
+	cerr << "in sm_manager create table B" << endl;
 
     return (0);
 }
