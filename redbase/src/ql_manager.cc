@@ -275,6 +275,7 @@ RC QL_Manager::Insert(const char *relName,
 	printer.PrintHeader(cout);
 	printer.Print(cout, pData);
 	printer.PrintFooter(cout);
+	cerr << "insert F" << endl;
 
 	//  Clean up
 	delete [] pData;
@@ -816,6 +817,13 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 					needToJoin.push_back(rel);
 			}
 			
+			cerr << needToJoin.begin()->type << endl;
+			cerr << needToJoin.begin()->child << endl;
+			cerr << needToJoin.begin()->otherChild << endl;
+			cerr << needToJoin.begin()->numRelations << endl;
+			cerr << needToJoin.begin()->numRids << endl;
+			cerr << needToJoin.begin()->numOutAttrs << endl;
+			cerr << needToJoin.begin()->numCountPairs << endl;
 			cerr << "TESTING " << endl;
 			PrintQueryPlan(*needToJoin.begin());
 
