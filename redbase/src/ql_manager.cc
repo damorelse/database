@@ -1070,7 +1070,15 @@ RC QL_Manager::GetResults(Node &qPlan)
 	 cerr << "getresults A" << endl;
 	 RC rc;
 	 while (!zeroCounts.empty()){
-		 if (rc = zeroCounts.front()->execute())
+		 if (strcmp(zeroCounts.front()->type, QL_JOIN) == 0)
+			 rc = dynamic_cast<Join*>((zeroCounts.front()))->execute();
+		 else if (strcmp(zeroCounts.front()->type, QL_CROSS) == 0)
+			 rc = dynamic_cast<Cross*>((zeroCounts.front()))->execute();
+		 else if (strcmp(zeroCounts.front()->type, QL_SEL) == 0)
+			 rc = dynamic_cast<Selection*>((zeroCounts.front()))->execute();
+		 else
+			 rc = dynamic_cast<Relation*>((zeroCounts.front()))->execute();
+		if (rc)
 			 return rc;
 
 		 if (zeroCounts.front()->parent){

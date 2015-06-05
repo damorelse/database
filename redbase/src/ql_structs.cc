@@ -663,7 +663,7 @@ Selection::Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& le
 	this->smm = smm;
 	this->rmm = rmm;
 	this->ixm = ixm;
-	strcpy(type, "Select");
+	strcpy(type, QL_SEL);
 	child = &left;
 	// otherChild set by default
 	// parent will be set by parent
@@ -826,7 +826,7 @@ Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& 
 	this->smm = smm;
 	this->rmm = rmm;
 	this->ixm = ixm;
-	strcpy(type, "Join");
+	strcpy(type, QL_JOIN);
 	child = &left;
 	otherChild = &right;
 	// parent will be set by parent
@@ -1049,7 +1049,7 @@ Cross::Cross(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, Node
 	this->smm = smm;
 	this->rmm = rmm;
 	this->ixm = ixm;
-	strcpy(type, "X");
+	strcpy(type, QL_CROSS);
 	child = &left;
 	otherChild = &right;
 	// parent will be set by parent

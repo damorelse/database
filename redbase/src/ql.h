@@ -21,6 +21,9 @@
 #define QL_INDEX 1
 #define QL_INDEXES 2
 
+#define QL_JOIN "Join"
+#define QL_CROSS "X"
+#define QL_SEL "Select"
 
 struct RelAttrCount {
    RelAttr first;
