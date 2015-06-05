@@ -786,10 +786,10 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 			// Initialize list, create relation/selection nodes
 			list<Node> needToJoin;
 			for (set<string>::iterator it = relGroups[k].begin(); it != relGroups[k].end(); ++it){
-				Node rel = Relation (smm, it->c_str(), calcProj, projVector.size(), &projVector[0]);
-				/*if (!rel.rc)
-					return rel.rc;*/
-				Node sel = Selection(smm, rmm, ixm, rel, condGroups[k].size(), &condGroups[k][0], calcProj, projVector.size(), &projVector[0]);
+				Relation rel(smm, it->c_str(), calcProj, projVector.size(), &projVector[0]);
+				if (!rel.rc)
+					return rel.rc;
+				Selection sel(smm, rmm, ixm, rel, condGroups[k].size(), &condGroups[k][0], calcProj, projVector.size(), &projVector[0]);
 				if (!sel.rc)
 					needToJoin.push_back(sel);
 				else
@@ -807,7 +807,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 			while (needToJoin.size() > 1){
 				for (list<Node>::iterator it = (++needToJoin.begin()); it != needToJoin.end(); ++it){
 					Node right = *it;
-					Node join = Join(smm, rmm, ixm, left, right, currConds.size(), &currConds[0], calcProj, projVector.size(), &projVector[0]);
+					Join join(smm, rmm, ixm, left, right, currConds.size(), &currConds[0], calcProj, projVector.size(), &projVector[0]);
 					if(!join.rc){
 						left = join;
 						needToJoin.erase(it);
@@ -904,7 +904,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 						Node left = tables[leftSize][leftSet].second;
 						Node right = tables[rightSize][rightSet].second;
 
-						Node cross = Cross(smm, rmm, ixm, left, right, calcProj, projVector.size(), &projVector[0]);
+						Cross cross(smm, rmm, ixm, left, right, calcProj, projVector.size(), &projVector[0]);
 						cross.cost = cost;
 						cross.numTuples = left.numTuples * right.numTuples;
 						cross.tupleSize = left.tupleSize + right.tupleSize;
