@@ -26,6 +26,7 @@ struct RelAttr{
     char     *relName;    // Relation name (may be NULL)
     char     *attrName;   // Attribute name
 
+	RelAttr();
 	RelAttr(char* rel, char*attr);
 	RelAttr(const RelAttr &other);
 	~RelAttr();
@@ -41,6 +42,7 @@ struct Value{
     AttrType type;         /* type of value               */
     void     *data;        /* value                       */
 			   /* print function              */
+	Value();
 	Value(const Value &other);
 	~Value();
 	bool operator==(const Value &other) const;
@@ -58,6 +60,7 @@ struct Condition{
     Value    rhsValue;   /* right-hand side value                */
 			 /* print function                               */
 
+	Condition();
 	Condition(const RelAttr lhsAttr, CompOp op, const int isAttr, const RelAttr rhsAttr, const Value rhsValue);
     bool operator==(const Condition &other) const;
 	bool operator<(const Condition &other) const;

@@ -16,6 +16,13 @@ AttrInfo::AttrInfo(Attrcat attrcat){
 }
 
 
+RelAttr::RelAttr(){
+	relName = new char[MAXNAME+1];
+	memset(relName, '\0', MAXNAME+1);
+
+	attrName = new char[MAXNAME+1];
+	memset(attrName, '\0', MAXNAME+1);
+}
 RelAttr::RelAttr(char* rel, char* attr){
 	relName = new char[MAXNAME+1];
 	memset(relName, '\0', MAXNAME+1);
@@ -67,6 +74,10 @@ bool RelAttr::operator<(const RelAttr &other) const{
 }
 
 
+Value::Value(){
+	type = INT;
+	data = NULL;
+}
 Value::Value(const Value &other){
 	type = other.type;
 	if (type != STRING){
@@ -126,6 +137,13 @@ bool Value::operator<(const Value &other) const{
 		return (strcmp((char*)data, (char*)other.data) < 0);
 		break;
 	}
+}
+Condition::Condition(){
+	lhsAttr = RelAttr();
+	op = EQ_OP;
+	bRhsIsAttr = true;
+	rhsAttr = RelAttr();
+	rhsValue = Value();
 }
 Condition::Condition(const RelAttr lhsAttr, CompOp op, const int isAttr, 
 					 const RelAttr rhsAttr, const Value rhsValue)
