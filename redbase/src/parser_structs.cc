@@ -3,13 +3,12 @@
 #include "parser.h"
 
 AttrInfo::AttrInfo(){
-	attrName = new char[MAXNAME+1];
-	memset(attrName, '\0', MAXNAME+1);
+	attrName = NULL;
 	attrType = INT;
 	attrLength = 4;
 }
 AttrInfo::~AttrInfo(){
-	if (attrName)
+	if (attrName && del)
 		delete [] attrName;
 	attrName = NULL;
 }
@@ -22,6 +21,7 @@ AttrInfo& AttrInfo::operator=(const AttrInfo& other){
 	return *this;
 }
 AttrInfo::AttrInfo(Attrcat attrcat){
+	del = true;
 	attrName = new char[MAXNAME+1];
 	memset(attrName, '\0', MAXNAME+1);
 	strcpy(attrName, attrcat.attrName);

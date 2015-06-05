@@ -17,6 +17,7 @@ struct AttrInfo{
     char     *attrName;   /* attribute name       */
     AttrType attrType;    /* type of attribute    */
     int      attrLength;  /* length of attribute  */
+	bool del;
 
 	AttrInfo();
 	~AttrInfo();
