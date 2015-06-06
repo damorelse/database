@@ -403,6 +403,7 @@ RC Node::DeleteTmpInput(){
 
 // Local functions
 RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAttrs, map<pair<string, string>, Attrcat> &attrcats, map<pair<string, string>, Attrcat> &otherAttrcats, RM_Record &record, RM_Record &otherRecord, char* outPData, RM_FileHandle &outFile){
+	cerr << "writeToOutput A" << endl;
 	RC rc;
 	char* pData;
 	if (rc = record.GetData(pData))
@@ -418,7 +419,7 @@ RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAtt
 		if (rc = otherRecord.GetRid(otherRid))
 			return rc;
 	}
-
+	cerr << "writeToOutput B" << endl;
 	// Write to output
 	char* outItr = outPData;
 	// RIDS
@@ -440,7 +441,7 @@ RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAtt
 			outItr += otherChild->numRids * sizeof(RID);
 		}
 	}
-	
+	cerr << "writeToOutput C" << endl;
 	for (int i = 0; i < numOutAttrs; ++i){
 		pair<string, string> key = getRelAttrNames(outAttrs[i].attrName);
 		if (attrcats.find(key) != attrcats.end()){
@@ -451,11 +452,12 @@ RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAtt
 			memcpy(outPData + outAttrs[i].offset, otherPData + otherAttrcats[key].offset, outAttrs[i].attrLen);
 		}
 	}
-
+	cerr << "writeToOutput D" << endl;
 	// Insert
 	RID tmp;
 	if (rc = outFile.InsertRec(outPData, tmp))
 		return rc;
+	cerr << "writeToOutput E" << endl;
 	return 0;
 }
 // Value condition OR condition's attributes from same relation
