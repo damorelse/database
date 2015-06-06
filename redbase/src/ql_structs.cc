@@ -447,7 +447,7 @@ RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAtt
 			memcpy(outPData + outAttrs[i].offset, pData + attrcats[key].offset, outAttrs[i].attrLen);
 		}
 		else{
-			cout << "offset for second rel: " << otherAttrcats[key].offset << "    " << outAttrs[i].attrLen << endl;
+			cerr << "offset for second rel relative to Original file: " << otherAttrcats[key].offset << "    " << outAttrs[i].attrLen << endl;
 			memcpy(outPData + outAttrs[i].offset, otherPData + otherAttrcats[key].offset, outAttrs[i].attrLen);
 		}
 	}
