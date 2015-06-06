@@ -873,15 +873,16 @@ RC Node::JoinExecute(){
 		RM_FileScan scan;
 		if (rc = scan.OpenScan(file, INT, 4, 0, NO_OP, NULL))
 			return rc;
-		RM_FileScan otherScan;
-		if (rc = otherScan.OpenScan(otherFile, INT, 4, 0, NO_OP, NULL))
-			return rc;
 
 		// Iterate over files
 		RM_Record record;
 		while(OK_RC == (rc = scan.GetNextRec(record))){
 			char* pData;
 			if (rc = record.GetData(pData))
+				return rc;
+
+			RM_FileScan otherScan;
+			if (rc = otherScan.OpenScan(otherFile, INT, 4, 0, NO_OP, NULL))
 				return rc;
 
 			RM_Record otherRecord;
@@ -902,11 +903,10 @@ RC Node::JoinExecute(){
 			}
 			if (rc != RM_EOF)
 				return rc;
+			if (rc = otherScan.CloseScan())
+				return rc;
 		}
 		if (rc != RM_EOF)
-			return rc;
-
-		if (rc = otherScan.CloseScan())
 			return rc;
 		if (rc = scan.CloseScan())
 			return rc;
@@ -984,7 +984,7 @@ RC Node::JoinExecute(){
 				if (rc != RM_EOF)
 					return rc;
 				if (rc = indexScan.CloseScan())
-				return rc;
+					return rc;
 
 				op = GT_OP;
 			}
@@ -1078,12 +1078,7 @@ RC Node::CrossExecute(){
 	RM_FileHandle otherFile;
 	if(rc = rmm->OpenFile(otherChild->output, otherFile))
 		return rc;
-	RM_FileScan scan;
-	if (rc = scan.OpenScan(file, INT, 4, 0, NO_OP, NULL))
-		return rc;
-	RM_FileScan otherScan;
-	if (rc = otherScan.OpenScan(otherFile, INT, 4, 0, NO_OP, NULL))
-		return rc;
+	
 	cerr << "cross execute B" << endl;
 	// Make outPData
 	int len = outAttrs[numOutAttrs-1].offset + outAttrs[numOutAttrs-1].attrLen;
@@ -1105,31 +1100,38 @@ RC Node::CrossExecute(){
 	// Iterate over files
 	RM_Record record;
 	int i = 0;
+	RM_FileScan scan;
+	if (rc = scan.OpenScan(file, INT, 4, 0, NO_OP, NULL))
+		return rc;
 	while(OK_RC == (rc = scan.GetNextRec(record))){
 		++i;
 		cerr << "outside " << i << endl;
 		RM_Record otherRecord;
 
 		int  k = 0; 
+		RM_FileScan otherScan;
+		if (rc = otherScan.OpenScan(otherFile, INT, 4, 0, NO_OP, NULL))
+			return rc;
 		while (OK_RC == (rc = otherScan.GetNextRec(otherRecord))){
 			++k;
-			cerr << "inside " << k;
+			cerr << "inside " << k << endl;;
 			if (rc = WriteToOutput(child, otherChild, numOutAttrs, outAttrs, attrcats, otherAttrcats, record, otherRecord, outPData, outFile))
 				return rc;
 		}
 		if (rc != RM_EOF)
 			return rc;
+		if (rc = otherScan.CloseScan())
+			return rc;
 	}
 	if (rc != RM_EOF)
 		return rc;
+	if (rc = scan.CloseScan())
+		return rc;
+
 	cerr << "cross execute D" << endl;
 	delete [] outPData;
 
 	// Close filescans and files
-	if (rc = otherScan.CloseScan())
-		return rc;
-	if (rc = scan.CloseScan())
-		return rc;
 	if (rc = rmm->CloseFile(otherFile))
 		return rc;
 	if (rc = rmm->CloseFile(file))
