@@ -402,7 +402,7 @@ RC Node::DeleteTmpInput(){
 
 
 // Local functions
-RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAttrs, map<pair<string, string>, Attrcat> &attrcats, map<pair<string, string>, Attrcat> &otherAttrcats, RM_Record record, RM_Record otherRecord, char* outPData, RM_FileHandle &outFile){
+RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAttrs, map<pair<string, string>, Attrcat> &attrcats, map<pair<string, string>, Attrcat> &otherAttrcats, RM_Record &record, RM_Record &otherRecord, char* outPData, RM_FileHandle &outFile){
 	RC rc;
 	char* pData;
 	if (rc = record.GetData(pData))
@@ -451,7 +451,8 @@ RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAtt
 
 	// Insert
 	RID tmp;
-	outFile.InsertRec(outPData, tmp);
+	if (rc = outFile.InsertRec(outPData, tmp))
+		return rc;
 	return 0;
 }
 // Value condition OR condition's attributes from same relation
