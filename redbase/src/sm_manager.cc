@@ -695,12 +695,12 @@ RC SM_Manager::Help(const char *relName)
 	// Make dataAttrs based on Attrcat
 	const int attrCount = 6;
 	DataAttrInfo* dataAttrs = new DataAttrInfo[attrCount]; 
-	dataAttrs[0] = DataAttrInfo(MYATTRCAT, "relName", offsetof(struct Attrcat, relName), STRING, MAXNAME+1, SM_INVALID);
-	dataAttrs[1] = DataAttrInfo(MYATTRCAT, "attrName", offsetof(struct Attrcat, attrName), STRING, MAXNAME+1, SM_INVALID);
-	dataAttrs[2] = DataAttrInfo(MYATTRCAT, "offset", offsetof(struct Attrcat, offset), INT, sizeof(int), SM_INVALID);
-	dataAttrs[3] = DataAttrInfo(MYATTRCAT, "attrType", offsetof(struct Attrcat, attrType), INT, sizeof(AttrType), SM_INVALID);
-	dataAttrs[4] = DataAttrInfo(MYATTRCAT, "attrLen", offsetof(struct Attrcat, attrLen),INT, sizeof(int), SM_INVALID);
-	dataAttrs[5] = DataAttrInfo(MYATTRCAT, "indexNo", offsetof(struct Attrcat, indexNo), INT, sizeof(int), SM_INVALID);
+	dataAttrs[0] = DataAttrInfo(MYATTRCAT, "relName", offsetof(struct Attrcat, relName), STRING, sizeof(Attrcat::relName), SM_INVALID);
+	dataAttrs[1] = DataAttrInfo(MYATTRCAT, "attrName", offsetof(struct Attrcat, attrName), STRING, sizeof(Attrcat::attrName), SM_INVALID);
+	dataAttrs[2] = DataAttrInfo(MYATTRCAT, "offset", offsetof(struct Attrcat, offset), INT, sizeof(Attrcat::offset), SM_INVALID);
+	dataAttrs[3] = DataAttrInfo(MYATTRCAT, "attrType", offsetof(struct Attrcat, attrType), INT, sizeof(Attrcat::attrType), SM_INVALID);
+	dataAttrs[4] = DataAttrInfo(MYATTRCAT, "attrLen", offsetof(struct Attrcat, attrLen),INT, sizeof(Attrcat::attrLen), SM_INVALID);
+	dataAttrs[5] = DataAttrInfo(MYATTRCAT, "indexNo", offsetof(struct Attrcat, indexNo), INT, sizeof(Attrcat::indexNo), SM_INVALID);
 
 	// Initialize printer
 	Printer printer(dataAttrs, attrCount);
