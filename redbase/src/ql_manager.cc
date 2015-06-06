@@ -314,7 +314,8 @@ RC QL_Manager::Delete(const char *relName,
 	if (rc = MakeSelectQueryPlan(0, NULL, 1, relations, nConditions, conditions, qPlan))
 		return rc;
 	if (rc = GetResults(*qPlan.root)){
-		smm->DropTable(qPlan.root->output);
+		if (!isRelation(*qPlan.root))
+			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
 	if (bQueryPlans){
@@ -325,7 +326,8 @@ RC QL_Manager::Delete(const char *relName,
 	// Open relation file
 	RM_FileHandle fileHandle;
 	if (rc = rmm->OpenFile(relName, fileHandle)){
-		smm->DropTable(qPlan.root->output);
+		if (!isRelation(*qPlan.root))
+			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
 	// Open index files
@@ -335,7 +337,8 @@ RC QL_Manager::Delete(const char *relName,
 		if (qPlan.root->outAttrs[i].indexNo != SM_INVALID){
 			IX_IndexHandle indexHandle;
 			if (rc = ixm->OpenIndex(relName, qPlan.root->outAttrs[i].indexNo, indexHandle)){
-				smm->DropTable(qPlan.root->output);
+				if (!isRelation(*qPlan.root))
+					smm->DropTable(qPlan.root->output);
 				return rc;
 			}
 			indexes.push_back(pair<Attrcat, IX_IndexHandle>(qPlan.root->outAttrs[i], indexHandle));
@@ -356,32 +359,37 @@ RC QL_Manager::Delete(const char *relName,
 	RM_FileHandle tmpFileHandle;
 	RM_FileScan tmpFileScan;
 	if (rc = rmm->OpenFile(qPlan.root->output, tmpFileHandle)){
-		smm->DropTable(qPlan.root->output);
+		if (!isRelation(*qPlan.root))
+			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
 	if (rc = tmpFileScan.OpenScan(tmpFileHandle, INT, 4, 0, NO_OP, NULL)){
-		smm->DropTable(qPlan.root->output);
+		if (!isRelation(*qPlan.root))
+			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
 	RM_Record record;
 	while (OK_RC == (rc = tmpFileScan.GetNextRec(record))){
 		char* pData;
 		if (rc = record.GetData(pData)){
-			smm->DropTable(qPlan.root->output);
+			if (!isRelation(*qPlan.root))
+				smm->DropTable(qPlan.root->output);
 			return rc;
 		}
 		// Get rid
 		RID rid(pData);
 		// Update relation 
 		if (rc = fileHandle.DeleteRec(rid)){
-			smm->DropTable(qPlan.root->output);
+			if (!isRelation(*qPlan.root))
+				smm->DropTable(qPlan.root->output);
 			return rc;
 		}
 		// Update indexes
 		for (int k = 0; k < indexes.size(); ++k){
 			char* attribute = pData + indexes[k].first.offset;
 			if (rc = indexes[k].second.DeleteEntry(attribute, rid)){
-				smm->DropTable(qPlan.root->output);
+				if (!isRelation(*qPlan.root))
+					smm->DropTable(qPlan.root->output);
 				return rc;
 			}
 		}
@@ -389,27 +397,32 @@ RC QL_Manager::Delete(const char *relName,
 		printer.Print(cout, pData + ridsSize);
 	}
 	if (rc != RM_EOF){
-		smm->DropTable(qPlan.root->output);
+		if (!isRelation(*qPlan.root))
+			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
 	if (rc = tmpFileScan.CloseScan()){
-		smm->DropTable(qPlan.root->output);
+		if (!isRelation(*qPlan.root))
+			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
 	if (rc = rmm->CloseFile(tmpFileHandle)){
-		smm->DropTable(qPlan.root->output);
+		if (!isRelation(*qPlan.root))
+			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
 
 	// CLOSE START
 	// Close relation file
 	if (rc = rmm->CloseFile(fileHandle)){
-		smm->DropTable(qPlan.root->output);
+		if (!isRelation(*qPlan.root))
+			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
 	// Close index files
 	for (int i = 0; i < indexes.size(); ++i){
 		if (rc = ixm->CloseIndex(indexes[i].second)){
+			if (!isRelation(*qPlan.root))
 			smm->DropTable(qPlan.root->output);
 			return rc;
 		}
@@ -419,8 +432,9 @@ RC QL_Manager::Delete(const char *relName,
 	// CLOSE END
 
 	// Clean up
-	if (rc = smm->DropTable(qPlan.root->output))
-		return rc;
+	if (!isRelation(*qPlan.root))
+		if (rc = smm->DropTable(qPlan.root->output))
+			return rc;
 
     return 0;
 }
@@ -456,7 +470,8 @@ RC QL_Manager::Update(const char *relName,
 	if (rc = MakeSelectQueryPlan(0, NULL, 1, relations, nConditions, conditions, qPlan))
 		return rc;
 	if (rc = GetResults(*qPlan.root)){
-		smm->DropTable(qPlan.root->output);
+		if (!isRelation(*qPlan.root))
+			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
 	if (bQueryPlans){
@@ -467,7 +482,8 @@ RC QL_Manager::Update(const char *relName,
 	// Open relation file
 	RM_FileHandle fileHandle;
 	if (rc = rmm->OpenFile(relName, fileHandle)){
-		smm->DropTable(qPlan.root->output);
+		if (!isRelation(*qPlan.root))
+			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
 	// Get left attrcat
@@ -477,7 +493,8 @@ RC QL_Manager::Update(const char *relName,
 	IX_IndexHandle indexHandle;
 	if (leftAttrcat.indexNo != SM_INVALID){
 		if (rc = ixm->OpenIndex(relName, leftAttrcat.indexNo, indexHandle)){
-			smm->DropTable(qPlan.root->output);
+			if (!isRelation(*qPlan.root))
+				smm->DropTable(qPlan.root->output);
 			return rc;
 		}
 	}
@@ -501,17 +518,20 @@ RC QL_Manager::Update(const char *relName,
 	RM_FileHandle tmpFileHandle;
 	RM_FileScan tmpFileScan;
 	if (rc = rmm->OpenFile(qPlan.root->output, tmpFileHandle)){
-		smm->DropTable(qPlan.root->output);
+		if (!isRelation(*qPlan.root))
+			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
 	if (rc = tmpFileScan.OpenScan(tmpFileHandle, INT, 4, 0, NO_OP, NULL)){
-		smm->DropTable(qPlan.root->output);
+		if (!isRelation(*qPlan.root))
+			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
 	while (OK_RC == (rc = tmpFileScan.GetNextRec(record))){
 		char* pData;
 		if (rc = record.GetData(pData)){
-			smm->DropTable(qPlan.root->output);
+			if (!isRelation(*qPlan.root))
+				smm->DropTable(qPlan.root->output);
 			return rc;
 		}
 		// Get rid
@@ -521,7 +541,8 @@ RC QL_Manager::Update(const char *relName,
 		// If update attribute has an index, delete old entry
 		if (leftAttrcat.indexNo != SM_INVALID){
 			if (rc = indexHandle.DeleteEntry(attribute, rid)){
-				smm->DropTable(qPlan.root->output);
+				if (!isRelation(*qPlan.root))
+					smm->DropTable(qPlan.root->output);
 				return rc;
 			}
 		}
@@ -536,13 +557,15 @@ RC QL_Manager::Update(const char *relName,
 		// If update attribute has an index, insert new entry
 		if (leftAttrcat.indexNo != SM_INVALID){
 			if (rc = indexHandle.InsertEntry(attribute, rid)){
-				smm->DropTable(qPlan.root->output);
+				if (!isRelation(*qPlan.root))
+					smm->DropTable(qPlan.root->output);
 				return rc;
 			}
 		}
 		// Update relation 
 		if (rc = fileHandle.UpdateRec(record)){
-			smm->DropTable(qPlan.root->output);
+			if (!isRelation(*qPlan.root))
+				smm->DropTable(qPlan.root->output);
 			return rc;
 		}
 
@@ -550,28 +573,33 @@ RC QL_Manager::Update(const char *relName,
 		printer.Print(cout, pData + ridsSize);
 	}
 	if (rc != RM_EOF){
-		smm->DropTable(qPlan.root->output);
+		if (!isRelation(*qPlan.root))
+			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
 	if (rc = tmpFileScan.CloseScan()){
-		smm->DropTable(qPlan.root->output);
+		if (!isRelation(*qPlan.root))
+			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
 	if (rc = rmm->CloseFile(tmpFileHandle)){
-		smm->DropTable(qPlan.root->output);
+		if (!isRelation(*qPlan.root))
+			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
 
 	// CLOSE START
 	// Close relation file
 	if (rc = rmm->CloseFile(fileHandle)){
-		smm->DropTable(qPlan.root->output);
+		if (!isRelation(*qPlan.root))
+			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
 	// Close index file (if necessary)
 	if (leftAttrcat.indexNo != SM_INVALID){
 		if (rc = ixm->CloseIndex(indexHandle)){
-			smm->DropTable(qPlan.root->output);
+			if (!isRelation(*qPlan.root))
+				smm->DropTable(qPlan.root->output);
 			return rc;
 		}
 	}
@@ -580,8 +608,9 @@ RC QL_Manager::Update(const char *relName,
 	// CLOSE END
 
 	// Clean up
-	if (rc = smm->DropTable(qPlan.root->output))
-		return rc;
+	if (!isRelation(*qPlan.root))
+		if (rc = smm->DropTable(qPlan.root->output))
+			return rc;
 
     return 0;
 }
