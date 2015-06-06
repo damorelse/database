@@ -1104,9 +1104,16 @@ RC Node::CrossExecute(){
 	cerr << "cross execute C" << endl;
 	// Iterate over files
 	RM_Record record;
+	int i = 0;
 	while(OK_RC == (rc = scan.GetNextRec(record))){
+		++i;
+		cerr << "outside " << i << endl;
 		RM_Record otherRecord;
+
+		int  k = 0; 
 		while (OK_RC == (rc = otherScan.GetNextRec(otherRecord))){
+			++k;
+			cerr << "inside " << k;
 			if (rc = WriteToOutput(child, otherChild, numOutAttrs, outAttrs, attrcats, otherAttrcats, record, otherRecord, outPData, outFile))
 				return rc;
 		}
