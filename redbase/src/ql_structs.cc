@@ -1147,8 +1147,9 @@ RC Node::CrossExecute(){
 	if (rc = rmm->CloseFile(outFile))
 		return rc;
 
-	if (rc = DeleteTmpInput())
-		return rc;
+	// TODO: TESTING, must REMOVE
+	/*if (rc = DeleteTmpInput())
+		return rc;*/
 
 	return 0;
 }
