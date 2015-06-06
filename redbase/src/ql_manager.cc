@@ -150,10 +150,10 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 
 
 	// Clean up
-	if (!isRelation(*qPlan.root)){
+	/*if (!isRelation(*qPlan.root)){
 		if (rc = smm->DropTable(qPlan.root->output))
 			return rc;
-	}
+	}*/
 
 	return 0;
 }
