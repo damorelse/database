@@ -88,17 +88,17 @@ int main(int argc, char *argv[])
 	vector<Attrcat> attributes;
 	// Make all the Attrcats
 	// relcat
-	attributes.push_back(Attrcat(MYRELCAT, "relName", offsetof(struct Relcat, relName), STRING, MAXNAME+1, SM_INVALID));
-	attributes.push_back(Attrcat(MYRELCAT, "tupleLen", offsetof(struct Relcat, tupleLen), INT, sizeof(int), SM_INVALID));
-	attributes.push_back(Attrcat(MYRELCAT, "attrCount", offsetof(struct Relcat, attrCount), INT, sizeof(int), SM_INVALID));
-	attributes.push_back(Attrcat(MYRELCAT, "indexCount", offsetof(struct Relcat, indexCount), INT, sizeof(int), SM_INVALID));
+	attributes.push_back(Attrcat(MYRELCAT, "relName", offsetof(struct Relcat, relName), STRING, sizeof(Relcat::relName), SM_INVALID));
+	attributes.push_back(Attrcat(MYRELCAT, "tupleLen", offsetof(struct Relcat, tupleLen), INT, sizeof(Relcat::tupleLen), SM_INVALID));
+	attributes.push_back(Attrcat(MYRELCAT, "attrCount", offsetof(struct Relcat, attrCount), INT, sizeof(Relcat::attrCount), SM_INVALID));
+	attributes.push_back(Attrcat(MYRELCAT, "indexCount", offsetof(struct Relcat, indexCount), INT, sizeof(Relcat::indexCount), SM_INVALID));
 	// attrcat
-	attributes.push_back(Attrcat(MYATTRCAT, "relName", offsetof(struct Attrcat, relName), STRING, MAXNAME+1, SM_INVALID));
-	attributes.push_back(Attrcat(MYATTRCAT, "attrName", offsetof(struct Attrcat, attrName), STRING, MAXNAME+1, SM_INVALID));
-	attributes.push_back(Attrcat(MYATTRCAT, "offset", offsetof(struct Attrcat, offset), INT, sizeof(int), SM_INVALID));
-	attributes.push_back(Attrcat(MYATTRCAT, "attrType", offsetof(struct Attrcat, attrType), INT, sizeof(AttrType), SM_INVALID));
-	attributes.push_back(Attrcat(MYATTRCAT, "attrLen", offsetof(struct Attrcat, attrLen), INT, sizeof(int), SM_INVALID));
-	attributes.push_back(Attrcat(MYATTRCAT, "indexNo", offsetof(struct Attrcat, indexNo), INT, sizeof(int), SM_INVALID));
+	attributes.push_back(Attrcat(MYATTRCAT, "relName", offsetof(struct Attrcat, relName), STRING, sizeof(Attrcat::relName), SM_INVALID));
+	attributes.push_back(Attrcat(MYATTRCAT, "attrName", offsetof(struct Attrcat, attrName), STRING, sizeof(Attrcat::attrName), SM_INVALID));
+	attributes.push_back(Attrcat(MYATTRCAT, "offset", offsetof(struct Attrcat, offset), INT, sizeof(Attrcat::offset), SM_INVALID));
+	attributes.push_back(Attrcat(MYATTRCAT, "attrType", offsetof(struct Attrcat, attrType), INT, sizeof(Attrcat::attrType), SM_INVALID));
+	attributes.push_back(Attrcat(MYATTRCAT, "attrLen", offsetof(struct Attrcat, attrLen), INT, sizeof(Attrcat::attrLen), SM_INVALID));
+	attributes.push_back(Attrcat(MYATTRCAT, "indexNo", offsetof(struct Attrcat, indexNo), INT, sizeof(Attrcat::indexNo), SM_INVALID));
 	// Insert all the Attrcats into attrcat catalog
 	for (int i = 0; i < attributes.size(); ++i){
 		Attrcat attrcat = attributes.at(i);
