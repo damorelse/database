@@ -31,7 +31,7 @@ string makeNewAttrName(const char* relName, const char* attrName){
 pair<string, string> getRelAttrNames(const char* attrName){
 	string str(attrName);
 	int delim = str.find('.');
-	return pair<string, string>(str.substr(0, delim).c_str(), str.substr(delim+1).c_str());
+	return pair<string, string>(str.substr(0, delim), str.substr(delim+1));
 }
 
 RelAttrCount::RelAttrCount(){
@@ -444,6 +444,7 @@ RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAtt
 	cerr << "writeToOutput C" << endl;
 	for (int i = 0; i < numOutAttrs; ++i){
 		pair<string, string> key = getRelAttrNames(outAttrs[i].attrName);
+		cerr << key.first << " " << key.second << endl;
 		if (attrcats.find(key) != attrcats.end()){
 			memcpy(outPData + outAttrs[i].offset, pData + attrcats[key].offset, outAttrs[i].attrLen);
 		}
@@ -869,7 +870,7 @@ RC Node::JoinExecute(){
 	map<pair<string, string>, Attrcat> otherAttrcats;
 	for (int i = 0; i < otherChild->numOutAttrs; ++i){
 		pair<string, string> key = getRelAttrNames(otherChild->outAttrs[i].attrName);
-		attrcats[key] = otherChild->outAttrs[i];
+		otherAttrcats[key] = otherChild->outAttrs[i];
 	}
 
 	// No index scan
@@ -1101,7 +1102,7 @@ RC Node::CrossExecute(){
 	map<pair<string, string>, Attrcat> otherAttrcats;
 	for (int i = 0; i < otherChild->numOutAttrs; ++i){
 		pair<string, string> key = getRelAttrNames(otherChild->outAttrs[i].attrName);
-		attrcats[key] = otherChild->outAttrs[i];
+		otherAttrcats[key] = otherChild->outAttrs[i];
 	}
 	cerr << "cross execute C" << endl;
 	// Iterate over files
