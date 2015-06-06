@@ -97,7 +97,7 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	for (int i = 0; i < qPlan.root->numOutAttrs; ++i){
 		cerr << qPlan.root->outAttrs[i].attrName << "   " << qPlan.root->outAttrs[i].offset << endl;
 		dataAttrs.push_back(DataAttrInfo (qPlan.root->outAttrs[i]));
-		//dataAttrs.back().offset -= ridsSize; //TODO BUG FIX HERE?
+		//dataAttrs.back().offset -= ridsSize; //TODO BUG FIX HERE? if works, apply to all others
 	}
 	Printer printer(&dataAttrs[0], qPlan.root->numOutAttrs);
 	printer.PrintHeader(cout);
@@ -126,7 +126,7 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 			return rc;
 		}
 		// Print 
-		printer.Print(cout, pData + ridsSize);
+		printer.Print(cout, pData); //TODO BUG FIX HERE? if works, apply to all others pData + ridsSize
 	}
 	if (rc != RM_EOF){
 		if (!isRelation(*qPlan.root))

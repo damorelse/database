@@ -443,10 +443,13 @@ RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAtt
 	
 	for (int i = 0; i < numOutAttrs; ++i){
 		pair<string, string> key = getRelAttrNames(outAttrs[i].attrName);
-		if (attrcats.find(key) != attrcats.end())
+		if (attrcats.find(key) != attrcats.end()){
 			memcpy(outPData + outAttrs[i].offset, pData + attrcats[key].offset, outAttrs[i].attrLen);
-		else
+		}
+		else{
+			cout << "offset for second rel: " << otherAttrcats[key].offset << "    " << outAttrs[i].attrLen << endl;
 			memcpy(outPData + outAttrs[i].offset, otherPData + otherAttrcats[key].offset, outAttrs[i].attrLen);
+		}
 	}
 
 	// Insert
@@ -1081,7 +1084,9 @@ RC Node::CrossExecute(){
 	
 	cerr << "cross execute B" << endl;
 	// Make outPData
+	cerr << "RID size (should be 8) : " << sizeof(RID) << endl;
 	int len = outAttrs[numOutAttrs-1].offset + outAttrs[numOutAttrs-1].attrLen;
+	cerr << "outPData len (should be 88) : " << len << endl;
 	char* outPData = new char[len];
 	memset(outPData, '\0', len);
 
