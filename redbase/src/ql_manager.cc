@@ -85,7 +85,6 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
-	cerr << "root output ...." << qPlan.root->output << endl;
 	cerr << "finished getResults" << endl;
 	if (bQueryPlans){
 		PrintQueryPlan(*qPlan.root);
@@ -97,7 +96,6 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	for (int i = 0; i < qPlan.root->numOutAttrs; ++i){
 		cerr << qPlan.root->outAttrs[i].attrName << "   " << qPlan.root->outAttrs[i].offset << endl;
 		dataAttrs.push_back(DataAttrInfo (qPlan.root->outAttrs[i]));
-		//dataAttrs.back().offset -= ridsSize; //TODO BUG FIX HERE? if works, apply to all others
 	}
 	Printer printer(&dataAttrs[0], qPlan.root->numOutAttrs);
 	printer.PrintHeader(cout);
@@ -120,17 +118,19 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	RM_Record record;
 	while (OK_RC == (rc = tmpFileScan.GetNextRec(record))){
 		char* pData;
+		cerr << "sel B1" << endl;
 		if (rc = record.GetData(pData)){
-			if (!isRelation(*qPlan.root))
-				smm->DropTable(qPlan.root->output);
+			/*if (!isRelation(*qPlan.root))
+				smm->DropTable(qPlan.root->output);*/
 			return rc;
 		}
 		// Print 
-		printer.Print(cout, pData); //TODO BUG FIX HERE? if works, apply to all others pData + ridsSize
+		cerr << "sel B2" << endl;
+		printer.Print(cout, pData);
 	}
 	if (rc != RM_EOF){
-		if (!isRelation(*qPlan.root))
-			smm->DropTable(qPlan.root->output);
+		//if (!isRelation(*qPlan.root))
+		//	smm->DropTable(qPlan.root->output);
 		return rc;
 	}
 	cerr << "select C" << endl;
@@ -349,7 +349,6 @@ RC QL_Manager::Delete(const char *relName,
 	vector<DataAttrInfo> dataAttrs; 
 	for (int i = 0; i < qPlan.root->numOutAttrs; ++i){
 		dataAttrs.push_back(DataAttrInfo (qPlan.root->outAttrs[i]));
-		dataAttrs.back().offset -= ridsSize;
 	}
 	Printer printer(&dataAttrs[0], qPlan.root->numOutAttrs);
 	printer.PrintHeader(cout);
@@ -394,7 +393,7 @@ RC QL_Manager::Delete(const char *relName,
 			}
 		}
 		// Print 
-		printer.Print(cout, pData + ridsSize);
+		printer.Print(cout, pData);
 	}
 	if (rc != RM_EOF){
 		if (!isRelation(*qPlan.root))
@@ -508,7 +507,6 @@ RC QL_Manager::Update(const char *relName,
 	vector<DataAttrInfo> dataAttrs; 
 	for (int i = 0; i < qPlan.root->numOutAttrs; ++i){
 		dataAttrs.push_back(DataAttrInfo (qPlan.root->outAttrs[i]));
-		dataAttrs.back().offset -= ridsSize;
 	}
 	Printer printer(&dataAttrs[0], qPlan.root->numOutAttrs);
 	printer.PrintHeader(cout);
@@ -570,7 +568,7 @@ RC QL_Manager::Update(const char *relName,
 		}
 
 		// Print 
-		printer.Print(cout, pData + ridsSize);
+		printer.Print(cout, pData);
 	}
 	if (rc != RM_EOF){
 		if (!isRelation(*qPlan.root))

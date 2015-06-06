@@ -403,7 +403,6 @@ RC Node::DeleteTmpInput(){
 
 // Local functions
 RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAttrs, map<pair<string, string>, Attrcat> &attrcats, map<pair<string, string>, Attrcat> &otherAttrcats, RM_Record &record, RM_Record &otherRecord, char* outPData, RM_FileHandle &outFile){
-	cerr << "writeToOutput A" << endl;
 	RC rc;
 	char* pData;
 	if (rc = record.GetData(pData))
@@ -419,7 +418,6 @@ RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAtt
 		if (rc = otherRecord.GetRid(otherRid))
 			return rc;
 	}
-	cerr << "writeToOutput B" << endl;
 	// Write to output
 	char* outItr = outPData;
 	// RIDS
@@ -449,7 +447,6 @@ RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAtt
 			memcpy(outPData + outAttrs[i].offset, pData + attrcats[key].offset, outAttrs[i].attrLen);
 		}
 		else{
-			cerr << "offset for second rel relative to Original file: " << otherAttrcats[key].offset << "    " << outAttrs[i].attrLen << endl;
 			memcpy(outPData + outAttrs[i].offset, otherPData + otherAttrcats[key].offset, outAttrs[i].attrLen);
 		}
 	}
@@ -458,7 +455,6 @@ RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAtt
 	RID tmp;
 	if (rc = outFile.InsertRec(outPData, tmp))
 		return rc;
-	cerr << "writeToOutput E" << endl;
 	return 0;
 }
 // Value condition OR condition's attributes from same relation
@@ -1107,22 +1103,16 @@ RC Node::CrossExecute(){
 	cerr << "cross execute C" << endl;
 	// Iterate over files
 	RM_Record record;
-	int i = 0;
 	RM_FileScan scan;
 	if (rc = scan.OpenScan(file, INT, 4, 0, NO_OP, NULL))
 		return rc;
 	while(OK_RC == (rc = scan.GetNextRec(record))){
-		++i;
-		cerr << "outside " << i << endl;
 		RM_Record otherRecord;
 
-		int  k = 0; 
 		RM_FileScan otherScan;
 		if (rc = otherScan.OpenScan(otherFile, INT, 4, 0, NO_OP, NULL))
 			return rc;
 		while (OK_RC == (rc = otherScan.GetNextRec(otherRecord))){
-			++k;
-			cerr << "inside " << k << endl;;
 			if (rc = WriteToOutput(child, otherChild, numOutAttrs, outAttrs, attrcats, otherAttrcats, record, otherRecord, outPData, outFile))
 				return rc;
 		}
@@ -1147,9 +1137,8 @@ RC Node::CrossExecute(){
 	if (rc = rmm->CloseFile(outFile))
 		return rc;
 
-	// TODO: TESTING, must REMOVE
-	/*if (rc = DeleteTmpInput())
-		return rc;*/
+	if (rc = DeleteTmpInput())
+		return rc;
 
 	return 0;
 }
