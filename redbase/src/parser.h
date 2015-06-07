@@ -50,6 +50,7 @@ struct Value{
 	Value();
 	Value(const Value &other);
 	~Value();
+	Value& operator=(const Value &other);
 	bool operator==(const Value &other) const;
 	bool operator<(const Value &other) const;
     friend std::ostream &operator<<(std::ostream &s, const Value &v);
