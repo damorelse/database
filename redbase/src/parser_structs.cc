@@ -116,17 +116,18 @@ Value::Value(){
 }
 Value::Value(const Value &other){
 	type = other.type;
-	if (type != STRING){
-		data = new char[4];
-		memcpy(data, other.data, 4);
-	} 
-	else {
-		int size = strlen((char*)other.data)+1;
-		data = new char[size];
-		strcpy((char*)data, (char*)other.data);
+	if (data){
+		if (type != STRING){
+			data = new char[4];
+			memcpy(data, other.data, 4);
+		} 
+		else {
+			int size = strlen((char*)other.data)+1;
+			data = new char[size];
+			strcpy((char*)data, (char*)other.data);
+		}
+		del = true;
 	}
-	del = true;
-
 }
 Value::~Value(){
 	if (data && del)
