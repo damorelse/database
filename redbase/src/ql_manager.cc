@@ -216,7 +216,11 @@ RC QL_Manager::Insert(const char *relName,
 	pData = new char[relcat.tupleLen];
 	for (int i = 0; i < nValues; ++i){
 		char* attribute = pData + attributes[i].offset;
-		memcpy(attribute, values[i].data, attributes[i].attrLen);
+		if (values[i].type == STRING){
+			memset(attribute, '\0', attributes[i].attrLen);
+			memcpy(attribute, (char*)values[i].data, min(attributes[i].attrLen, strlen((char*)values[i].data)));
+		} else
+			memcpy(attribute, values[i].data, 4);
 
 		if (i > 0)
 			file << ',';
