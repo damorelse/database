@@ -682,10 +682,7 @@ RC QL_Manager::CheckAttribute(RelAttr &attribute, const char * const relations[]
 	if (attribute.relName && sizeof(attribute.relName) > 0 && strlen(attribute.relName) > 0 && isalpha(attribute.relName[0])){
 		// Check relation in from clause
 		set<string> relSet(relations, relations+nRelations);
-		cerr << "Attribute : " << attribute.relName << "   " << strlen(attribute.relName) << endl;
-		cerr << "Attribute : " << attribute.attrName << "   " << strlen(attribute.relName) << endl;
 		if (relSet.find(attribute.relName) == relSet.end()){
-			cerr << "Error is here in check attribute" << endl;
 			return QL_RELNOTINCLAUSE;
 		}
 		// Check relation-attribute exists
@@ -993,7 +990,13 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 			right = &groupNodes[i];
 			last = Cross(smm, rmm, ixm, *left, *right, calcProj, projVector.size(), &projVector[0]);
 		}
+		cerr << "one" << endl;
+		cerr << groupNodes[0].child << endl; //TODO
+		cerr << groupNodes[1].child << endl;
+		cerr << groupNodes[2].child << endl;
+		return 1;
 		qPlan = &last;
+		cerr << "two" << endl;
 	}
 	else {
 		// Initialize tables
