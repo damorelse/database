@@ -26,13 +26,13 @@ struct DataAttrInfo
     // Default constructor
     DataAttrInfo() {
        memset(relName, 0, MAXNAME + 1);
-       memset(attrName, 0, MAXNAME + 1);
+       memset(attrName, 0, sizeof(DataAttrInfo::attrName));
     };
 
     // Copy constructor
     DataAttrInfo( const DataAttrInfo &d ) {
-       strcpy (relName, d.relName);
-       strcpy (attrName, d.attrName);
+       memcpy(this->relName, d.relName, sizeof(DataAttrInfo::relName));
+	   memcpy(this->attrName, d.attrName, sizeof(DataAttrInfo::attrName));
        offset = d.offset;
        attrType = d.attrType;
        attrLength = d.attrLength;
@@ -41,8 +41,8 @@ struct DataAttrInfo
 
     DataAttrInfo& operator=(const DataAttrInfo &d) {
        if (this != &d) {
-          strcpy (relName, d.relName);
-          strcpy (attrName, d.attrName);
+          memcpy(this->relName, d.relName, sizeof(DataAttrInfo::relName));
+		  memcpy(this->attrName, d.attrName, sizeof(DataAttrInfo::attrName));
           offset = d.offset;
           attrType = d.attrType;
           attrLength = d.attrLength;
@@ -53,8 +53,8 @@ struct DataAttrInfo
 
 	// Added
 	DataAttrInfo(const Attrcat attrcat){
-		strcpy(this->relName, attrcat.relName);
-		strcpy(this->attrName, attrcat.attrName);
+		memcpy(this->relName, attrcat.relName, sizeof(Attrcat::relName));
+		memcpy(this->attrName, attrcat.attrName, sizeof(Attrcat::attrName));
 		this->offset = attrcat.offset;
 		this->attrType = attrcat.attrType;
 		this->attrLength = attrcat.attrLen;
@@ -64,7 +64,7 @@ struct DataAttrInfo
 	// Added
 	DataAttrInfo(const char* relName, const char* attrName, int offset, AttrType attrType, 
 		         int attrLen, int indexNo){
-		strcpy(this->relName, relName);
+		memcpy(this->relName, relName, sizeof(DataAttrInfo::relName));
 		strcpy(this->attrName, attrName);
 		this->offset = offset;
 		this->attrType = attrType;
@@ -73,7 +73,7 @@ struct DataAttrInfo
 	}
 
     char     relName[MAXNAME+1];    // Relation name
-    char     attrName[MAXNAME+1];   // Attribute name
+    char     attrName[MAXNAME*2+2];   // Attribute name
     int      offset;                // Offset of attribute
     AttrType attrType;              // Type of attribute
     int      attrLength;            // Length of attribute
