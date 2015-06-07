@@ -271,13 +271,6 @@ RC QL_Manager::Insert(const char *relName,
 		return rc;
 	}
 	cerr << "insert G" << endl;
-	// Destroy temp file
-	if (remove(fileName)){
-		delete [] pData;
-		delete [] attributes;
-		return QL_FILEERROR;
-	}
-	cerr << "insert H" << endl;
 
 	// TESTING
 	string line;
@@ -289,6 +282,14 @@ RC QL_Manager::Insert(const char *relName,
 		myfile.close();
 	}
 	// Testing end
+
+	// Destroy temp file
+	if (remove(fileName)){
+		delete [] pData;
+		delete [] attributes;
+		return QL_FILEERROR;
+	}
+	cerr << "insert H" << endl;
 
 	//Print result
 	vector<DataAttrInfo> dataAttrs; 
