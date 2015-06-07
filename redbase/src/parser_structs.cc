@@ -137,6 +137,28 @@ Value::Value(const Value &other): type(other.type), data(NULL), del(false){
 		del = true;
 	}
 }
+Value& Value::operator=(const Value &other){
+	if (this != &other){
+		if (data){
+			delete [] (char*)data;
+			data = NULL;
+		}
+		if (other.data){
+			if (type != STRING){
+				data = new char[4];
+				memcpy(data, other.data, 4);
+			} 
+			else {
+				//int size = strlen((char*)other.data)+1;
+				cerr << sizeof((char*)other.data) << endl;
+				data = new char[sizeof((char*)other.data)];
+				memcpy((char*)data, (char*)other.data, sizeof((char*)other.data));
+			}
+			del = true;
+		}
+	}
+	return *this;
+}
 Value::~Value(){
 	if (data && del)
 		delete [] (char*)data;
@@ -185,12 +207,17 @@ bool Value::operator<(const Value &other) const{
 		break;
 	}
 }
-Condition::Condition(){
-	lhsAttr = RelAttr("", "");
+
+Condition::Condition(): lhsAttr(RelAttr("", "")), rhsAttr(RelAttr("", "")), rhsValue(Value()){
 	op = EQ_OP;
 	bRhsIsAttr = true;
-	rhsAttr = RelAttr("", "");
-	rhsValue = Value();
+}
+Condition::Condition(const Condition& other){
+	lhsAttr = other.lhsAttr;
+	op = other.op;
+	bRhsIsAttr = other.bRhsIsAttr;
+	rhsAttr = other.rhsAttr;
+	rhsValue = other.rhsValue;
 }
 Condition::Condition(const RelAttr lhsAttr, CompOp op, const int isAttr, 
 					 const RelAttr rhsAttr, const Value rhsValue)
