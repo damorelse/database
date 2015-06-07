@@ -308,36 +308,38 @@ void Node::SetOutAttrs(){
 	}
 }
 void Node::Project(bool calcProj, int numTotalPairs, RelAttrCount *pTotals){
-	// Create projection counts map
-	map<RelAttr, int> projCounts;
-	// Include children counts
-	if (child){
-		for (int i = 0; i < child->numCountPairs; ++i)
-			projCounts[child->pCounts[i].first] = child->pCounts[i].second;
-		if (otherChild){
-			for (int i = 0; i < otherChild->numCountPairs; ++i)
-				projCounts[otherChild->pCounts[i].first] = otherChild->pCounts[i].second;
-		}
-	}
-	// Include conditions counts
-	for (int i = 0; i < numConditions; ++i){
-		RelAttr tmp(conditions[i].lhsAttr.relName, conditions[i].lhsAttr.attrName);
-		projCounts[tmp] += 1;
-		if (conditions[i].bRhsIsAttr){
-			RelAttr tmp2(conditions[i].rhsAttr.relName, conditions[i].rhsAttr.attrName);
-			projCounts[tmp2] += 1;
-		}
-	}
-	// Update numPairs / projCount
-	numCountPairs = projCounts.size();
-	if (numCountPairs > 0){
-		vector<RelAttrCount > tmp;
-		for (map<RelAttr, int>::iterator it = projCounts.begin(); it != projCounts.end(); ++it)
-			tmp.push_back(RelAttrCount(it->first, it->second));
-		pCounts = &tmp[0];
-	}
-
 	if (calcProj){
+		// Create projection counts map
+		map<RelAttr, int> projCounts;
+		// Include children counts
+		if (child){
+			for (int i = 0; i < child->numCountPairs; ++i)
+				projCounts[child->pCounts[i].first] = child->pCounts[i].second;
+			if (otherChild){
+				for (int i = 0; i < otherChild->numCountPairs; ++i)
+					projCounts[otherChild->pCounts[i].first] = otherChild->pCounts[i].second;
+			}
+		}
+		// Include conditions counts
+		for (int i = 0; i < numConditions; ++i){
+			RelAttr tmp(conditions[i].lhsAttr.relName, conditions[i].lhsAttr.attrName);
+			projCounts[tmp] += 1;
+			if (conditions[i].bRhsIsAttr){
+				RelAttr tmp2(conditions[i].rhsAttr.relName, conditions[i].rhsAttr.attrName);
+				projCounts[tmp2] += 1;
+			}
+		}
+		// Update numPairs / projCount
+		numCountPairs = projCounts.size();
+		if (numCountPairs > 0){
+			vector<RelAttrCount > tmp;
+			for (map<RelAttr, int>::iterator it = projCounts.begin(); it != projCounts.end(); ++it)
+				tmp.push_back(RelAttrCount(it->first, it->second));
+			pCounts = &tmp[0];
+		}
+		
+		// TODO TESTING: calcProj if here
+
 		// Recreate projection totals map
 		map<RelAttr, int> projTotals;
 		for (int i = 0; i < numTotalPairs; ++i)
