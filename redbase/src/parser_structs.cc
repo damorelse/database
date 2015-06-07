@@ -53,7 +53,8 @@ AttrInfo::AttrInfo(Attrcat attrcat){
 RelAttr::RelAttr(){
 	relName = NULL;
 	attrName = NULL;
-	del = false;
+	delRel = false;
+	delAttr = false;
 }
 RelAttr::RelAttr(const char* rel, const char* attr){
 	relName = new char[MAXNAME+1];
@@ -66,7 +67,8 @@ RelAttr::RelAttr(const char* rel, const char* attr){
 	if (attr)
 		strcpy(attrName, attr);
 
-	del = true;
+	delRel = true;
+	delAttr = true;
 }
 RelAttr::RelAttr(const RelAttr &other){
 	relName = new char[MAXNAME+1];
@@ -79,28 +81,29 @@ RelAttr::RelAttr(const RelAttr &other){
 	if (other.attrName)
 		strcpy(attrName, other.attrName);
 
-	del = true;
+	delRel = true;
+	delAttr = true;
 }
 RelAttr::~RelAttr(){
-	if (relName && del)
+	if (relName && delRel)
 		delete [] relName;
 	relName = NULL;
-	if (attrName && del)
+	if (attrName && delAttr)
 		delete [] attrName;
 	attrName = NULL;
-	del = false;
 }
 RelAttr& RelAttr::operator=(const RelAttr &other){
 	if (this != &other){
 		if (!relName){
 			relName = new char[MAXNAME+1];
 			memset(relName, '\0', MAXNAME+1);
-			del = true;
+			delRel = true;
 		}
 		strcpy(relName, other.relName);
 		if (!attrName){
 			attrName = new char[MAXNAME+1];
 			memset(attrName, '\0', MAXNAME+1);
+			delAttr = true;
 		}
 		strcpy(attrName, other.attrName);
 	}

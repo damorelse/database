@@ -122,6 +122,7 @@ Node::~Node(){
 	cerr << "DELETE " << type << endl;
 	if (conditions)
 		delete [] conditions;
+	cerr << "deleted conditions successfully" << endl;
 	conditions = NULL;
 	if (relations)
 		delete [] relations;

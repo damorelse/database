@@ -29,7 +29,8 @@ struct AttrInfo{
 struct RelAttr{
     char     *relName;    // Relation name (may be NULL)
     char     *attrName;   // Attribute name
-	bool del;
+	bool delRel;
+	bool delAttr;
 	RelAttr();
 	RelAttr(const char* rel, const char*attr);
 	RelAttr(const RelAttr &other);
