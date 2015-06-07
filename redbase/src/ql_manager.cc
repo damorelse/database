@@ -276,17 +276,6 @@ RC QL_Manager::Insert(const char *relName,
 	}
 	cerr << "insert G" << endl;
 
-	// TESTING
-	string line;
-	ifstream myfile (fileName);
-	if (myfile.is_open())
-	{
-		getline (myfile,line);
-		cout << line << '\n';
-		myfile.close();
-	}
-	// Testing end
-
 	// Destroy temp file
 	if (remove(fileName)){
 		delete [] pData;
@@ -299,7 +288,7 @@ RC QL_Manager::Insert(const char *relName,
 	vector<DataAttrInfo> dataAttrs; 
 	for (int i = 0; i < relcat.attrCount; ++i){
 		cerr << i << endl;
-		dataAttrs[i] = DataAttrInfo (attributes[i]);
+		dataAttrs.push_back(DataAttrInfo (attributes[i]));
 		cerr << i << endl;
 	}
 	cerr << "insert I" << endl;
