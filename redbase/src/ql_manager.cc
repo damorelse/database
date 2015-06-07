@@ -482,13 +482,13 @@ RC QL_Manager::Update(const char *relName,
 
 	// Check update attributes valid
 	const char * const relations[1] = {relName};
+	RelAttr myUpdAttr(updAttr);
+	strcpy(myUpdAttr.relName, relName);
+	RelAttr myRhsRelAttr(rhsRelAttr);
+	strcpy(myRhsRelAttr.relName, relName);
+
 	cerr << "Update A" << endl;
-	cerr << updAttr.relName << " " << updAttr.attrName << endl;
-	if (bIsValue)
-		cerr << rhsValue.data << endl;
-	else
-		cerr << rhsRelAttr.relName << " " << rhsRelAttr.attrName << endl;
-	Condition misleading(updAttr, EQ_OP, !bIsValue, rhsRelAttr, rhsValue);
+	Condition misleading(myUpdAttr, EQ_OP, !bIsValue, myRhsRelAttr, rhsValue);
 	cerr << "..." << endl;
 	if (rc = CheckCondition(misleading, relations, 1))
 		return rc;

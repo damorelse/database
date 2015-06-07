@@ -58,11 +58,13 @@ RelAttr::RelAttr(){
 RelAttr::RelAttr(const char* rel, const char* attr){
 	relName = new char[MAXNAME+1];
 	memset(relName, '\0', MAXNAME+1);
-	strcpy(relName, rel);
+	if (rel)
+		strcpy(relName, rel);
 
 	attrName = new char[MAXNAME+1];
 	memset(attrName, '\0', MAXNAME+1);
-	strcpy(attrName, attr);
+	if (attr)
+		strcpy(attrName, attr);
 
 	del = true;
 }
