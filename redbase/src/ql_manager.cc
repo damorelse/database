@@ -984,18 +984,18 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 		// Arbitrary crossing
 		Node* left = &groupNodes[0];
 		Node* right = &groupNodes[1];
-		Cross last(smm, rmm, ixm, *left, *right, calcProj, projVector.size(), &projVector[0]);
+		Cross* last = new Cross(smm, rmm, ixm, *left, *right, calcProj, projVector.size(), &projVector[0]);
 		for (int i = 2; i < groupNodes.size(); ++i){
-			left = &last;
+			left = last;
 			right = &groupNodes[i];
-			last = Cross(smm, rmm, ixm, *left, *right, calcProj, projVector.size(), &projVector[0]);
+			last = new Cross(smm, rmm, ixm, *left, *right, calcProj, projVector.size(), &projVector[0]);
 		}
 		cerr << "one" << endl;
 		cerr << groupNodes[0].child << endl; //TODO
 		cerr << groupNodes[1].child << endl;
 		cerr << groupNodes[2].child << endl;
-		return 1;
-		qPlan = &last;
+		cerr << last->child << endl;
+		qPlan = last;
 		cerr << "two" << endl;
 	}
 	else {
