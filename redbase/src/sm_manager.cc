@@ -759,9 +759,9 @@ RC SM_Manager::GetAttrcatRecord (const char *relName, const char *attrName, RM_R
 	char relation[MAXNAME + 1];
 	memset(relation, '\0', MAXNAME + 1);
 	memcpy(relation, relName, min(strlen(relName), MAXNAME));
-	char attribute[MAXNAME + 1];
-	memset(attribute, '\0', MAXNAME + 1);
-	memcpy(attribute, attrName, min(strlen(attrName), MAXNAME));
+	char attribute[MAXNAME*2 + 2];
+	memset(attribute, '\0', MAXNAME*2 + 2);
+	memcpy(attribute, attrName, min(strlen(attrName), MAXNAME*2 + 2));
 
 	RM_FileScan fileScan;
 	RC rc;
