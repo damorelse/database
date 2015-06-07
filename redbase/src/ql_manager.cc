@@ -979,8 +979,6 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 	// No cross needed
 	if (groupNodes.size() == 1){
 		cerr << "makequeryplan H" << endl;
-		cerr << groupNodes[0]->child->numRelations << endl; // TODO remove testing
-		cerr << string(groupNodes[0]->child->relations) << endl; // TODO remove 
 		qPlan.root = groupNodes[0];
 	}
 	else if (groupNodes.size() == 2){
