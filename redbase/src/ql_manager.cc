@@ -907,12 +907,16 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 				else{
 					cerr << "sel" << endl;
 					needToJoin.push_back((Node)sel);
+					cerr <<sel.child->numRelations << endl; // TODO remove testing
+					cerr << string(sel.child->relations) << endl; // TODO remove 
 				}
 			}
 			cerr << "A make query plan CHECK OFFSET (not 0) : " << needToJoin.begin()->outAttrs[1].offset << endl;
 
 			if (relGroups[k].size() == 1){
 				groupNodes.push_back((Node)*needToJoin.begin());
+				cerr << groupNodes[0].child->numRelations << endl; // TODO remove testing
+				cerr << string(groupNodes[0].child->relations) << endl; // TODO remove 
 				continue;
 			}
 			if (relGroups[k].size() == 2){
@@ -970,8 +974,8 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 	if (groupNodes.size() == 1){
 		cerr << "makequeryplan H" << endl;
 		PrintQueryPlan(groupNodes[0]);
-		cerr << groupNodes[0].child->numRelations << endl;
-		cerr << string(groupNodes[0].child->relations) << endl;
+		cerr << groupNodes[0].child->numRelations << endl; // TODO remove testing
+		cerr << string(groupNodes[0].child->relations) << endl; // TODO remove 
 		qPlan = &groupNodes[0];
 		return 0;
 	}
