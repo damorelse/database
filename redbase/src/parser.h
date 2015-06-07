@@ -68,6 +68,7 @@ struct Condition{
 
 	Condition();
 	Condition(const RelAttr lhsAttr, CompOp op, const int isAttr, const RelAttr rhsAttr, const Value rhsValue);
+	Condition& operator=(const Condition &other);
     bool operator==(const Condition &other) const;
 	bool operator<(const Condition &other) const;
 	friend std::ostream &operator<<(std::ostream &s, const Condition &c);
