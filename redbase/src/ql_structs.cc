@@ -230,7 +230,7 @@ void Node::printType(){
 	}
 	cout << ")";
 }
-Attrcat Node::getAttrcat(const char *relName, char* attrName){
+Attrcat Node::getAttrcat(const char *relName, const char* attrName){
 	string str = makeNewAttrName(relName, attrName);
 	for (int i = 0; i < numOutAttrs; ++i){
 		if (strcmp(outAttrs[i].attrName, str.c_str()) == 0)

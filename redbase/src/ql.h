@@ -42,7 +42,7 @@ public:
 	Node& operator=(const Node& other);
 	virtual RC execute();
 	void printType();
-	Attrcat getAttrcat(const char *relName, char* attrName);
+	Attrcat getAttrcat(const char *relName, const char* attrName);
 	CompOp FlipOp(CompOp op);
 
 	// Returns early in join/select if no conditions apply

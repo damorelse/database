@@ -710,8 +710,6 @@ RC QL_Manager::CheckAttribute(RelAttr &attribute, const char * const relations[]
 		if (count > 1)
 			return QL_ATTRAMBIG;
 
-		attribute.relName = new char[MAXNAME + 1];
-		memset(attribute.relName, '\0', MAXNAME + 1);
 		strcpy(attribute.relName, relations[relIndex]);
 	}
 	return 0;
