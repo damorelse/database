@@ -114,9 +114,8 @@ Value::Value(){
 	data = NULL;
 	del = false;
 }
-Value::Value(const Value &other){
-	type = other.type;
-	if (data){
+Value::Value(const Value &other): type(other.type), data(NULL), del(false){
+	if (other.data){
 		if (type != STRING){
 			data = new char[4];
 			memcpy(data, other.data, 4);
