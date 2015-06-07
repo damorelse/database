@@ -125,48 +125,15 @@ Value::Value(){
 	data = NULL;
 	del = false;
 }
-Value::Value(const Value &other): type(other.type), data(NULL), del(false){
-	if (other.data){
-		if (type != STRING){
-			data = new char[4];
-			memcpy(data, other.data, 4);
-		} 
-		else {
-			//int size = strlen((char*)other.data)+1;
-			cerr << sizeof((char*)other.data) << endl;
-			data = new char[sizeof((char*)other.data)];
-			memcpy((char*)data, (char*)other.data, sizeof((char*)other.data));
-		}
-		del = true;
-	}
-}
+Value::Value(const Value &other): type(other.type), data(other.data), del(false){}
 Value& Value::operator=(const Value &other){
 	if (this != &other){
-		if (data){
-			delete [] (char*)data;
-			data = NULL;
-		}
-		if (other.data){
-			if (type != STRING){
-				data = new char[4];
-				memcpy(data, other.data, 4);
-			} 
-			else {
-				//int size = strlen((char*)other.data)+1;
-				cerr << sizeof((char*)other.data) << endl;
-				data = new char[sizeof((char*)other.data)];
-				memcpy((char*)data, (char*)other.data, sizeof((char*)other.data));
-			}
-			del = true;
-		}
+		type = other.type;
+		data = other.data;
 	}
 	return *this;
 }
-Value::~Value(){
-	if (data && del)
-		delete [] data;
-	data = NULL;
-}
+Value::~Value(){}
 bool Value::operator==(const Value &other) const{
 	if (type != other.type)
 		return false;
