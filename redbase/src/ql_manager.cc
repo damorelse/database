@@ -297,10 +297,11 @@ RC QL_Manager::Insert(const char *relName,
 		dataAttrs[i] = DataAttrInfo (attributes[i]);
 	Printer printer(&dataAttrs[0], relcat.attrCount);
 	printer.PrintHeader(cout);
+	cerr << "insert I" << endl;
 	printer.Print(cout, pData);
 	printer.PrintFooter(cout);
 
-	cerr << "insert F" << endl;
+	cerr << "insert J" << endl;
 
 	//  Clean up
 	delete [] pData;
