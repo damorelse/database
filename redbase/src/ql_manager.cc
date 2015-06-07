@@ -796,22 +796,25 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 			if (rc = CheckAttribute(mySelAttrs[i], relations, nRelations))
 				return rc;
 		}
-
-		for (int i = 0; i < nConditions; ++i){
-			if(conditions[i].bRhsIsAttr){
-				myAttrConds.push_back(conditions[i]);
-				rc = CheckCondition(myAttrConds.back(), relations, nRelations);
-				myConds.push_back(myAttrConds.back());
-			}
-			else {
-				myValConds.push_back(conditions[i]);
-				rc = CheckCondition(myValConds.back(), relations, nRelations);
-				myConds.push_back(myAttrConds.back());
-			}
-			if (rc)
-				return rc;
-		}
 	}
+
+	for (int i = 0; i < nConditions; ++i){
+		if(conditions[i].bRhsIsAttr){
+			myAttrConds.push_back(conditions[i]);
+			rc = CheckCondition(myAttrConds.back(), relations, nRelations);
+			myConds.push_back(myAttrConds.back());
+		}
+		else {
+			myValConds.push_back(conditions[i]);
+			rc = CheckCondition(myValConds.back(), relations, nRelations);
+			myConds.push_back(myAttrConds.back());
+		}
+		if (rc)
+			return rc;
+	}
+	cerr << "Conditions : " << myConds.size() << endl;
+	cerr << "attribute conds : " << myAttrConds.size() << endl;
+	cerr << "value conds : " << myValConds.size() << endl;
 	// End check input
 	cerr << "makequeryplan B" << endl;
 	// Make projection map
@@ -990,13 +993,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 			right = &groupNodes[i];
 			last = new Cross(smm, rmm, ixm, *left, *right, calcProj, projVector.size(), &projVector[0]);
 		}
-		cerr << "one" << endl;
-		cerr << groupNodes[0].child << endl; //TODO
-		cerr << groupNodes[1].child << endl;
-		cerr << groupNodes[2].child << endl;
-		cerr << last->child << endl;
 		qPlan = last;
-		cerr << "two" << endl;
 	}
 	else {
 		// Initialize tables
