@@ -278,7 +278,19 @@ RC QL_Manager::Insert(const char *relName,
 		return QL_FILEERROR;
 	}
 	cerr << "insert H" << endl;
-	// Print result
+
+	// TESTING
+	string line;
+	ifstream myfile (fileName);
+	if (myfile.is_open())
+	{
+		getline (myfile,line);
+		cout << line << '\n';
+		myfile.close();
+	}
+	// Testing end
+
+	//Print result
 	vector<DataAttrInfo> dataAttrs; 
 	for (int i = 0; i < relcat.attrCount; ++i)
 		dataAttrs[i] = DataAttrInfo (attributes[i]);
@@ -286,6 +298,7 @@ RC QL_Manager::Insert(const char *relName,
 	printer.PrintHeader(cout);
 	printer.Print(cout, pData);
 	printer.PrintFooter(cout);
+
 	cerr << "insert F" << endl;
 
 	//  Clean up
