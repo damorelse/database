@@ -78,7 +78,8 @@ Node::Node(){
 Node::Node(const Node& other){
 	numConditions = other.numConditions;
 	conditions = new Condition[numConditions];
-	memcpy(conditions, other.conditions, numConditions * sizeof(Condition));
+	if (other.conditions)
+		memcpy(conditions, other.conditions, numConditions * sizeof(Condition));
 
 	smm = other.smm;
 	rmm = other.rmm;
@@ -93,18 +94,22 @@ Node::Node(const Node& other){
 
 	numRelations = other.numRelations;
 	relations = new char[numRelations * (MAXNAME+1)];
-	memcpy(relations, other.relations,numRelations * (MAXNAME+1));
+	if (other.numRelations)
+		memcpy(relations, other.relations,numRelations * (MAXNAME+1));
 
 	numRids = other.numRids;
 	rids = new Attrcat[numRids];
-	memcpy(rids, other.rids, numRids * sizeof(Attrcat));
+	if (other.rids)
+		memcpy(rids, other.rids, numRids * sizeof(Attrcat));
 
 	numOutAttrs = other.numOutAttrs;
 	outAttrs = new Attrcat[numOutAttrs];
-	memcpy(outAttrs, other.outAttrs, numOutAttrs * sizeof(Attrcat));
+	if (other.outAttrs)
+		memcpy(outAttrs, other.outAttrs, numOutAttrs * sizeof(Attrcat));
 	numCountPairs = other.numCountPairs;
 	pCounts = new RelAttrCount[numCountPairs];
-	memcpy(pCounts, other.pCounts, numCountPairs * sizeof(RelAttrCount));
+	if (other.pCounts)
+		memcpy(pCounts, other.pCounts, numCountPairs * sizeof(RelAttrCount));
 	project = other.project;
 
 	rc = other.rc;
