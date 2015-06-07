@@ -482,11 +482,12 @@ RC QL_Manager::Update(const char *relName,
 
 	// Check update attributes valid
 	const char * const relations[1] = {relName};
+	cerr << "Update A" << endl;
 	Condition misleading(updAttr, EQ_OP, !bIsValue, rhsRelAttr, rhsValue);
 	if (rc = CheckCondition(misleading, relations, 1))
 		return rc;
 	// End check input
-
+	cerr << "Update B" << endl;
 	QueryTree qPlan;
 	if (rc = MakeSelectQueryPlan(0, NULL, 1, relations, nConditions, conditions, qPlan))
 		return rc;
@@ -498,7 +499,7 @@ RC QL_Manager::Update(const char *relName,
 	if (bQueryPlans){
 		PrintQueryPlan(*qPlan.root);
 	}
-
+	cerr << "Update C" << endl;
 	// OPEN START
 	// Open relation file
 	RM_FileHandle fileHandle;
@@ -519,13 +520,13 @@ RC QL_Manager::Update(const char *relName,
 			return rc;
 		}
 	}
+	cerr << "Update D" << endl;
 	// Get right attrcat (if necessary)
 	Attrcat rightAttrcat;
 	if (!bIsValue)
 		rightAttrcat = qPlan.root->getAttrcat(relName, rhsRelAttr.attrName);
-	
+	cerr << "Update E" << endl;
 	// Start Printer
-	int ridsSize = qPlan.root->numRids * sizeof(RID);
 	vector<DataAttrInfo> dataAttrs; 
 	for (int i = 0; i < qPlan.root->numOutAttrs; ++i){
 		dataAttrs.push_back(DataAttrInfo (qPlan.root->outAttrs[i]));
@@ -533,7 +534,7 @@ RC QL_Manager::Update(const char *relName,
 	Printer printer(&dataAttrs[0], qPlan.root->numOutAttrs);
 	printer.PrintHeader(cout);
 	// OPEN END
-
+	cerr << "Update F" << endl;
 	// Update tuples
 	RM_FileHandle tmpFileHandle;
 	RM_FileScan tmpFileScan;
@@ -554,6 +555,7 @@ RC QL_Manager::Update(const char *relName,
 			return rc;
 		}
 	}
+	cerr << "Update G" << endl;
 	while (OK_RC == (rc = tmpFileScan.GetNextRec(record))){
 		char* pData;
 		if (rc = record.GetData(pData)){
@@ -577,7 +579,7 @@ RC QL_Manager::Update(const char *relName,
 				return rc;
 			}
 		}
-
+		cerr << "Update H" << endl;
 		// Update record
 		if (bIsValue){
 			memcpy(attribute, rhsValue.data, leftAttrcat.attrLen);
@@ -586,6 +588,7 @@ RC QL_Manager::Update(const char *relName,
 			char* rightAttribute = pData + rightAttrcat.offset;
 			memcpy(attribute, rightAttribute, min(leftAttrcat.attrLen, rightAttrcat.attrLen));
 		}
+		cerr << "Update I" << endl;
 		// If update attribute has an index, insert new entry
 		if (leftAttrcat.indexNo != SM_INVALID){
 			if (rc = indexHandle.InsertEntry(attribute, rid)){
@@ -594,13 +597,14 @@ RC QL_Manager::Update(const char *relName,
 				return rc;
 			}
 		}
+		cerr << "Update J" << endl;
 		// Update relation 
 		pData += qPlan.root->numRids * sizeof(RID);
 		if (rc = fileHandle.UpdateRec(record)){
 			return rc;
 		}
 		pData -= qPlan.root->numRids * sizeof(RID);
-
+		cerr << "Update K" << endl;
 		// Print 
 		printer.Print(cout, pData);
 	}
@@ -609,6 +613,7 @@ RC QL_Manager::Update(const char *relName,
 			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
+	cerr << "Update L" << endl;
 	if (rc = tmpFileScan.CloseScan()){
 		if (!isRelation(*qPlan.root))
 			smm->DropTable(qPlan.root->output);
@@ -621,7 +626,7 @@ RC QL_Manager::Update(const char *relName,
 			return rc;
 		}
 	}
-
+	cerr << "Update M" << endl;
 	// CLOSE START
 	// Close relation file
 	if (rc = rmm->CloseFile(fileHandle)){
