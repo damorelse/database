@@ -164,7 +164,7 @@ Value& Value::operator=(const Value &other){
 }
 Value::~Value(){
 	if (data && del)
-		delete [] (char*)data;
+		delete [] data;
 	data = NULL;
 }
 bool Value::operator==(const Value &other) const{
