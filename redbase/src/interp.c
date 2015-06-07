@@ -343,11 +343,13 @@ static void mk_rel_attr(NODE *node, RelAttr &relAttr)
 
 	relAttr.relName = new char[MAXNAME+1];
 	memset(relAttr.relName, '\0', MAXNAME+1);
-	strcpy(relAttr.relName, node->u.RELATTR.relname);
+	if (node->u.RELATTR.relname)
+		strcpy(relAttr.relName, node->u.RELATTR.relname);
 
 	relAttr.attrName = new char[MAXNAME+1];
 	memset(relAttr.attrName, '\0', MAXNAME+1);
-	strcpy(relAttr.attrName, node->u.RELATTR.attrname);
+	if (node->u.RELATTR.attrname)
+		strcpy(relAttr.attrName, node->u.RELATTR.attrname);
 
 	// TODO: Gina here
 }
