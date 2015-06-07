@@ -96,9 +96,10 @@ Node::Node(const Node& other){
 
 	numRelations = other.numRelations;
 	cerr << "Node D" << endl;
+	cerr << numRelations << "    " << string(other.relations) << endl;
 	relations = new char[numRelations * (MAXNAME+1)];
 	if (other.numRelations)
-		memcpy(relations, other.relations,numRelations * (MAXNAME+1));
+		memcpy(relations, other.relations, numRelations * (MAXNAME+1));
 
 	cerr << "Node E" << endl;
 	numRids = other.numRids;
