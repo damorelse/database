@@ -297,8 +297,11 @@ RC QL_Manager::Insert(const char *relName,
 
 	//Print result
 	vector<DataAttrInfo> dataAttrs; 
-	for (int i = 0; i < relcat.attrCount; ++i)
+	for (int i = 0; i < relcat.attrCount; ++i){
+		cerr << i << endl;
 		dataAttrs[i] = DataAttrInfo (attributes[i]);
+		cerr << i << endl;
+	}
 	cerr << "insert I" << endl;
 	Printer printer(&dataAttrs[0], relcat.attrCount);
 	printer.PrintHeader(cout);
