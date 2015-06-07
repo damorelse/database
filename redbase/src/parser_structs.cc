@@ -212,16 +212,20 @@ Condition::Condition(): lhsAttr(RelAttr("", "")), rhsAttr(RelAttr("", "")), rhsV
 	op = EQ_OP;
 	bRhsIsAttr = true;
 }
-Condition::Condition(const Condition& other){
+Condition::Condition(const Condition& other): lhsAttr(other.lhsAttr), rhsAttr(other.rhsAttr), rhsValue(other.rhsValue){
+	op = other.op;
+	bRhsIsAttr = other.bRhsIsAttr;
+}
+Condition::Condition(const RelAttr lhsAttr, CompOp op, const int isAttr, 
+					 const RelAttr rhsAttr, const Value rhsValue)
+					 : lhsAttr(lhsAttr), op(op), bRhsIsAttr(isAttr), rhsAttr(rhsAttr), rhsValue(rhsValue){}
+Condition& Condition::operator=(const Condition& other){
 	lhsAttr = other.lhsAttr;
 	op = other.op;
 	bRhsIsAttr = other.bRhsIsAttr;
 	rhsAttr = other.rhsAttr;
 	rhsValue = other.rhsValue;
 }
-Condition::Condition(const RelAttr lhsAttr, CompOp op, const int isAttr, 
-					 const RelAttr rhsAttr, const Value rhsValue)
-					 : lhsAttr(lhsAttr), op(op), bRhsIsAttr(isAttr), rhsAttr(rhsAttr), rhsValue(rhsValue){}
 bool Condition::operator==(const Condition &other) const{
 	if (!(lhsAttr == other.lhsAttr) || op != other.op || bRhsIsAttr != other.bRhsIsAttr)
 		return false;
