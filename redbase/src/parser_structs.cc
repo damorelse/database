@@ -4,6 +4,8 @@
 #include <iostream>
 #include "parser.h"
 
+using namespace std;
+
 AttrInfo::AttrInfo(){
     del = false;
 	attrName = NULL;
