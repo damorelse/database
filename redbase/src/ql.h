@@ -47,7 +47,7 @@ public:
 
 	// Returns early in join/select if no conditions apply
 	int numConditions;
-	Condition *conditions;
+	Condition **conditions;
 
 	SM_Manager *smm;
 	RM_Manager *rmm;
