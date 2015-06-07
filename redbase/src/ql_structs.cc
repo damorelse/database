@@ -1232,15 +1232,12 @@ Relation::~Relation(){}
 
 QueryTree::QueryTree(): root(NULL){}
 QueryTree::~QueryTree(){
-	if (root)
-		RecursiveDelete(root);
+	RecursiveDelete(root);
 	root = NULL;
 }
 QueryTree& QueryTree::operator=(Node* node){
-	if (root){
+	if (root)
 		RecursiveDelete(root);
-		root = NULL;
-	}
 	root = RecursiveClone(node);
 
 	return *this;

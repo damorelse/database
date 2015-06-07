@@ -26,6 +26,13 @@ using namespace std;
 bool isRelation(const Node &node){
 	return node.numRids == 0;
 }
+void RecursiveDelete(Node* node){
+	if (!node)
+		return;
+	RecursiveDelete(node->child);
+	RecursiveDelete(node->otherChild);
+	delete node;
+}
 //
 // QL_Manager::QL_Manager(SM_Manager &smm, IX_Manager &ixm, RM_Manager &rmm)
 //
@@ -885,7 +892,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 
 	cerr << "makequeryplan F" << endl;
 	// Create relation/selection/join nodes
-	vector<Node> groupNodes;
+	vector<Node*> groupNodes;
 	if (!EXT){
 		// Applies selections as deeply as possible
 		// No condition ordering
@@ -894,178 +901,181 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 		for (int k = 0; k < relGroups.size(); ++k){
 			cerr << "makequeryplan F1" << endl;
 			// Initialize list, create relation/selection nodes
-			list<Node> needToJoin;
+			list<Node*> needToJoin;
 			for (set<string>::iterator it = relGroups[k].begin(); it != relGroups[k].end(); ++it){
-				Relation rel(smm, it->c_str(), calcProj, projVector.size(), &projVector[0]);
-				if (rel.rc)
-					return rel.rc;
-				Selection sel(smm, rmm, ixm, rel, condGroups[k].size(), &condGroups[k][0], calcProj, projVector.size(), &projVector[0]);
-				if (sel.rc){
+				Relation* rel = new Relation (smm, it->c_str(), calcProj, projVector.size(), &projVector[0]);
+				if (rel->rc)
+					return rel->rc;
+				Selection* sel = new Selection(smm, rmm, ixm, *rel, condGroups[k].size(), &condGroups[k][0], calcProj, projVector.size(), &projVector[0]);
+				if (sel->rc){
 					cerr << "rel" << endl;
-					needToJoin.push_back((Node)rel);
+					needToJoin.push_back(rel);
+					delete sel;
 				}
 				else{
 					cerr << "sel" << endl;
-					needToJoin.push_back((Node)sel);
-					cerr <<sel.child->numRelations << endl; // TODO remove testing
-					cerr << string(sel.child->relations) << endl; // TODO remove 
+					needToJoin.push_back(sel);
 				}
 			}
-			cerr << "A make query plan CHECK OFFSET (not 0) : " << needToJoin.begin()->outAttrs[1].offset << endl;
+			cerr << "A make query plan CHECK OFFSET (not 0) : " << (*needToJoin.begin())->outAttrs[1].offset << endl;
 
 			if (relGroups[k].size() == 1){
-				groupNodes.push_back((Node)*needToJoin.begin());
-				cerr << groupNodes[0].child->numRelations << endl; // TODO remove testing
-				cerr << string(groupNodes[0].child->relations) << endl; // TODO remove 
+				groupNodes.push_back(*needToJoin.begin());
+				cerr << groupNodes[0]->child->numRelations << endl; // TODO remove testing
+				cerr << string(groupNodes[0]->child->relations) << endl; // TODO remove 
 				continue;
 			}
-			if (relGroups[k].size() == 2){
-				Join join(smm, rmm, ixm, *needToJoin.begin(), *(needToJoin.begin()++), condGroups[k].size(), &condGroups[k][0], calcProj, projVector.size(), &projVector[0]);
+			else if (relGroups[k].size() == 2){
+				Join* join = new Join(smm, rmm, ixm, **needToJoin.begin(), **(needToJoin.begin()++), condGroups[k].size(), &condGroups[k][0], calcProj, projVector.size(), &projVector[0]);
 				groupNodes.push_back(join);
 				continue;
 			}
-			cerr << "makequeryplan F2" << endl;
-			// Joins
-			Node left = *needToJoin.begin();
-			set<Condition> leftConds(left.conditions, left.conditions + left.numConditions);
-			vector<Condition> currConds;
-			for (vector<Condition>::iterator it = condGroups[k].begin(); it != condGroups[k].end(); ++it){
-				if (leftConds.find(*it) == leftConds.end())
-					currConds.push_back(*it);
-			}
-			while (needToJoin.size() > 1){
-				for (list<Node>::iterator it = (++needToJoin.begin()); it != needToJoin.end(); ++it){
-					Node right = *it;
-					Join join(smm, rmm, ixm, left, right, currConds.size(), &currConds[0], calcProj, projVector.size(), &projVector[0]);
-					if(!join.rc){
-						left = join;
-						needToJoin.erase(it);
+			else {
+				cerr << "makequeryplan F2" << endl;
+				// Joins
+				Node* left = *needToJoin.begin();
+				set<Condition> leftConds(left->conditions, left->conditions + left->numConditions);
+				vector<Condition> currConds;
+				for (vector<Condition>::iterator it = condGroups[k].begin(); it != condGroups[k].end(); ++it){
+					if (leftConds.find(*it) == leftConds.end())
+						currConds.push_back(*it);
+				}
+				while (needToJoin.size() > 1){
+					for (list<Node*>::iterator it = (++needToJoin.begin()); it != needToJoin.end(); ++it){
+						Node* right = *it;
+						Join* join = new Join(smm, rmm, ixm, *left, *right, currConds.size(), &currConds[0], calcProj, projVector.size(), &projVector[0]);
+						if(!join->rc){
+							left = join;
+							needToJoin.erase(it);
 
-						vector<Condition> newConds;
-						set<Condition> tmpConds (join.conditions, join.conditions+join.numConditions);
-						for (vector<Condition>::iterator it = currConds.begin(); it != currConds.end(); ++it){
-							if (tmpConds.find(*it) == tmpConds.end())
-								newConds.push_back(*it);
+							vector<Condition> newConds;
+							set<Condition> tmpConds (join->conditions, join->conditions+join->numConditions);
+							for (vector<Condition>::iterator it = currConds.begin(); it != currConds.end(); ++it){
+								if (tmpConds.find(*it) == tmpConds.end())
+									newConds.push_back(*it);
+							}
+							currConds = newConds;
+							break;
 						}
-						currConds = newConds;
-						break;
 					}
 				}
+				groupNodes.push_back(*needToJoin.begin());
 			}
-			groupNodes.push_back(*needToJoin.begin());
 		}
 		cerr << "makequeryplan F3" << endl;
 	}
 	else {
-		// TODO
-		for (int i = 0; i < relGroups.size(); ++i){
-			// [set size] [condition set] . (cost | Node)
-			vector<map<set<Condition>, pair<int, Node> > > tables;
-			// set groupNodes[i] to min cost tree root
-		}
-		// Found min join-selection ordering
-		for (int i = 0; i < groupNodes.size(); ++i)
-			SetParents(groupNodes[i]);
+		//// TODO
+		//for (int i = 0; i < relGroups.size(); ++i){
+		//	// [set size] [condition set] . (cost | Node)
+		//	vector<map<set<Condition>, pair<int, Node> > > tables;
+		//	// set groupNodes[i] to min cost tree root
+		//}
+		//// Found min join-selection ordering
+		//for (int i = 0; i < groupNodes.size(); ++i)
+		//	SetParents(*groupNodes[i]);
 	}
+
 	cerr << "makequeryplan G" << endl;
-	cerr << "B make query plan CHECK OFFSET (not 0) : " << groupNodes[0].outAttrs[1].offset << endl;
 	// Create cross nodes 
 	// No cross needed
 	if (groupNodes.size() == 1){
 		cerr << "makequeryplan H" << endl;
-		PrintQueryPlan(groupNodes[0]);
-		cerr << groupNodes[0].child->numRelations << endl; // TODO remove testing
-		cerr << string(groupNodes[0].child->relations) << endl; // TODO remove 
-		qPlan = &groupNodes[0];
-		return 0;
+		cerr << groupNodes[0]->child->numRelations << endl; // TODO remove testing
+		cerr << string(groupNodes[0]->child->relations) << endl; // TODO remove 
+		qPlan.root = groupNodes[0];
 	}
-	if (groupNodes.size() == 2){
+	else if (groupNodes.size() == 2){
 		cerr << "makequeryplan I" << endl;
-		Node left = groupNodes[0];
-		Node right = groupNodes[1];
-		Cross tmp(smm, rmm, ixm, left, right, calcProj, projVector.size(), &projVector[0]);
-		qPlan = &tmp;
-		return 0;
-	}
-	cerr << "makequeryplan J" << endl;
-	if (!EXT){
-		// Arbitrary crossing
-		Node* left = &groupNodes[0];
-		Node* right = &groupNodes[1];
-		Cross* last = new Cross(smm, rmm, ixm, *left, *right, calcProj, projVector.size(), &projVector[0]);
-		for (int i = 2; i < groupNodes.size(); ++i){
-			left = last;
-			right = &groupNodes[i];
-			last = new Cross(smm, rmm, ixm, *left, *right, calcProj, projVector.size(), &projVector[0]);
-		}
-		qPlan = last;
+		Node* left = groupNodes[0];
+		Node* right = groupNodes[1];
+		Cross* tmp = new Cross(smm, rmm, ixm, *left, *right, calcProj, projVector.size(), &projVector[0]);
+		qPlan.root = tmp;
 	}
 	else {
-		// Initialize tables
-		vector<map<set<int>, pair<int, Node> > > tables;
-		for (int i = 0; i < groupNodes.size(); ++i){
-			set<int> tmp;
-			tmp.insert(i);
-			tables[1][tmp] = pair<int, Node>(0, groupNodes[i]);
-		}
-		// Dynamic alg for crosses
-		for (int i = 2; i <= groupNodes.size(); ++i){
-			// Generate subsets of size i
-			vector<vector<int> > subsets; 
-			for(map<set<int>, pair<int, Node> >::iterator it = tables[i-1].begin(); it != tables[i-1].end(); ++it){
-				vector<int> tmp(it->first.begin(), it->first.end());
-				for (int i = 0; i < groupNodes.size(); ++i){
-					if (it->first.find(i) == it->first.end()){;
-						subsets.push_back(tmp);
-						subsets.back().push_back(i);
-					}
-				}
+		cerr << "makequeryplan J" << endl;
+		if (!EXT){
+			// Arbitrary crossing
+			Node* left = groupNodes[0];
+			Node* right = groupNodes[1];
+			Cross* last = new Cross(smm, rmm, ixm, *left, *right, calcProj, projVector.size(), &projVector[0]);
+			for (int i = 2; i < groupNodes.size(); ++i){
+				left = last;
+				right = groupNodes[i];
+				last = new Cross(smm, rmm, ixm, *left, *right, calcProj, projVector.size(), &projVector[0]);
 			}
-
-			for (int k = 0; k < subsets.size(); ++k){
-				// Get min cost of subset
-				set<int> setKey(subsets[k].begin(), subsets[k].end());
-
-				for (int divide = 1; divide < i; ++divide){
-					int leftSize = divide;
-					int rightSize = i - divide;
-					set<int> leftSet(subsets[k].begin(), subsets[k].begin() + divide);
-					set<int> rightSet(subsets[k].begin() + divide, subsets[k].end());
-					int cost = (tables[leftSize][leftSet].first + 
-						        tables[rightSize][rightSet].first +
-								CrossCost(tables[leftSize][leftSet].second, tables[rightSize][rightSet].second));
-
-					if (divide == 1 || cost < tables[i][setKey].first){
-						Node left = tables[leftSize][leftSet].second;
-						Node right = tables[rightSize][rightSet].second;
-
-						Cross cross(smm, rmm, ixm, left, right, calcProj, projVector.size(), &projVector[0]);
-						cross.cost = cost;
-						cross.numTuples = left.numTuples * right.numTuples;
-						cross.tupleSize = left.tupleSize + right.tupleSize;
-
-						tables[i][setKey] = pair<int, Node>(cost, cross);
-					}
-				}
-			}
+			qPlan.root = last;
 		}
+		else {
+			//// Initialize tables
+			//vector<map<set<int>, pair<int, Node> > > tables;
+			//for (int i = 0; i < groupNodes.size(); ++i){
+			//	set<int> tmp;
+			//	tmp.insert(i);
+			//	tables[1][tmp] = pair<int, Node>(0, *groupNodes[i]);
+			//}
+			//// Dynamic alg for crosses
+			//for (int i = 2; i <= groupNodes.size(); ++i){
+			//	// Generate subsets of size i
+			//	vector<vector<int> > subsets; 
+			//	for(map<set<int>, pair<int, Node> >::iterator it = tables[i-1].begin(); it != tables[i-1].end(); ++it){
+			//		vector<int> tmp(it->first.begin(), it->first.end());
+			//		for (int i = 0; i < groupNodes.size(); ++i){
+			//			if (it->first.find(i) == it->first.end()){;
+			//				subsets.push_back(tmp);
+			//				subsets.back().push_back(i);
+			//			}
+			//		}
+			//	}
 
-		// Found min cost cross ordering
-		qPlan = &tables[groupNodes.size()].begin()->second.second;
-		SetParents(*qPlan.root);
+			//	for (int k = 0; k < subsets.size(); ++k){
+			//		// Get min cost of subset
+			//		set<int> setKey(subsets[k].begin(), subsets[k].end());
 
-		//// Sort join groups by byte size
-		//sort(groupNodes.begin(), groupNodes.end(), sortJoins);
-		//// Create crosses smallest->largest 
-		//Node left = groupNodes[0];
-		//Node right = groupNodes[1];
-		//qPlan = Cross(smm, rmm, ixm, left, right, calcProj, projVector.size(), &projVector[0]);
-		//for (int i = 2; i < groupNodes.size(); ++i){
-		//	left = qPlan;
-		//	right = groupNodes[i];
-		//	qPlan = Cross(smm, rmm, ixm, left, right, calcProj, projVector.size(), &projVector[0]);
-		//}
+			//		for (int divide = 1; divide < i; ++divide){
+			//			int leftSize = divide;
+			//			int rightSize = i - divide;
+			//			set<int> leftSet(subsets[k].begin(), subsets[k].begin() + divide);
+			//			set<int> rightSet(subsets[k].begin() + divide, subsets[k].end());
+			//			int cost = (tables[leftSize][leftSet].first + 
+			//				        tables[rightSize][rightSet].first +
+			//						CrossCost(tables[leftSize][leftSet].second, tables[rightSize][rightSet].second));
+
+			//			if (divide == 1 || cost < tables[i][setKey].first){
+			//				Node left = tables[leftSize][leftSet].second;
+			//				Node right = tables[rightSize][rightSet].second;
+
+			//				Cross cross(smm, rmm, ixm, left, right, calcProj, projVector.size(), &projVector[0]);
+			//				cross.cost = cost;
+			//				cross.numTuples = left.numTuples * right.numTuples;
+			//				cross.tupleSize = left.tupleSize + right.tupleSize;
+
+			//				tables[i][setKey] = pair<int, Node>(cost, cross);
+			//			}
+			//		}
+			//	}
+			//}
+
+			//// Found min cost cross ordering
+			//qPlan = &tables[groupNodes.size()].begin()->second.second;
+			//SetParents(*qPlan.root);
+
+			// OR
+
+			//// Sort join groups by byte size
+			//sort(groupNodes.begin(), groupNodes.end(), sortJoins);
+			//// Create crosses smallest->largest 
+			//Node left = groupNodes[0];
+			//Node right = groupNodes[1];
+			//qPlan = Cross(smm, rmm, ixm, left, right, calcProj, projVector.size(), &projVector[0]);
+			//for (int i = 2; i < groupNodes.size(); ++i){
+			//	left = qPlan;
+			//	right = groupNodes[i];
+			//	qPlan = Cross(smm, rmm, ixm, left, right, calcProj, projVector.size(), &projVector[0]);
+			//}
+		}
 	}
+
 	cerr << "makequeryplan K" << endl;
 	return 0;
 }
