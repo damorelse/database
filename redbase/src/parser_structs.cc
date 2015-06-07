@@ -1,5 +1,6 @@
 #include <string>
 #include <cstring>
+#include <cerrno>
 #include "parser.h"
 
 AttrInfo::AttrInfo(){
@@ -65,11 +66,13 @@ RelAttr::RelAttr(const char* rel, const char* attr){
 RelAttr::RelAttr(const RelAttr &other){
 	relName = new char[MAXNAME+1];
 	memset(relName, '\0', MAXNAME+1);
-	strcpy(relName, other.relName);
+	if (other.relName)
+		strcpy(relName, other.relName);
 
 	attrName = new char[MAXNAME+1];
 	memset(attrName, '\0', MAXNAME+1);
-	strcpy(attrName, other.attrName);
+	if (other.attrName)
+		strcpy(attrName, other.attrName);
 
 	del = true;
 }
@@ -121,8 +124,9 @@ Value::Value(const Value &other): type(other.type), data(NULL), del(false){
 			memcpy(data, other.data, 4);
 		} 
 		else {
-			int size = strlen((char*)other.data)+1;
-			data = new char[size];
+			//int size = strlen((char*)other.data)+1;
+			cerr << sizeof((char*)other.data) << endl;
+			data = new char[sizeof((char*)other.data)];
 			memcpy((char*)data, (char*)other.data, sizeof((char*)other.data));
 		}
 		del = true;
