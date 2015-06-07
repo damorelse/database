@@ -53,8 +53,8 @@ AttrInfo::AttrInfo(Attrcat attrcat){
 RelAttr::RelAttr(){
 	relName = NULL;
 	attrName = NULL;
-	delRel = false;
-	delAttr = false;
+	delRel = true; //TODO: gina
+	delAttr = true;
 }
 RelAttr::RelAttr(const char* rel, const char* attr){
 	relName = new char[MAXNAME+1];
