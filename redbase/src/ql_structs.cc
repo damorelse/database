@@ -204,27 +204,31 @@ void Node::printType(){
 
 	cout << " (";
 	for (int i = 0 ; i < numConditions; ++i){
-		cout << conditions[i].lhsAttr.relName << "." << conditions[i].lhsAttr.attrName << " ";
+		cout << conditions[i].lhsAttr.relName << "." << conditions[i].lhsAttr.attrName;
 		switch (conditions[i].op){
 		case EQ_OP:
-			cout << "=";
+			cout << " = ";
 			break;
 		case NE_OP:
-			cout << "<>";
+			cout << " <> ";
 			break;
 		case LT_OP:
-			cout << "<";
+			cout << " < ";
 			break;
 		case GT_OP:
-			cout << ">";
+			cout << " > ";
 			break;
 		case LE_OP:
-			cout << "<=";
+			cout << " <= ";
 			break;
 		case GE_OP:
-			cout << ">=";
+			cout << " >= ";
 			break;
 		};
+		if (conditions[i].bRhsIsAttr)
+			cout << conditions[i].rhsAttr.relName << "." << conditions[i].rhsAttr.attrName;
+		else
+			cout << conditions[i].rhsValue.data;
 		if (i + 1 < numConditions)
 			cout << ", ";
 	}
