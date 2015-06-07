@@ -394,17 +394,15 @@ static int mk_conditions(NODE *list, int max, Condition conditions[])
          return E_TOOMANY;
 
       current = list -> u.LIST.curr;
-      strcpy(conditions[i].lhsAttr.relName,  
-         current->u.CONDITION.lhsRelattr->u.RELATTR.relname);
-      strcpy(conditions[i].lhsAttr.attrName, 
-         current->u.CONDITION.lhsRelattr->u.RELATTR.attrname);
+	  if (current->u.CONDITION.lhsRelattr->u.RELATTR.relname)
+		 strcpy(conditions[i].lhsAttr.relName, current->u.CONDITION.lhsRelattr->u.RELATTR.relname);
+      strcpy(conditions[i].lhsAttr.attrName, current->u.CONDITION.lhsRelattr->u.RELATTR.attrname);
       conditions[i].op = current->u.CONDITION.op;
       if (current->u.CONDITION.rhsRelattr) {
          conditions[i].bRhsIsAttr = TRUE;
-         strcpy(conditions[i].rhsAttr.relName,
-            current->u.CONDITION.rhsRelattr->u.RELATTR.relname);
-         strcpy(conditions[i].rhsAttr.attrName,
-            current->u.CONDITION.rhsRelattr->u.RELATTR.attrname);
+		 if (current->u.CONDITION.rhsRelattr->u.RELATTR.relname)
+			strcpy(conditions[i].rhsAttr.relName, current->u.CONDITION.rhsRelattr->u.RELATTR.relname);
+         strcpy(conditions[i].rhsAttr.attrName, current->u.CONDITION.rhsRelattr->u.RELATTR.attrname);
       }
       else {
          conditions[i].bRhsIsAttr = FALSE;
