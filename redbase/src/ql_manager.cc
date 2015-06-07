@@ -77,7 +77,7 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	if (rc = MakeSelectQueryPlan(nSelAttrs, selAttrs, nRelations, relations, nConditions, conditions, qPlan))
 		return rc;
 
-	PrintQueryPlan(*qPlan.root); //TODO TESTING
+	PrintQueryPlan(*qPlan.root);
 	cerr << "start getResults" << endl;
 	if (rc = GetResults(*qPlan.root)){
 		cerr << "BUG IN getResults!!!!!!!!!!!" << endl;
@@ -90,15 +90,21 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 		PrintQueryPlan(*qPlan.root);
 	}
 
-	// Start Printer
-	int ridsSize = qPlan.root->numRids * sizeof(RID); // Changed from numRelations
+	// Start Printer //TODO TESTING Printer
+	/*int ridsSize = qPlan.root->numRids * sizeof(RID);
 	vector<DataAttrInfo> dataAttrs; 
 	for (int i = 0; i < qPlan.root->numOutAttrs; ++i){
-		cerr << qPlan.root->outAttrs[i].attrName << "   " << qPlan.root->outAttrs[i].offset << endl;
 		dataAttrs.push_back(DataAttrInfo (qPlan.root->outAttrs[i]));
 	}
 	Printer printer(&dataAttrs[0], qPlan.root->numOutAttrs);
-	printer.PrintHeader(cout);
+	printer.PrintHeader(cout);*/
+
+	if (rc = smm->Print(qPlan.root->output)){
+		if (!isRelation(*qPlan.root))
+			smm->DropTable(qPlan.root->output);
+		return rc;
+	}
+
 	cerr << "select A" << endl;
 
 	// Print
@@ -120,17 +126,17 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 		char* pData;
 		cerr << "sel B1" << endl;
 		if (rc = record.GetData(pData)){
-			/*if (!isRelation(*qPlan.root))
-				smm->DropTable(qPlan.root->output);*/
+			if (!isRelation(*qPlan.root))
+				smm->DropTable(qPlan.root->output);
 			return rc;
 		}
 		// Print 
 		cerr << "sel B2" << endl;
-		printer.Print(cout, pData);
+		/*printer.Print(cout, pData);*/  //TODO TESTING Printer
 	}
 	if (rc != RM_EOF){
-		//if (!isRelation(*qPlan.root))
-		//	smm->DropTable(qPlan.root->output);
+		if (!isRelation(*qPlan.root))
+			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
 	cerr << "select C" << endl;
@@ -146,14 +152,14 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	}
 
 	// Finish Printer
-	printer.PrintFooter(cout);
+	/*printer.PrintFooter(cout);*/  //TODO TESTING Printer
 
 
 	// Clean up
-	/*if (!isRelation(*qPlan.root)){
+	if (!isRelation(*qPlan.root)){
 		if (rc = smm->DropTable(qPlan.root->output))
 			return rc;
-	}*/
+	}
 
 	return 0;
 }
@@ -287,9 +293,7 @@ RC QL_Manager::Insert(const char *relName,
 	//Print result
 	vector<DataAttrInfo> dataAttrs; 
 	for (int i = 0; i < relcat.attrCount; ++i){
-		cerr << i << endl;
 		dataAttrs.push_back(DataAttrInfo (attributes[i]));
-		cerr << i << endl;
 	}
 	cerr << "insert I" << endl;
 	Printer printer(&dataAttrs[0], relcat.attrCount);
