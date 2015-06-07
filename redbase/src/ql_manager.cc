@@ -525,7 +525,7 @@ RC QL_Manager::Update(const char *relName,
 		rightAttrcat = qPlan.root->getAttrcat(relName, rhsRelAttr.attrName);
 	
 	// Start Printer
-	int ridsSize = sizeof(RID);
+	int ridsSize = qPlan.root->numRids * sizeof(RID);
 	vector<DataAttrInfo> dataAttrs; 
 	for (int i = 0; i < qPlan.root->numOutAttrs; ++i){
 		dataAttrs.push_back(DataAttrInfo (qPlan.root->outAttrs[i]));
@@ -537,15 +537,22 @@ RC QL_Manager::Update(const char *relName,
 	// Update tuples
 	RM_FileHandle tmpFileHandle;
 	RM_FileScan tmpFileScan;
-	if (rc = rmm->OpenFile(qPlan.root->output, tmpFileHandle)){
-		if (!isRelation(*qPlan.root))
-			smm->DropTable(qPlan.root->output);
-		return rc;
+	// Open scan on relation file
+	if (isRelation(*qPlan.root)){
+		if (rc = tmpFileScan.OpenScan(fileHandle, INT, 4, 0, NO_OP, NULL)){
+			return rc;
+		}
 	}
-	if (rc = tmpFileScan.OpenScan(tmpFileHandle, INT, 4, 0, NO_OP, NULL)){
-		if (!isRelation(*qPlan.root))
+	// Open scan on temp file
+	else {
+		if (rc = rmm->OpenFile(qPlan.root->output, tmpFileHandle)){
 			smm->DropTable(qPlan.root->output);
-		return rc;
+			return rc;
+		}
+		if (rc = tmpFileScan.OpenScan(tmpFileHandle, INT, 4, 0, NO_OP, NULL)){
+			smm->DropTable(qPlan.root->output);
+			return rc;
+		}
 	}
 	while (OK_RC == (rc = tmpFileScan.GetNextRec(record))){
 		char* pData;
@@ -556,6 +563,10 @@ RC QL_Manager::Update(const char *relName,
 		}
 		// Get rid
 		RID rid(pData);
+		if (isRelation(*qPlan.root)){
+			if (rc = record.GetRid(rid))
+				return rc;
+		}
 		char* attribute = pData + leftAttrcat.offset;
 
 		// If update attribute has an index, delete old entry
@@ -568,11 +579,12 @@ RC QL_Manager::Update(const char *relName,
 		}
 
 		// Update record
-		if (bIsValue)
+		if (bIsValue){
 			memcpy(attribute, rhsValue.data, leftAttrcat.attrLen);
+		}
 		else {
-			char* rightAttribute = pData + ridsSize + rightAttrcat.offset;
-			memcpy(attribute, rightAttribute, leftAttrcat.attrLen);
+			char* rightAttribute = pData + rightAttrcat.offset;
+			memcpy(attribute, rightAttribute, min(leftAttrcat.attrLen, rightAttrcat.attrLen));
 		}
 		// If update attribute has an index, insert new entry
 		if (leftAttrcat.indexNo != SM_INVALID){
@@ -583,11 +595,11 @@ RC QL_Manager::Update(const char *relName,
 			}
 		}
 		// Update relation 
+		pData += qPlan.root->numRids * sizeof(RID);
 		if (rc = fileHandle.UpdateRec(record)){
-			if (!isRelation(*qPlan.root))
-				smm->DropTable(qPlan.root->output);
 			return rc;
 		}
+		pData -= qPlan.root->numRids * sizeof(RID);
 
 		// Print 
 		printer.Print(cout, pData);
@@ -602,10 +614,12 @@ RC QL_Manager::Update(const char *relName,
 			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
-	if (rc = rmm->CloseFile(tmpFileHandle)){
-		if (!isRelation(*qPlan.root))
-			smm->DropTable(qPlan.root->output);
-		return rc;
+	if (!isRelation(*qPlan.root)){
+		if (rc = rmm->CloseFile(tmpFileHandle)){
+			if (!isRelation(*qPlan.root))
+				smm->DropTable(qPlan.root->output);
+			return rc;
+		}
 	}
 
 	// CLOSE START
