@@ -921,8 +921,6 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 
 			if (relGroups[k].size() == 1){
 				groupNodes.push_back(*needToJoin.begin());
-				cerr << groupNodes[0]->child->numRelations << endl; // TODO remove testing
-				cerr << string(groupNodes[0]->child->relations) << endl; // TODO remove 
 				continue;
 			}
 			else if (relGroups[k].size() == 2){
