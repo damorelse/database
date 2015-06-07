@@ -97,7 +97,7 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 		cerr << qPlan.root->outAttrs[i].attrName << "   " << qPlan.root->outAttrs[i].offset << endl;
 		dataAttrs.push_back(DataAttrInfo (qPlan.root->outAttrs[i]));
 	}
-	Printer printer(&dataAttrs[0], qPlan.root->numOutAttrs + qPlan.root->numRids); // TODO: TESTING
+	Printer printer(&dataAttrs[0], qPlan.root->numOutAttrs);
 	printer.PrintHeader(cout);
 	cerr << "select A" << endl;
 

@@ -382,7 +382,7 @@ RC Node::CreateTmpOutput(){
 	for (int i = 0; i < numOutAttrs; ++i)
 		attributes.push_back(AttrInfo(outAttrs[i]));
 	cerr << "create tmp output, BEFORE createtable" << endl;
-	if (rc = smm->CreateTable(output, numOutAttrs, &attributes[0]))
+	if (rc = smm->CreateTable(output, numOutAttrs + numRids, &attributes[0]))
 		return rc;
 	cerr << "create tmp output, AFTER createtable" << endl;
 	return 0;
