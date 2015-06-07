@@ -808,7 +808,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 		else {
 			myValConds.push_back(conditions[i]);
 			rc = CheckCondition(myValConds.back(), relations, nRelations);
-			myConds.push_back(myAttrConds.back());
+			myConds.push_back(myValConds.back());
 		}
 		if (rc)
 			return rc;
