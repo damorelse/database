@@ -1,6 +1,7 @@
 #include <string>
 #include <cstring>
 #include <cerrno>
+#include <iostream>
 #include "parser.h"
 
 AttrInfo::AttrInfo(){
