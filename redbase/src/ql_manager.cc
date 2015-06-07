@@ -681,9 +681,11 @@ RC QL_Manager::CheckAttribute(RelAttr &attribute, const char * const relations[]
 	if (attribute.relName && sizeof(attribute.relName) > 0){
 		// Check relation in from clause
 		set<string> relSet(relations, relations+nRelations);
-		if (relSet.find(attribute.relName) == relSet.end())
+		cerr << "Attribute relname : " << attribute.relName << endl;
+		if (relSet.find(attribute.relName) == relSet.end()){
+			cerr << "Error is here in check attribute" << endl;
 			return QL_RELNOTINCLAUSE;
-
+		}
 		// Check relation-attribute exists
 		if( rc = smm->GetAttrcatRecord(attribute.relName, attribute.attrName, record)){
 			if (rc == RM_EOF)
@@ -724,6 +726,7 @@ RC QL_Manager::CheckCondition(Condition &condition, const char * const relations
 
 	// Check right hand attribute (if it is an attribute)
 	if (condition.bRhsIsAttr){
+		cerr << "right hand attribute" << endl;
 		if (rc = CheckAttribute(condition.rhsAttr, relations, nRelations))
 			return rc;
 	}
