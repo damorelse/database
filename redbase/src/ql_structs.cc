@@ -80,32 +80,38 @@ Node::Node(const Node& other){
 	conditions = new Condition[numConditions];
 	if (other.conditions)
 		memcpy(conditions, other.conditions, numConditions * sizeof(Condition));
-
+	cerr << "Node A" << endl;
 	smm = other.smm;
 	rmm = other.rmm;
 	ixm = other.ixm;
+	cerr << "Node B" << endl;
 	memset(type, '\0', MAXNAME+1);
 	strcpy(type, other.type);
 	child = other.child;
 	otherChild = other.otherChild;
 	parent = other.parent;
+	cerr << "Node C" << endl;
 	memset(output, '\0', MAXNAME+1);
 	memcpy(output, other.output, MAXNAME);
 
 	numRelations = other.numRelations;
+	cerr << "Node D" << endl;
 	relations = new char[numRelations * (MAXNAME+1)];
 	if (other.numRelations)
 		memcpy(relations, other.relations,numRelations * (MAXNAME+1));
 
+	cerr << "Node E" << endl;
 	numRids = other.numRids;
 	rids = new Attrcat[numRids];
 	if (other.rids)
 		memcpy(rids, other.rids, numRids * sizeof(Attrcat));
 
+	cerr << "Node F" << endl;
 	numOutAttrs = other.numOutAttrs;
 	outAttrs = new Attrcat[numOutAttrs];
 	if (other.outAttrs)
 		memcpy(outAttrs, other.outAttrs, numOutAttrs * sizeof(Attrcat));
+	cerr << "Node G" << endl;
 	numCountPairs = other.numCountPairs;
 	pCounts = new RelAttrCount[numCountPairs];
 	if (other.pCounts)
