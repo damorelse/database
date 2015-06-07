@@ -970,6 +970,8 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 	if (groupNodes.size() == 1){
 		cerr << "makequeryplan H" << endl;
 		PrintQueryPlan(groupNodes[0]);
+		cerr << groupNodes[0].child->numRelations << endl;
+		cerr << string(groupNodes[0].child->relations) << endl;
 		qPlan = &groupNodes[0];
 		return 0;
 	}
