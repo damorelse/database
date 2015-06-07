@@ -788,6 +788,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 	vector<Condition> myConds;
 	vector<Condition> myAttrConds;
 	vector<Condition> myValConds;
+	cerr << "makequeryplan AA" << endl;
 	if (nSelAttrs == 0)
 		calcProj = false;
 	else {
@@ -797,7 +798,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 				return rc;
 		}
 	}
-
+	cerr << "makequeryplan AAA" << endl;
 	for (int i = 0; i < nConditions; ++i){
 		if(conditions[i].bRhsIsAttr){
 			myAttrConds.push_back(conditions[i]);
