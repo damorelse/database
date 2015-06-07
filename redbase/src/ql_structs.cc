@@ -34,8 +34,7 @@ pair<string, string> getRelAttrNames(const char* attrName){
 	return pair<string, string>(str.substr(0, delim), str.substr(delim+1));
 }
 
-RelAttrCount::RelAttrCount(){
-	first = RelAttr();
+RelAttrCount::RelAttrCount():first(RelAttr()){
 	second = 0;
 }
 RelAttrCount::RelAttrCount( const RelAttr& relAttr, const int& count): first(relAttr), second(count){}
