@@ -352,7 +352,7 @@ RC QL_Manager::Delete(const char *relName,
 		}
 	}
 	// Start Printer
-	int ridsSize = sizeof(RID);
+	int ridsSize = qPlan.root->numRids * sizeof(RID);
 	vector<DataAttrInfo> dataAttrs; 
 	for (int i = 0; i < qPlan.root->numOutAttrs; ++i){
 		dataAttrs.push_back(DataAttrInfo (qPlan.root->outAttrs[i]));
@@ -364,16 +364,24 @@ RC QL_Manager::Delete(const char *relName,
 	// Delete tuples
 	RM_FileHandle tmpFileHandle;
 	RM_FileScan tmpFileScan;
-	if (rc = rmm->OpenFile(qPlan.root->output, tmpFileHandle)){
-		if (!isRelation(*qPlan.root))
-			smm->DropTable(qPlan.root->output);
-		return rc;
+	// Open scan on relation file
+	if (isRelation(*qPlan.root)){
+		if (rc = tmpFileScan.OpenScan(fileHandle, INT, 4, 0, NO_OP, NULL)){
+			return rc;
+		}
 	}
-	if (rc = tmpFileScan.OpenScan(tmpFileHandle, INT, 4, 0, NO_OP, NULL)){
-		if (!isRelation(*qPlan.root))
+	// Open scan on temp file
+	else {
+		if (rc = rmm->OpenFile(qPlan.root->output, tmpFileHandle)){
 			smm->DropTable(qPlan.root->output);
-		return rc;
+			return rc;
+		}
+		if (rc = tmpFileScan.OpenScan(tmpFileHandle, INT, 4, 0, NO_OP, NULL)){
+			smm->DropTable(qPlan.root->output);
+			return rc;
+		}
 	}
+
 	RM_Record record;
 	while (OK_RC == (rc = tmpFileScan.GetNextRec(record))){
 		char* pData;
@@ -384,6 +392,11 @@ RC QL_Manager::Delete(const char *relName,
 		}
 		// Get rid
 		RID rid(pData);
+		if (isRelation(*qPlan.root)){
+			if (rc = record.GetRid(rid))
+				return rc;
+		}
+
 		// Update relation 
 		if (rc = fileHandle.DeleteRec(rid)){
 			if (!isRelation(*qPlan.root))
@@ -412,10 +425,12 @@ RC QL_Manager::Delete(const char *relName,
 			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
-	if (rc = rmm->CloseFile(tmpFileHandle)){
-		if (!isRelation(*qPlan.root))
-			smm->DropTable(qPlan.root->output);
-		return rc;
+	if (!isRelation(*qPlan.root)){
+		if (rc = rmm->CloseFile(tmpFileHandle)){
+			if (!isRelation(*qPlan.root))
+				smm->DropTable(qPlan.root->output);
+			return rc;
+		}
 	}
 
 	// CLOSE START
@@ -429,7 +444,7 @@ RC QL_Manager::Delete(const char *relName,
 	for (int i = 0; i < indexes.size(); ++i){
 		if (rc = ixm->CloseIndex(indexes[i].second)){
 			if (!isRelation(*qPlan.root))
-			smm->DropTable(qPlan.root->output);
+				smm->DropTable(qPlan.root->output);
 			return rc;
 		}
 	}
