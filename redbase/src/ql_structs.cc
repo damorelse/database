@@ -227,8 +227,32 @@ void Node::printType(){
 		};
 		if (conditions[i].bRhsIsAttr)
 			cout << conditions[i].rhsAttr.relName << "." << conditions[i].rhsAttr.attrName;
-		else
-			cout << conditions[i].rhsValue.data;
+		else {
+			switch (conditions[i].rhsValue.type){
+
+			case INT:
+			{
+				int tmp;
+				memcpy(&tmp, conditions[i].rhsValue.data, 4);
+				cout << tmp;
+				break;
+			}
+			case FLOAT:
+				{
+					float tmp;
+					memcpy(&tmp, conditions[i].rhsValue.data, 4);
+					cout << tmp;
+					break;
+				}
+			case STRING:
+				{
+					string str((char*)conditions[i].rhsValue.data);
+					cout << str;
+					break;
+				}
+			}
+
+		}
 		if (i + 1 < numConditions)
 			cout << ", ";
 	}
