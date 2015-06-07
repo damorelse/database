@@ -123,7 +123,7 @@ Value::Value(const Value &other): type(other.type), data(NULL), del(false){
 		else {
 			int size = strlen((char*)other.data)+1;
 			data = new char[size];
-			strcpy((char*)data, (char*)other.data);
+			memcpy((char*)data, (char*)other.data, sizeof((char*)other.data));
 		}
 		del = true;
 	}
