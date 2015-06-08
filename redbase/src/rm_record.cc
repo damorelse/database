@@ -57,3 +57,8 @@ RC RM_Record::GetRid (RID &rid) const
 	rid = this->rid;
 	return OK_RC;
 }
+
+int RM_Record::GetLength() const
+{
+	return length;
+}

@@ -41,6 +41,7 @@ class RM_Record {
 		// Return the RID associated with the record
 		RC GetRid (RID &rid) const;
 
+		int GetLength() const;
 	private: 
 		char * recordCopy;
 		RID rid;

@@ -618,11 +618,22 @@ RC QL_Manager::Update(const char *relName,
 		}
 		cerr << "Update J" << endl;
 		// Update relation 
-		pData += qPlan.root->numRids * sizeof(RID);
-		if (rc = fileHandle.UpdateRec(record)){
-			return rc;
+		if(isRelation(*qPlan.root)){
+			if (rc = fileHandle.UpdateRec(record))
+				return rc;
+		} else {
+			char* src = pData + qPlan.root->numRids * sizeof(RID);
+			if (rc = fileHandle.GetRec(rid, record))
+				return rc;
+			char* dest;
+			if (rc = record.GetData(dest))
+				return rc;
+			memcpy(dest, src, record.GetLength());
+
+			if (rc = fileHandle.UpdateRec(record))
+				return rc;
 		}
-		pData -= qPlan.root->numRids * sizeof(RID);
+
 		cerr << "Update K" << endl;
 		// Print 
 		printer.Print(cout, pData);
