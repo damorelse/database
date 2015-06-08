@@ -30,9 +30,9 @@ list<set<string> >::iterator GetJoinSet(list<set<string> >joinGroups, char* relN
 	return joinGroups.end();
 }
 string GetRelName(char* attrName){
-	int i;
-	for (i = 0; i < strlen(attrName) &&attrName[i] != '.'; ++i){}
-	return string(attrName, i);
+	string str(attrName);
+	int delim = str.find('.');
+	return str.substr(0, delim);
 }
 
 //
