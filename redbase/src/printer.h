@@ -53,13 +53,14 @@ struct DataAttrInfo
 
 	// Added
 	DataAttrInfo(const Attrcat attrcat, bool query = false){
-		memcpy(this->relName, attrcat.relName, sizeof(Attrcat::relName));
 		if (query){
 			int i;
 			for (i = 0; i < strlen(attrcat.attrName) && attrcat.attrName[i] != '.'; ++i){}
+			memcpy(this->relName, attrcat.attrName, i);
 			memcpy(this->attrName, attrcat.attrName + i + 1, min(sizeof(Attrcat::attrName), strlen(attrcat.attrName)));
 		}
 		else {
+			memcpy(this->relName, attrcat.relName, sizeof(Attrcat::relName));
 			memcpy(this->attrName, attrcat.attrName, sizeof(Attrcat::attrName));
 		}
 		this->offset = attrcat.offset;

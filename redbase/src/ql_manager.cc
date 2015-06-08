@@ -29,6 +29,11 @@ list<set<string> >::iterator GetJoinSet(list<set<string> >joinGroups, char* relN
 			return it;
 	return joinGroups.end();
 }
+string GetRelName(char* attrName){
+	int i;
+	for (i = 0; i < strlen(attrName) &&attrName[i] != '.'; ++i){}
+	return string(attrName, i);
+}
 
 //
 // QL_Manager::QL_Manager(SM_Manager &smm, IX_Manager &ixm, RM_Manager &rmm)
@@ -94,8 +99,44 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 
 	// Start Printer
 	vector<DataAttrInfo> dataAttrs; 
-	for (int i = 0; i < qPlan.root->numOutAttrs; ++i){
-		dataAttrs.push_back(DataAttrInfo (qPlan.root->outAttrs[i], true));
+	// Order attributes
+	if (nSelAttrs == 1 && strcmp(selAttrs[0].attrName, "*") == 0){
+		map<string, pair<int, int>> map; // relName -> start index, length
+		string relName = GetRelName(qPlan.root->outAttrs[0].attrName);
+		int start = 0;
+		int end = 1;
+		for (int i = 1; i < qPlan.root->numOutAttrs; ++i){
+			string otherRelName = GetRelName(qPlan.root->outAttrs[i].attrName);
+			if (relName == otherRelName)
+				++end;
+			else {
+				map[relName] = make_pair(start, end);
+				relName = otherRelName;
+				start = i;
+				end = i + 1;
+			}
+		}
+		map[relName] = make_pair(start, end);
+		for (int i = 0; i < nRelations; ++i){
+			pair<int, int> startEnd = map[relations[i]];
+			for (int index = startEnd.first; index < startEnd.second; ++index){
+				dataAttrs.push_back(DataAttrInfo (qPlan.root->outAttrs[index], true));
+			}
+		}
+	}
+	else {
+		map<string, Attrcat*> map; // relName.attrName -> outAttr pointer
+		for (int i = 0; i < qPlan.root->numOutAttrs; ++i){
+			map[qPlan.root->outAttrs[i].attrName] = qPlan.root->outAttrs + i;
+		}
+		Attrcat* attrcat;
+		for (int i = 0; i < nSelAttrs; ++i){
+			RelAttr tmp(selAttrs[i]);
+			if (rc = CheckAttribute(tmp, relations, nRelations))
+				return rc;
+			attrcat = map[string(tmp.relName) + "." + string(tmp.attrName)];
+			dataAttrs.push_back(DataAttrInfo (*attrcat, true));
+		}
 	}
 	Printer printer(&dataAttrs[0], qPlan.root->numOutAttrs);
 	printer.PrintHeader(cout);
