@@ -1009,10 +1009,10 @@ Relation::Relation(SM_Manager *smm, const char *relName, bool calcProj, int numT
 		cerr << endl << endl;
 		vector<Attrcat> newOutAttrs;
 		for (int i = 0; i < numOutAttrs; ++i){
-			RelAttr tmp(outAttrs[i].relName, outAttrs[i].attrName);
-			if (projTotals.find(tmp) != projTotals.end()){
+			pair<string, string> pair = getRelAttrNames(outAttrs[i].attrName);
+			RelAttr relattr(pair.first.c_str(), pair.second.c_str());
+			if (projTotals.find(relattr) != projTotals.end()){
 				newOutAttrs.push_back(outAttrs[i]);
-				cerr << outAttrs[i].relName << "." << outAttrs[i].attrName << endl;
 			}
 		}
 
