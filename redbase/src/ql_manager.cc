@@ -995,6 +995,8 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 	if (groupNodes.size() == 1){
 		cerr << "makequeryplan H" << endl;
 		qPlan.root = groupNodes[0];
+		PrintQueryPlan(*groupNodes[0]);
+		cerr << "makequeryplan H.2" << endl;
 	}
 	else if (groupNodes.size() == 2){
 		cerr << "makequeryplan I" << endl;
@@ -1166,9 +1168,9 @@ RC QL_Manager::GetResults(Node &qPlan)
 }
 
 // Print query plan
-void QL_Manager::PrintQueryPlan(Node &qPlan)
+void QL_Manager::PrintQueryPlan(Node &node)
 {
-	RecursivePrint(qPlan, 0);
+	RecursivePrint(node, 0);
 }
 void QL_Manager::RecursivePrint(Node &node, int indent){
 	// Go down tree, print each branch one at a time, right-most branch first
