@@ -994,11 +994,9 @@ Relation::Relation(SM_Manager *smm, const char *relName, bool calcProj, int numT
 		rc = QL_RELNODE;
 		return;
 	}
-	cerr << "relation constructor CHECK OFFSET (not 0) : " << outAttrs[1].offset << endl;
 	// Update outAttrs.attrName
 	for (int i = 0; i < numOutAttrs; ++i)
 		strcpy(outAttrs[i].attrName, makeNewAttrName(outAttrs[i].relName, outAttrs[i].attrName).c_str());
-	cerr << "relation constructor CHECK OFFSET (not 0) : " << outAttrs[1].offset << endl;
 
 	// NOT typical projection since no execution function to generate new output
 	if (calcProj){

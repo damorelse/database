@@ -932,7 +932,6 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 					needToJoin.push_back(sel);
 				}
 			}
-			cerr << "A make query plan CHECK OFFSET (not 0) : " << (*needToJoin.begin())->outAttrs[1].offset << endl;
 
 			if (relGroups[k].size() == 1){
 				groupNodes.push_back(*needToJoin.begin());
