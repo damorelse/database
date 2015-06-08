@@ -11,7 +11,7 @@
 #include <iostream>
 #include <cstring>
 #include "redbase.h"      // For definition of MAXNAME
-
+using namespace std;
 #define MAXPRINTSTRING  ((2*MAXNAME) + 5)
 
 //
