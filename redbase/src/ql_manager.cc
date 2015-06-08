@@ -100,6 +100,7 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	// Start Printer
 	vector<DataAttrInfo> dataAttrs; 
 	// Order attributes
+	cerr << "N Sel Attrs " << nSelAttrs << "  " << selAttrs[0].attrName << endl;
 	if (nSelAttrs == 1 && strcmp(selAttrs[0].attrName, "*") == 0){
 		map<string, pair<int, int> > map; // relName -> start index, length
 		string relName = GetRelName(qPlan.root->outAttrs[0].attrName);
@@ -128,6 +129,7 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 		}
 	}
 	else {
+		cerr << "Went the wrong way" << endl;
 		map<string, Attrcat*> map; // relName.attrName -> outAttr pointer
 		for (int i = 0; i < qPlan.root->numOutAttrs; ++i){
 			map[qPlan.root->outAttrs[i].attrName] = qPlan.root->outAttrs + i;
