@@ -623,15 +623,16 @@ RC QL_Manager::Update(const char *relName,
 				return rc;
 		} else {
 			char* src = pData + qPlan.root->numRids * sizeof(RID);
-			if (rc = fileHandle.GetRec(rid, record))
+			RM_Record otherRecord;
+			if (rc = fileHandle.GetRec(rid, otherRecord))
 				return rc;
 			char* dest;
-			if (rc = record.GetData(dest))
+			if (rc = otherRecord.GetData(dest))
 				return rc;
 			int len = qPlan.root->outAttrs[qPlan.root->numOutAttrs].offset + qPlan.root->outAttrs[qPlan.root->numOutAttrs].attrLen - qPlan.root->numRids * sizeof(RID);
 			memcpy(dest, src, len);
 
-			if (rc = fileHandle.UpdateRec(record))
+			if (rc = fileHandle.UpdateRec(otherRecord))
 				return rc;
 		}
 
