@@ -24,7 +24,7 @@ bool isJoinCondition(Condition &cond){
 // Assumes condition not yet applied
 bool SelectionConditionApplies(Condition &cond, set<string> &myRelations){
 	// Check left attribute is in relations
-	if (myRelations.find(cond.lhsAttr.relName)  == myRelations.end())
+	if (myRelations.find(getRelAttrNames(cond.lhsAttr.attrName).first)  == myRelations.end())
 		return false;
 	// Check is not a join condition
 	if (isJoinCondition(cond))
@@ -38,11 +38,13 @@ bool JoinConditionApplies(Condition &cond, set<string> &myRelations){
 		return SelectionConditionApplies(cond, myRelations);
 	}
 	// Check both attributes included in relations
+	cerr << "  " << cond.lhsAttr.relName << "  " << cond.rhsAttr.relName;
 	if (myRelations.find(cond.lhsAttr.relName) == myRelations.end() ||
 		myRelations.find(cond.rhsAttr.relName) == myRelations.end()){
 		return false;
 	}
 	// Join condition
+	cerr << "Join condition found!!!" << endl;
 	return true;
 }
 
@@ -656,23 +658,32 @@ Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& 
 
 	// numConditions and conditions
 	set<string> myRelations;
-	for (int i = 0; i < left.numRelations; ++i)
+	for (int i = 0; i < left.numRelations; ++i){
 		myRelations.insert(left.relations + i * (MAXNAME + 1));
-	for (int i = 0; i < right.numRelations; ++i)
+		cerr << "relation: " << (string)(left.relations + i * (MAXNAME + 1)) << endl;
+	}
+	for (int i = 0; i < right.numRelations; ++i){
 		myRelations.insert(right.relations + i * (MAXNAME + 1));
+		cerr << "relation: " << (string)(left.relations + i * (MAXNAME + 1)) << endl;
+	}
+	bool foundJoinCondition = false;
 	vector<Condition> condVector;
 	for (int i = 0; i < numConds; ++i){
-		if (JoinConditionApplies(conds[i], myRelations))
+		if (JoinConditionApplies(conds[i], myRelations)){
 			condVector.push_back(conds[i]);
+			if (isJoinCondition(conds[i]))
+				foundJoinCondition = true;
+		}
+	}
+	// Early exit
+	if (!foundJoinCondition){
+		rc = QL_JOINNODE;
+		return;
 	}
 	numConditions = condVector.size();
 	conditions = new Condition[numConditions];
 	copy(condVector.begin(), condVector.end(), conditions);
-	// Early exit
-	if (numConditions == 0){
-		rc = QL_JOINNODE;
-		return;
-	}
+
 
 	cerr << "JOIN CREATION HERE" << endl;
 	this->smm = smm;
