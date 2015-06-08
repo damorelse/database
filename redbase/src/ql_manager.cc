@@ -939,15 +939,10 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 				continue;
 			}
 			else if (relGroups[k].size() == 2){
-				cerr << "just before join node creation" << endl;
-				cerr <<  (*needToJoin.begin())->numRelations << endl;
-				cerr << (*needToJoin.begin()++)->numRelations << endl;
 				Join* join = new Join(smm, rmm, ixm, **needToJoin.begin(), **(++needToJoin.begin()), condGroups[k].size(), &condGroups[k][0], calcProj, projVector.size(), &projVector[0]);
 				if (join->rc)
 					return join->rc;
 				groupNodes.push_back(join);
-				PrintQueryPlan(*groupNodes[0]);
-				cerr << "just after join node creation" << endl;
 				continue;
 			}
 			else {
@@ -963,18 +958,20 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 				while (needToJoin.size() > 1){
 					for (list<Node*>::iterator it = (++needToJoin.begin()); it != needToJoin.end(); ++it){
 						Node* right = *it;
+
+						vector<Condition> newConds;
+						set<Condition> rightConds (right->conditions, right->conditions+right->numConditions);
+						for (vector<Condition>::iterator it = currConds.begin(); it != currConds.end(); ++it){
+							if (rightConds.find(*it) == rightConds.end())
+								newConds.push_back(*it);
+						}
+						currConds = newConds;
+
+						
 						Join* join = new Join(smm, rmm, ixm, *left, *right, currConds.size(), &currConds[0], calcProj, projVector.size(), &projVector[0]);
 						if(!join->rc){
 							left = join;
 							needToJoin.erase(it);
-
-							vector<Condition> newConds;
-							set<Condition> tmpConds (join->conditions, join->conditions+join->numConditions);
-							for (vector<Condition>::iterator it = currConds.begin(); it != currConds.end(); ++it){
-								if (tmpConds.find(*it) == tmpConds.end())
-									newConds.push_back(*it);
-							}
-							currConds = newConds;
 							break;
 						}
 					}
