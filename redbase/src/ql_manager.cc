@@ -947,11 +947,6 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 			}*/
 			else {
 				cerr << "makequeryplan F2" << endl;
-				// Joins
-				cerr << (*needToJoin.begin())->output << endl;
-				cerr << (*++needToJoin.begin())->output << endl;
-				cerr << (*++(++needToJoin.begin()))->output << endl;
-				cerr << "makequeryplan F2  a" << endl;
 
 				// Fence post
 				Node* left = *needToJoin.begin();
