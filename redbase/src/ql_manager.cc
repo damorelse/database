@@ -629,8 +629,7 @@ RC QL_Manager::Update(const char *relName,
 			char* dest;
 			if (rc = otherRecord.GetData(dest))
 				return rc;
-			int len = qPlan.root->outAttrs[qPlan.root->numOutAttrs].offset + qPlan.root->outAttrs[qPlan.root->numOutAttrs].attrLen - qPlan.root->numRids * sizeof(RID);
-			memcpy(dest, src, len);
+			memcpy(dest, src, otherRecord.GetLength());
 
 			if (rc = fileHandle.UpdateRec(otherRecord))
 				return rc;
