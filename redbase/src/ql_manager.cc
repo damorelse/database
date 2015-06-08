@@ -95,7 +95,7 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	// Start Printer
 	vector<DataAttrInfo> dataAttrs; 
 	for (int i = 0; i < qPlan.root->numOutAttrs; ++i){
-		dataAttrs.push_back(DataAttrInfo (qPlan.root->outAttrs[i]));
+		dataAttrs.push_back(DataAttrInfo (qPlan.root->outAttrs[i], true));
 	}
 	Printer printer(&dataAttrs[0], qPlan.root->numOutAttrs);
 	printer.PrintHeader(cout);
@@ -295,7 +295,7 @@ RC QL_Manager::Insert(const char *relName,
 	//Print result
 	vector<DataAttrInfo> dataAttrs; 
 	for (int i = 0; i < relcat.attrCount; ++i){
-		dataAttrs.push_back(DataAttrInfo (attributes[i]));
+		dataAttrs.push_back(DataAttrInfo (attributes[i], true));
 	}
 	 // cerr << "insert I" << endl;
 	Printer printer(&dataAttrs[0], relcat.attrCount);
@@ -365,7 +365,7 @@ RC QL_Manager::Delete(const char *relName,
 	// Start Printer
 	vector<DataAttrInfo> dataAttrs; 
 	for (int i = 0; i < qPlan.root->numOutAttrs; ++i){
-		dataAttrs.push_back(DataAttrInfo (qPlan.root->outAttrs[i]));
+		dataAttrs.push_back(DataAttrInfo (qPlan.root->outAttrs[i], true));
 	}
 	Printer printer(&dataAttrs[0], qPlan.root->numOutAttrs);
 	printer.PrintHeader(cout);
@@ -545,7 +545,7 @@ RC QL_Manager::Update(const char *relName,
 	// Start Printer
 	vector<DataAttrInfo> dataAttrs; 
 	for (int i = 0; i < qPlan.root->numOutAttrs; ++i){
-		dataAttrs.push_back(DataAttrInfo (qPlan.root->outAttrs[i]));
+		dataAttrs.push_back(DataAttrInfo (qPlan.root->outAttrs[i], true));
 	}
 	Printer printer(&dataAttrs[0], qPlan.root->numOutAttrs);
 	printer.PrintHeader(cout);
