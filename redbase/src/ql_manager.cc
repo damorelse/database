@@ -80,7 +80,6 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	if (rc = MakeSelectQueryPlan(nSelAttrs, selAttrs, nRelations, relations, nConditions, conditions, qPlan))
 		return rc;
 
-	PrintQueryPlan(*qPlan.root);
 	 // cerr << "start getResults" << endl;
 	if (rc = GetResults(*qPlan.root)){
 		 // cerr << "BUG IN getResults!!!!!!!!!!!" << endl;
