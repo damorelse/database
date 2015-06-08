@@ -69,12 +69,12 @@ public:
 	int numCountPairs;
 	RelAttrCount *pCounts;
 	bool project;
+	int tupleSize;
 
 	RC rc; // set optionally
 	int execution; //set during query plan building
 	int cost; //set during query plan building
 	int numTuples; //set during query plan building
-	int tupleSize; //set during query plan building, = outAttrs[last].offset + outAttrs[last].length
 
 private:
 	RC SelectionExecute();

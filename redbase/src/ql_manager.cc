@@ -94,7 +94,6 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	}
 
 	// Start Printer
-	int ridsSize = qPlan.root->numRids * sizeof(RID);
 	vector<DataAttrInfo> dataAttrs; 
 	for (int i = 0; i < qPlan.root->numOutAttrs; ++i){
 		dataAttrs.push_back(DataAttrInfo (qPlan.root->outAttrs[i]));
@@ -365,7 +364,6 @@ RC QL_Manager::Delete(const char *relName,
 		}
 	}
 	// Start Printer
-	int ridsSize = qPlan.root->numRids * sizeof(RID);
 	vector<DataAttrInfo> dataAttrs; 
 	for (int i = 0; i < qPlan.root->numOutAttrs; ++i){
 		dataAttrs.push_back(DataAttrInfo (qPlan.root->outAttrs[i]));
@@ -802,12 +800,12 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 		return QL_MULTIREL;
 
 	// Check attributes valid (and make copies)
-	bool calcProj = true;
 	vector<RelAttr> mySelAttrs;
 	vector<Condition> myConds;
 	vector<Condition> myAttrConds;
 	vector<Condition> myValConds;
 	cerr << "makequeryplan AA" << endl;
+	bool calcProj = true;
 	if (nSelAttrs == 0)
 		calcProj = false;
 	else {
@@ -836,6 +834,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 	cerr << "attribute conds : " << myAttrConds.size() << endl;
 	cerr << "value conds : " << myValConds.size() << endl;
 	// End check input
+
 	cerr << "makequeryplan B" << endl;
 	// Make projection map
 	map<RelAttr, int> projMap;
@@ -852,6 +851,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 	for(map<RelAttr, int>::iterator it = projMap.begin(); it != projMap.end(); ++it)
 		projVector.push_back(RelAttrCount(it->first, it->second));
 	cerr << "makequeryplan C" << endl;
+
 	// Make join lists
 	map<string, set<string> > joinLists;
 	for (int i = 0; i < myAttrConds.size(); ++i){
@@ -906,6 +906,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 
 	cerr << "makequeryplan F" << endl;
 	// Create relation/selection/join nodes
+	bool relProject = (calcProj && nRelations == 1 && nConditions == 0);
 	vector<Node*> groupNodes;
 	if (!EXT){
 		// Applies selections as deeply as possible
@@ -917,7 +918,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 			// Initialize list, create relation/selection nodes
 			list<Node*> needToJoin;
 			for (set<string>::iterator it = relGroups[k].begin(); it != relGroups[k].end(); ++it){
-				Relation* rel = new Relation (smm, it->c_str(), calcProj, projVector.size(), &projVector[0]);
+				Relation* rel = new Relation (smm, it->c_str(), relProject, projVector.size(), &projVector[0]);
 				if (rel->rc)
 					return rel->rc;
 				Selection* sel = new Selection(smm, rmm, ixm, *rel, condGroups[k].size(), &condGroups[k][0], calcProj, projVector.size(), &projVector[0]);

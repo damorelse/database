@@ -102,12 +102,12 @@ Node::Node(){
 	numCountPairs = 0;
 	pCounts = NULL;
 	project = false;
+	tupleSize = 0;
 
 	rc = 0;
 	execution = QL_FILE;
 	cost = 0;
 	numTuples = 0;
-	tupleSize = 0;
 }
 Node::Node(const Node& other){
 	numConditions = other.numConditions;
@@ -376,6 +376,9 @@ void Node::SetOutAttrs(){
 		outAttrs[i].offset = offset;
 		offset += outAttrs[i].attrLen;
 	}
+
+	// tupleSize
+	tupleSize = offset; 
 }
 void Node::Project(bool calcProj, int numTotalPairs, RelAttrCount *pTotals){
 	if (calcProj){
@@ -435,6 +438,7 @@ void Node::Project(bool calcProj, int numTotalPairs, RelAttrCount *pTotals){
 			delete [] outAttrs;
 			outAttrs = &newOutAttrs[0];
 			project = true;
+			tupleSize = offset;
 		}
 	}
 }
@@ -995,7 +999,28 @@ Relation::Relation(SM_Manager *smm, const char *relName, bool calcProj, int numT
 	for (int i = 0; i < numOutAttrs; ++i)
 		strcpy(outAttrs[i].attrName, makeNewAttrName(outAttrs[i].relName, outAttrs[i].attrName).c_str());
 	cerr << "relation constructor CHECK OFFSET (not 0) : " << outAttrs[1].offset << endl;
-	// NO projection since no execution function to generate new output
+
+	// NOT typical projection since no execution function to generate new output
+	if (calcProj){
+		// TODO: HERE change dataAttrs if qPlan.root is relation and calcProj
+		map<RelAttr, int> projTotals;
+		for (int i = 0; i < numTotalPairs; ++i)
+			projTotals[pTotals[i].first] = pTotals[i].second;
+
+		vector<Attrcat> newOutAttrs;
+		for (int i = 0; i < numOutAttrs; ++i){
+			RelAttr tmp(outAttrs[i].relName, outAttrs[i].attrName);
+			if (projTotals.find(tmp) != projTotals.end()){
+				newOutAttrs.push_back(outAttrs[i]);
+			}
+		}
+
+		delete [] outAttrs;
+		project = (numOutAttrs != newOutAttrs.size());
+		numOutAttrs = newOutAttrs.size();
+		outAttrs = &newOutAttrs[0];
+		// tupleSize not used
+	}
 }
 Relation::~Relation(){}
 
