@@ -100,8 +100,7 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	// Start Printer
 	vector<DataAttrInfo> dataAttrs; 
 	// Order attributes
-	cerr << "N Sel Attrs " << nSelAttrs << "  " << selAttrs[0].attrName << endl;
-	if (nSelAttrs == 1 && strcmp(selAttrs[0].attrName, "*") == 0){
+	if (nSelAttrs == 0){
 		map<string, pair<int, int> > map; // relName -> start index, length
 		string relName = GetRelName(qPlan.root->outAttrs[0].attrName);
 		cerr << relName << endl;
