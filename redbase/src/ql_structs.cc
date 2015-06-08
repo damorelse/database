@@ -1019,7 +1019,8 @@ Relation::Relation(SM_Manager *smm, const char *relName, bool calcProj, int numT
 		delete [] outAttrs;
 		project = (numOutAttrs != newOutAttrs.size());
 		numOutAttrs = newOutAttrs.size();
-		outAttrs = &newOutAttrs[0];
+		outAttrs = new Attrcat[numOutAttrs];
+		memcpy(outAttrs, &newOutAttrs[0], numOutAttrs * sizeof(Attrcat));
 		// tupleSize not used
 	}
 }
