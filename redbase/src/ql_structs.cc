@@ -1285,13 +1285,10 @@ RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAtt
 	cerr << "writeToOutput C" << endl;
 	for (int i = 0; i < numOutAttrs; ++i){
 		pair<string, string> key = getRelAttrNames(outAttrs[i].attrName);
-		cerr << key.first << " " << key.second << endl;
-		if (attrcats.find(key) != attrcats.end()){
+		if (attrcats.find(key) != attrcats.end())
 			memcpy(outPData + outAttrs[i].offset, pData + attrcats[key].offset, outAttrs[i].attrLen);
-		}
-		else{
+		else
 			memcpy(outPData + outAttrs[i].offset, otherPData + otherAttrcats[key].offset, outAttrs[i].attrLen);
-		}
 	}
 	cerr << "writeToOutput D" << endl;
 	// Insert

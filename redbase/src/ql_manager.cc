@@ -933,6 +933,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 				}
 			}
 
+			// Create join nodes
 			if (relGroups[k].size() == 1){
 				groupNodes.push_back(*needToJoin.begin());
 				continue;
