@@ -54,6 +54,7 @@ bool SelectionConditionApplies(Condition &cond, set<string> &myRelations){
 bool JoinConditionApplies(Condition &cond, set<string> &myRelations){
 	// Selection condition
 	if (!isJoinCondition(cond)){
+		cerr << "selection condition  : " << cond.lhsAttr.relName << endl;
 		return SelectionConditionApplies(cond, myRelations);
 	}
 	// Check both attributes included in relations
@@ -62,6 +63,7 @@ bool JoinConditionApplies(Condition &cond, set<string> &myRelations){
 		return false;
 	}
 	// Join condition
+	cerr << cond.lhsAttr.relName << "   " << cond.rhsAttr.relName << endl;
 	cerr << "Join condition found!!!" << endl;
 	return true;
 }
