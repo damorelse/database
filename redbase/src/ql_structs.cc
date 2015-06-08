@@ -15,6 +15,25 @@
 using namespace std;
 
 // Forward declaration
+Attrcat GetAttrcat(RelAttr relAttr, map<pair<string, string>, Attrcat> &attrcats, map<pair<string, string>, Attrcat> &otherAttrcats){
+	pair<string, string> key(relAttr.relName, relAttr.attrName);
+	if (attrcats.find(key) != attrcats.end())
+		return attrcats[key];
+	return otherAttrcats[key];
+}
+string makeNewAttrName(const char* relName, const char* attrName){
+	string result(relName);
+	result += ".";
+	result += attrName;
+	return result;
+}
+pair<string, string> getRelAttrNames(const char* attrName){
+	string str(attrName);
+	int delim = str.find('.');
+	return pair<string, string>(str.substr(0, delim), str.substr(delim+1));
+}
+
+
 bool CheckSelectionCondition(char* pData, Condition cond, map<pair<string, string>, Attrcat> &attrcats);
 bool CheckJoinCondition(char* pData, char* otherPData, Condition cond, map<pair<string, string>, Attrcat> &attrcats, map<pair<string, string>, Attrcat> &otherAttrcats);
 bool CheckCondition(CompOp op, AttrType attrType, char* leftPtr, const int leftLen, char* rightPtr, const int rightLen);
@@ -46,24 +65,6 @@ bool JoinConditionApplies(Condition &cond, set<string> &myRelations){
 	// Join condition
 	cerr << "Join condition found!!!" << endl;
 	return true;
-}
-
-Attrcat GetAttrcat(RelAttr relAttr, map<pair<string, string>, Attrcat> &attrcats, map<pair<string, string>, Attrcat> &otherAttrcats){
-	pair<string, string> key(relAttr.relName, relAttr.attrName);
-	if (attrcats.find(key) != attrcats.end())
-		return attrcats[key];
-	return otherAttrcats[key];
-}
-string makeNewAttrName(const char* relName, const char* attrName){
-	string result(relName);
-	result += ".";
-	result += attrName;
-	return result;
-}
-pair<string, string> getRelAttrNames(const char* attrName){
-	string str(attrName);
-	int delim = str.find('.');
-	return pair<string, string>(str.substr(0, delim), str.substr(delim+1));
 }
 
 RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAttrs, map<pair<string, string>, Attrcat> &attrcats, map<pair<string, string>, Attrcat> &otherAttrcats, RM_Record& record, RM_Record& otherRecord, char* outPData, RM_FileHandle &outFile);
