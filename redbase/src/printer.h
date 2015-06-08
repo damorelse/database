@@ -54,9 +54,9 @@ struct DataAttrInfo
 	// Added
 	DataAttrInfo(const Attrcat attrcat){
 		memcpy(this->relName, attrcat.relName, sizeof(Attrcat::relName));
-		string str(attrcat.attrName);
-		int delim = str.find('.');
-		memcpy(this->attrName, str.substr(delim+1).c_str(), sizeof(Attrcat::attrName));
+		int i;
+		for (i = 0; i < strlen(attrcat.attrName) && attrcat.attrName[i] != '.'; ++i){}
+		memcpy(this->attrName, attrcat.attrName + i, min(sizeof(Attrcat::attrName), strlen(attrcat.attrName)));
 
 		this->offset = attrcat.offset;
 		this->attrType = attrcat.attrType;
