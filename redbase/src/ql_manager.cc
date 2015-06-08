@@ -1040,6 +1040,8 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 							needToJoin.erase(it);
 							break;
 						}
+						else 
+							delete join;
 					}
 					if (it == needToJoin.end())
 						return QL_JOINNODE;
