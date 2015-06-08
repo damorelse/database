@@ -135,11 +135,9 @@ RC SM_Manager::CreateTable(const char *relName,
 	if (rc = relFile.InsertRec((char*)&relcat, rid))
 		return rc;
 
-	cerr << "in sm_manager create table A" << endl;
 	// Create relation file
 	if (rc = rmManager->CreateFile(relName, tupleLen))
 		return rc;
-	cerr << "in sm_manager create table B" << endl;
 
     return (0);
 }

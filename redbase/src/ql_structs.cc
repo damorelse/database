@@ -551,7 +551,7 @@ RC Node::SelectionExecute(){
 		pair<string, string> key = getRelAttrNames(child->outAttrs[i].attrName);;
 		attrcats[key] = child->outAttrs[i];
 	}
-	cout << "selection execute A" << endl;
+	// cerr << "selection execute A" << endl;
 	// No index scan
 	if (execution == QL_FILE){
 		RM_FileScan scan;
