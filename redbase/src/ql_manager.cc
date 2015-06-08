@@ -100,53 +100,49 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	// Start Printer
 	vector<DataAttrInfo> dataAttrs; 
 	// Order attributes
-	//if (nSelAttrs == 0){
-	//	map<string, pair<int, int> > map; // relName -> start index, length
-	//	string relName = GetRelName(qPlan.root->outAttrs[0].attrName);
-	//	int start = 0;
-	//	int end = 1;
-	//	for (int i = 1; i < qPlan.root->numOutAttrs; ++i){
-	//		string otherRelName = GetRelName(qPlan.root->outAttrs[i].attrName);
-	//		if (relName == otherRelName)
-	//			++end;
-	//		else {
-	//			map[relName] = make_pair(start, end);
-	//			relName = otherRelName;
-	//			start = i;
-	//			end = i + 1;
-	//		}
-	//	}
-	//	map[relName] = make_pair(start, end);
-	//	for (int i = 0; i < nRelations; ++i){
-	//		pair<int, int> startEnd = map[relations[i]];
-	//		for (int index = startEnd.first; index < startEnd.second; ++index){
-	//			dataAttrs.push_back(DataAttrInfo (qPlan.root->outAttrs[index], true));
-	//		}
-	//	}
-	//}
-	//else {
-	//	map<string, Attrcat*> map; // relName.attrName -> outAttr pointer
-	//	for (int i = 0; i < qPlan.root->numOutAttrs; ++i){
-	//		cerr << "OutAttr attrName : " << endl;
-	//		map[qPlan.root->outAttrs[i].attrName] = qPlan.root->outAttrs + i;
-	//	}
-	//	Attrcat* attrcat;
-	//	for (int i = 0; i < nSelAttrs; ++i){
-	//		RelAttr tmp(selAttrs[i]);
-	//		if (rc = CheckAttribute(tmp, relations, nRelations))
-	//			return rc;
-	//		cerr << "Relation name : " << tmp.relName << endl;
-	//		cerr << "Attribute name : " << tmp.attrName << endl;
-	//		attrcat = map[string(tmp.relName) + "." + string(tmp.attrName)];
-	//		dataAttrs.push_back(DataAttrInfo (*attrcat, true));
-	//	}
-	//}
+	if (nSelAttrs == 0){
+		map<string, pair<int, int> > map; // relName -> start index, length
+		string relName = GetRelName(qPlan.root->outAttrs[0].attrName);
+		int start = 0;
+		int end = 1;
+		for (int i = 1; i < qPlan.root->numOutAttrs; ++i){
+			string otherRelName = GetRelName(qPlan.root->outAttrs[i].attrName);
+			if (relName == otherRelName)
+				++end;
+			else {
+				map[relName] = make_pair(start, end);
+				relName = otherRelName;
+				start = i;
+				end = i + 1;
+			}
+		}
+		map[relName] = make_pair(start, end);
+		for (int i = 0; i < nRelations; ++i){
+			pair<int, int> startEnd = map[relations[i]];
+			for (int index = startEnd.first; index < startEnd.second; ++index){
+				dataAttrs.push_back(DataAttrInfo (qPlan.root->outAttrs[index], true));
+			}
+		}
+	}
+	else {
+		map<string, Attrcat*> map; // relName.attrName -> outAttr pointer
+		for (int i = 0; i < qPlan.root->numOutAttrs; ++i){
+			cerr << "OutAttr attrName : " << endl;
+			map[qPlan.root->outAttrs[i].attrName] = qPlan.root->outAttrs + i;
+		}
+		Attrcat* attrcat;
+		for (int i = 0; i < nSelAttrs; ++i){
+			RelAttr tmp(selAttrs[i]);
+			if (rc = CheckAttribute(tmp, relations, nRelations))
+				return rc;
+			cerr << "Relation name : " << tmp.relName << endl;
+			cerr << "Attribute name : " << tmp.attrName << endl;
+			attrcat = map[string(tmp.relName) + "." + string(tmp.attrName)];
+			dataAttrs.push_back(DataAttrInfo (*attrcat, true));
+		}
+	}
 	for (int i = 0; i < qPlan.root->numOutAttrs; ++i){
 		dataAttrs.push_back(DataAttrInfo(qPlan.root->outAttrs[i], true));
-		cerr << "OutAttr's attrName : " << qPlan.root->outAttrs[i].attrName << endl;
-		cerr << "dataAttrs relName : " << dataAttrs.back().relName << endl;
-		cerr << "dataAttrs attrName : " << dataAttrs.back().attrName << endl;
-		cerr << "---------------------" << endl;
 	}
 	Printer printer(&dataAttrs[0], qPlan.root->numOutAttrs);
 	printer.PrintHeader(cout);
