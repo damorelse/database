@@ -674,6 +674,7 @@ Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& 
 		return;
 	}
 
+	cerr << "JOIN CREATION HERE" << endl;
 	this->smm = smm;
 	this->rmm = rmm;
 	this->ixm = ixm;

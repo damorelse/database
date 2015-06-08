@@ -941,6 +941,8 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 			else if (relGroups[k].size() == 2){
 				Join* join = new Join(smm, rmm, ixm, **needToJoin.begin(), **(needToJoin.begin()++), condGroups[k].size(), &condGroups[k][0], calcProj, projVector.size(), &projVector[0]);
 				groupNodes.push_back(join);
+				PrintQueryPlan(*groupNodes[0]);
+				cerr << "just after join node creation" << endl;
 				continue;
 			}
 			else {
