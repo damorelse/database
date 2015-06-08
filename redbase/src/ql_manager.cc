@@ -1268,6 +1268,12 @@ void QL_Manager::RecursivePrint(Node &node, int indent){
 	node.printType();
 	cout << endl;
 
+	// Print access type
+	for (int i = 0; i < indent; ++i)
+		cout << "|   ";
+	node.printExecution();
+	cout << endl;
+
 	for (int i = 0; i < indent; ++i)
 		cout << "|   ";
 	if (!node.child){

@@ -109,7 +109,7 @@ Node::Node(){
 	tupleSize = 0;
 
 	rc = 0;
-	execution = QL_FILE;
+	strcpy(execution, QL_FILE);
 	cost = 0;
 	numTuples = 0;
 }
@@ -301,6 +301,9 @@ void Node::printType(){
 			cout << ", ";
 	}
 	cout << ")";
+}
+void Node::printExecution(){
+	cout << execution;
 }
 Attrcat Node::getAttrcat(const char *relName, const char* attrName){
 	string str = makeNewAttrName(relName, attrName);
@@ -553,7 +556,7 @@ RC Node::SelectionExecute(){
 	}
 	// cerr << "selection execute A" << endl;
 	// No index scan
-	if (execution == QL_FILE){
+	if (strcmp(execution, QL_FILE) == 0){
 		RM_FileScan scan;
 		if (!smm->isCatalog(child->output)){
 			rc = scan.OpenScan(file, INT, 4, 0, NO_OP, NULL);
@@ -587,7 +590,7 @@ RC Node::SelectionExecute(){
 			return rc;
 	}
 	// Use index scan (for value conditions only, with an index on lhs attribute)
-	else if (execution == QL_INDEX) {
+	else if (strcmp(execution, QL_INDEX) == 0) {
 		pair<string, string> key(conditions[0].lhsAttr.relName, conditions[0].lhsAttr.attrName);
 		IX_IndexHandle index;
 		if (rc = ixm->OpenIndex(attrcats[key].relName, attrcats[key].indexNo, index))
@@ -629,7 +632,7 @@ RC Node::SelectionExecute(){
 		}
 	}
 	// Attribute conditions with indexes on both attributes
-	else if (execution == QL_INDEXES)
+	else if (strcmp(execution, QL_INDEXES) == 0)
 	{
 		// TODO: index scans on both attributes
 	}
@@ -743,7 +746,7 @@ RC Node::JoinExecute(){
 	}
 
 	// No index scan
-	if (execution == QL_FILE)
+	if (strcmp(execution, QL_FILE) == 0)
 	{
 		RM_FileScan scan;
 		if (!smm->isCatalog(child->output)){
@@ -804,7 +807,7 @@ RC Node::JoinExecute(){
 	}
 	// Index scan of one attribute 
 	// (AB join C with index on C's attribute, A join B with index on one attribute)
-	else if (execution == QL_INDEX)
+	else if (strcmp(execution, QL_INDEX) == 0)
 	{
 		// Assumes lhsAttr is the indexed one
 		Attrcat left = GetAttrcat(conditions[0].lhsAttr, attrcats, otherAttrcats);
@@ -901,7 +904,7 @@ RC Node::JoinExecute(){
 			return rc;
 	}
 	// Index scan of both attributes (must be A join B)
-	else if (execution == QL_INDEXES) {
+	else if (strcmp(execution, QL_INDEXES) == 0) {
 		// TODO
 	}
 

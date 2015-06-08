@@ -17,9 +17,9 @@
 #include "sm.h"
 
 #define EXT false
-#define QL_FILE 0
-#define QL_INDEX 1
-#define QL_INDEXES 2
+#define QL_FILE "Full Table Scan"
+#define QL_INDEX "Index Scan" 
+#define QL_INDEXES "Index Scans"
 
 #define QL_JOIN "Join"
 #define QL_CROSS "X"
@@ -43,6 +43,7 @@ public:
 
 	virtual RC execute();
 	void printType();
+	void printExecution();
 	Attrcat getAttrcat(const char *relName, const char* attrName);
 	CompOp FlipOp(CompOp op);
 
@@ -72,7 +73,7 @@ public:
 	int tupleSize;
 
 	RC rc; // set optionally
-	int execution; //set during query plan building
+	char execution[20]; //set during query plan building
 	int cost; //set during query plan building
 	int numTuples; //set during query plan building
 
