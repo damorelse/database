@@ -141,8 +141,13 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	//		dataAttrs.push_back(DataAttrInfo (*attrcat, true));
 	//	}
 	//}
-	for (int i = 0; i < qPlan.root->numOutAttrs; ++i)
+	for (int i = 0; i < qPlan.root->numOutAttrs; ++i){
 		dataAttrs.push_back(DataAttrInfo(qPlan.root->outAttrs[i], true));
+		cerr << "OutAttr's attrName : " << qPlan.root->outAttrs[i].attrName << endl;
+		cerr << "dataAttrs relName : " << dataAttrs.back().relName << endl;
+		cerr << "dataAttrs attrName : " << dataAttrs.back().attrName << endl;
+		cerr << "---------------------" << endl;
+	}
 	Printer printer(&dataAttrs[0], qPlan.root->numOutAttrs);
 	printer.PrintHeader(cout);
 	 // cerr << "select A" << endl;
