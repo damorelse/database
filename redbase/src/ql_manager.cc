@@ -980,8 +980,9 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 							cerr << "joinConds size: " << joinConds.size() << endl;
 							for (vector<Condition>::iterator innerItr = newConds.begin(); innerItr != newConds.end(); ++innerItr){
 								cerr << " should repeat " << newConds.size() << "times" ;
-								if (joinConds.find(*innerItr) == joinConds.end())
+								if (joinConds.find(*innerItr) == joinConds.end()){
 									currConds.push_back(*innerItr);
+								}
 							}
 							// Update left
 							left = join;

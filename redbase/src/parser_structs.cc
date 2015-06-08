@@ -78,7 +78,7 @@ RelAttr& RelAttr::operator=(const RelAttr &other){
 	return *this;
 }
 bool RelAttr::operator==(const RelAttr &other) const{
-	return strcmp(relName, other.relName) && strcmp(attrName, other.attrName);
+	return (strcmp(relName, other.relName) == 0) && (strcmp(attrName, other.attrName) == 0);
 }
 bool RelAttr::operator<(const RelAttr &other) const{
 	int diff = strcmp(relName, other.relName);
@@ -165,7 +165,7 @@ Condition& Condition::operator=(const Condition& other){
 	rhsValue = other.rhsValue;
 }
 bool Condition::operator==(const Condition &other) const{
-	if (!(lhsAttr == other.lhsAttr) || op != other.op || bRhsIsAttr != other.bRhsIsAttr)
+	if (!(lhsAttr == other.lhsAttr && op == other.op && bRhsIsAttr == other.bRhsIsAttr))
 		return false;
 	if (bRhsIsAttr)
 		return rhsAttr == other.rhsAttr;
