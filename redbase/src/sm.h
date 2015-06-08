@@ -20,6 +20,7 @@
 // SM_Manager: provides data management
 //
 class SM_Manager {
+	friend class Node;
     friend class QL_Manager;
 	friend class Relation;
 public:
