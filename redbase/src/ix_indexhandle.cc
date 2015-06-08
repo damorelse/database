@@ -1077,17 +1077,14 @@ RC IX_IndexHandle::LeafDelete(PageNum currPage, char* pData, void* attribute, co
 	cerr << "LeafDelete numEntries before : " << tmperInt << endl;
 	// TODO GINA HERE END
 
-
-	PageNum deletePage = currPage;
 	SlotNum deleteSlot = 0;
-	char* deleteData = pData;
 	int attrLength = ixIndexHeader.attrLength;
 	RC rc;
 
 	bool found = false;
 	while (!found){
-		if(GetSlotBitValue(deleteData, deleteSlot)){
-			char* ptr = GetEntryPtr(deleteData, deleteSlot);
+		if(GetSlotBitValue(pData, deleteSlot)){
+			char* ptr = GetEntryPtr(pData, deleteSlot);
 
 			PageNum v_page;
 			memcpy(&v_page, ptr + attrLength, sizeof(PageNum));
@@ -1109,21 +1106,21 @@ RC IX_IndexHandle::LeafDelete(PageNum currPage, char* pData, void* attribute, co
 	}
 
 	// Found matching entry. Delete
-	SetSlotBitValue(deleteData, deleteSlot, false);
-
+	SetSlotBitValue(pData, deleteSlot, false);
 
 	// If delete in last bucket page, done.
+	memcpy(&numEntries, pData, sizeof(int));
 	numEntries -= 1;
-	memcpy(deleteData, &numEntries, sizeof(int));
+	memcpy(pData, &numEntries, sizeof(int));
 
 	// TODO GINA HERE
 	memcpy(&tmperInt, pData, sizeof(int));
 	cerr << "LeafDelete numEntries after : " << tmperInt << endl;
 	// TODO GINA HERE END
 
-	rc = pfFileHandle.MarkDirty(deletePage); // EXtra??
+	rc = pfFileHandle.MarkDirty(currPage); // EXtra??
 	if (rc != OK_RC){
-		pfFileHandle.UnpinPage(deletePage);
+		pfFileHandle.UnpinPage(currPage);
 		PrintError(rc);
 		return rc;
 	}
