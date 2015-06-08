@@ -405,10 +405,10 @@ void Node::Project(bool calcProj, int numTotalPairs, RelAttrCount *pTotals){
 		// Update numPairs / projCount
 		numCountPairs = projCounts.size();
 		if (numCountPairs > 0){
-			vector<RelAttrCount > tmp;
-			for (map<RelAttr, int>::iterator it = projCounts.begin(); it != projCounts.end(); ++it)
-				tmp.push_back(RelAttrCount(it->first, it->second));
-			pCounts = &tmp[0];
+			pCounts = new RelAttrCount[numCountPairs];
+			int i = 0;
+			for (map<RelAttr, int>::iterator it = projCounts.begin(); it != projCounts.end(); ++it, ++i)
+				pCounts[i] = RelAttrCount(it->first, it->second);
 		}
 		
 		// TODO TESTING: calcProj if here
@@ -436,7 +436,9 @@ void Node::Project(bool calcProj, int numTotalPairs, RelAttrCount *pTotals){
 		if (newOutAttrs.size() < numOutAttrs){
 			numOutAttrs = newOutAttrs.size();
 			delete [] outAttrs;
-			outAttrs = &newOutAttrs[0];
+			outAttrs = new Attrcat[numOutAttrs];
+			for (int i = 0; i < numOutAttrs; ++i)
+				outAttrs[i] = newOutAttrs[i];
 			project = true;
 			tupleSize = offset;
 		}
@@ -499,7 +501,7 @@ Selection::Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& le
 	}
 	numConditions = condVector.size();
 	conditions = new Condition[numConditions];
-	copy(condVector.begin(), condVector.end(), conditions);
+	memcpy(conditions, &condVector[0], numConditions * sizeof(Condition));
 	// Early exit
 	if (numConditions == 0){
 		rc = QL_SELNODE;
@@ -876,7 +878,7 @@ Cross::Cross(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, Node
 	SetOutAttrs();
 
 	// NO projection needed
-	// Project(calcProj, numTotalPairs, pTotals);
+	Project(calcProj, numTotalPairs, pTotals);
 }
 Cross::~Cross(){}
 RC Node::CrossExecute(){
@@ -997,8 +999,11 @@ Relation::Relation(SM_Manager *smm, const char *relName, bool calcProj, int numT
 	// Update outAttrs.attrName
 	for (int i = 0; i < numOutAttrs; ++i)
 		strcpy(outAttrs[i].attrName, makeNewAttrName(outAttrs[i].relName, outAttrs[i].attrName).c_str());
+	// numCountPairs, pCounts, project set by default
+	tupleSize = relcat.tupleLen;
 
 	// NOT typical projection since no execution function to generate new output
+	// Update numOutAttrs, outAttrs, project
 	if (calcProj){
 		map<RelAttr, int> projTotals;
 		for (int i = 0; i < numTotalPairs; ++i){
