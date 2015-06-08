@@ -422,7 +422,7 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 		// TODO GINA HERE
 		int tmperInt;
 		memcpy(&tmperInt, pData, sizeof(int));
-		cerr << "InsertEntryHelper numEntries: " << tmperInt << endl;
+		//cerr << "InsertEntryHelper numEntries: " << tmperInt << endl;
 		// TODO GINA HERE END
 
 		// If L has space... usual case
@@ -709,7 +709,7 @@ RC IX_IndexHandle::LeafInsert(PageNum pageNum, void* attribute, const RID &rid)
 	// TODO GINA HERE
 	int tmperInt;
 	memcpy(&tmperInt, pData, sizeof(int));
-	cerr << "LeafInsert numEntries: before " << tmperInt << endl;
+	//cerr << "LeafInsert numEntries: before " << tmperInt << endl;
 	// TODO GINA HERE END
 
 	char* copyBack;
@@ -722,7 +722,7 @@ RC IX_IndexHandle::LeafInsert(PageNum pageNum, void* attribute, const RID &rid)
 
 	// TODO GINA HERE
 	memcpy(&tmperInt, pData, sizeof(int));
-	cerr << "LeafInsert numEntries: after " << tmperInt << endl;
+	//cerr << "LeafInsert numEntries: after " << tmperInt << endl;
 	// TODO GINA HERE END
 
 
@@ -752,7 +752,7 @@ void IX_IndexHandle::MakeEntryCopyBack(char* pData, void* attribute, const RID &
 	// TODO GINA HERE
 	int tmperInt;
 	memcpy(&tmperInt, pData, sizeof(int));
-	cerr << "MakeEntryCopyBack numEntries: " << tmperInt << endl;
+	//cerr << "MakeEntryCopyBack numEntries: " << tmperInt << endl;
 	// TODO GINA HERE END
 
 
@@ -760,7 +760,7 @@ void IX_IndexHandle::MakeEntryCopyBack(char* pData, void* attribute, const RID &
 	memcpy(&numEntries, pData, sizeof(int));
 	numEntries += 1;
 	if (numEntries <= 0){ //TODO
-		cerr << "Should be greater than 0: " << numEntries << endl;
+		//cerr << "Should be greater than 0: " << numEntries << endl;
         // numEntries = 1; // TODO: HERE
     }
 	int entrySize = ixIndexHeader.attrLength + sizeof(PageNum) + sizeof(SlotNum);
@@ -818,7 +818,7 @@ void IX_IndexHandle::WriteLeafFromEntryCopyBack(char* pData, char* copyBack, int
 	// TODO GINA HERE
 	int tmperInt;
 	memcpy(&tmperInt, pData, sizeof(int));
-	cerr << "WriteLeaffromEntryCopyBack before : " << tmperInt << endl;
+	//cerr << "WriteLeaffromEntryCopyBack before : " << tmperInt << endl;
 	// TODO GINA HERE END
 
 	// Write copyBack back
@@ -834,7 +834,7 @@ void IX_IndexHandle::WriteLeafFromEntryCopyBack(char* pData, char* copyBack, int
 
 	// TODO GINA HERE
 	memcpy(&tmperInt, pData, sizeof(int));
-	cerr << "WriteLeaffromEntryCopyBack after : " << tmperInt << endl;
+	//cerr << "WriteLeaffromEntryCopyBack after : " << tmperInt << endl;
 	// TODO GINA HERE END
 
 	// Clean up
@@ -1074,7 +1074,7 @@ RC IX_IndexHandle::LeafDelete(PageNum currPage, char* pData, void* attribute, co
 	// TODO GINA HERE
 	int tmperInt;
 	memcpy(&tmperInt, pData, sizeof(int));
-	cerr << "LeafDelete numEntries before : " << tmperInt << endl;
+	//cerr << "LeafDelete numEntries before : " << tmperInt << endl;
 	// TODO GINA HERE END
 
 	SlotNum deleteSlot = 0;
@@ -1115,7 +1115,7 @@ RC IX_IndexHandle::LeafDelete(PageNum currPage, char* pData, void* attribute, co
 
 	// TODO GINA HERE
 	memcpy(&tmperInt, pData, sizeof(int));
-	cerr << "LeafDelete numEntries after : " << tmperInt << endl;
+	//cerr << "LeafDelete numEntries after : " << tmperInt << endl;
 	// TODO GINA HERE END
 
 	rc = pfFileHandle.MarkDirty(currPage); // EXtra??
