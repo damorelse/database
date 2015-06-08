@@ -924,13 +924,15 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 					return rel->rc;
 				Selection* sel = new Selection(smm, rmm, ixm, *rel, condGroups[k].size(), &condGroups[k][0], calcProj, projVector.size(), &projVector[0]);
 				if (sel->rc){
-					cerr << "rel" << endl;
+					cerr << "rel" << rel->output << endl;
 					needToJoin.push_back(rel);
+					cerr << rel->output << endl;
 					delete sel;
 				}
 				else{
-					cerr << "sel" << endl;
+					cerr << "sel" << sel ->child->output << endl;
 					needToJoin.push_back(sel);
+					cerr << sel->relations << endl;
 				}
 			}
 
@@ -944,7 +946,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 
 				// Fence post
 				Node* left = *needToJoin.begin();
-				needToJoin.erase(needToJoin.begin());
+				needToJoin.pop_front();
 				// Remove left conditions
 				set<Condition> leftConds(left->conditions, left->conditions + left->numConditions);
 				vector<Condition> currConds;

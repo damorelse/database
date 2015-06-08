@@ -162,10 +162,8 @@ Node::Node(const Node& other){
 	tupleSize = other.tupleSize;
 }
 Node::~Node(){
-	cerr << "DELETE " << type << endl;
 	if (conditions)
 		delete [] conditions;
-	cerr << "deleted conditions successfully" << endl;
 	conditions = NULL;
 	if (relations)
 		delete [] relations;
@@ -662,11 +660,11 @@ Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& 
 	cerr << "num relations: " << left.numRelations << " " << right.numRelations << endl;
 	for (int i = 0; i < left.numRelations; ++i){
 		myRelations.insert(left.relations + i * (MAXNAME + 1));
-		cerr << "relation: " << (string)(left.relations + i * (MAXNAME + 1)) << endl;
+		cerr << " left relation: " << (string)(left.relations + i * (MAXNAME + 1)) << endl;
 	}
 	for (int i = 0; i < right.numRelations; ++i){
 		myRelations.insert(right.relations + i * (MAXNAME + 1));
-		cerr << "relation: " << (string)(left.relations + i * (MAXNAME + 1)) << endl;
+		cerr << "right relation: " << (string)(left.relations + i * (MAXNAME + 1)) << endl;
 	}
 	bool foundJoinCondition = false;
 	vector<Condition> condVector;
