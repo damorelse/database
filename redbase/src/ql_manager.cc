@@ -103,7 +103,6 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	if (nSelAttrs == 0){
 		map<string, pair<int, int> > map; // relName -> start index, length
 		string relName = GetRelName(qPlan.root->outAttrs[0].attrName);
-		cerr << relName << endl;
 		int start = 0;
 		int end = 1;
 		for (int i = 1; i < qPlan.root->numOutAttrs; ++i){
@@ -113,13 +112,11 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 			else {
 				map[relName] = make_pair(start, end);
 				relName = otherRelName;
-				cerr << relName << endl;
 				start = i;
 				end = i + 1;
 			}
 		}
 		map[relName] = make_pair(start, end);
-		cerr << "reached this point" << endl;
 		for (int i = 0; i < nRelations; ++i){
 			pair<int, int> startEnd = map[relations[i]];
 			for (int index = startEnd.first; index < startEnd.second; ++index){
@@ -128,7 +125,6 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 		}
 	}
 	else {
-		cerr << "Went the wrong way" << endl;
 		map<string, Attrcat*> map; // relName.attrName -> outAttr pointer
 		for (int i = 0; i < qPlan.root->numOutAttrs; ++i){
 			map[qPlan.root->outAttrs[i].attrName] = qPlan.root->outAttrs + i;

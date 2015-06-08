@@ -735,7 +735,7 @@ void IX_IndexHandle::MakeEntryCopyBack(char* pData, void* attribute, const RID &
 	numEntries += 1;
 	if (numEntries <= 0){ //TODO
 		//cerr << "Should be greater than 0: " << numEntries << endl;
-        numEntries = 1;
+        // numEntries = 1; // TODO: HERE
     }
 	int entrySize = ixIndexHeader.attrLength + sizeof(PageNum) + sizeof(SlotNum);
 
