@@ -1000,16 +1000,19 @@ Relation::Relation(SM_Manager *smm, const char *relName, bool calcProj, int numT
 
 	// NOT typical projection since no execution function to generate new output
 	if (calcProj){
-		// TODO: HERE change dataAttrs if qPlan.root is relation and calcProj
 		map<RelAttr, int> projTotals;
-		for (int i = 0; i < numTotalPairs; ++i)
+		for (int i = 0; i < numTotalPairs; ++i){
 			projTotals[pTotals[i].first] = pTotals[i].second;
-
+			cerr << pTotals[i].first.relName << "." << pTotals[i].first.attrName << endl;
+		}
+		
+		cerr << endl << endl;
 		vector<Attrcat> newOutAttrs;
 		for (int i = 0; i < numOutAttrs; ++i){
 			RelAttr tmp(outAttrs[i].relName, outAttrs[i].attrName);
 			if (projTotals.find(tmp) != projTotals.end()){
 				newOutAttrs.push_back(outAttrs[i]);
+				cerr << outAttrs[i].relName << "." << outAttrs[i].attrName << endl;
 			}
 		}
 
