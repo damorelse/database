@@ -938,16 +938,20 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 				groupNodes.push_back(*needToJoin.begin());
 				continue;
 			}
-			else if (relGroups[k].size() == 2){
+			/*else if (relGroups[k].size() == 2){
 				Join* join = new Join(smm, rmm, ixm, **needToJoin.begin(), **(++needToJoin.begin()), condGroups[k].size(), &condGroups[k][0], calcProj, projVector.size(), &projVector[0]);
 				if (join->rc)
 					return join->rc;
 				groupNodes.push_back(join);
 				continue;
-			}
+			}*/
 			else {
 				cerr << "makequeryplan F2" << endl;
 				// Joins
+				cerr << (*needToJoin.begin())->output << endl;
+				cerr << (*++needToJoin.begin())->output << endl;
+				cerr << (*++(++needToJoin.begin()))->output << endl;
+				cerr << "makequeryplan F2  a" << endl;
 				Node* left = *needToJoin.begin();
 				set<Condition> leftConds(left->conditions, left->conditions + left->numConditions);
 				vector<Condition> currConds;
