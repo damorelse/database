@@ -99,6 +99,7 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 
 	// Start Printer
 	vector<DataAttrInfo> dataAttrs; 
+	dataAttrs.push_back(DataAttrInfo());
 	// Order attributes
 	if (nSelAttrs == 0){
 		map<string, pair<int, int> > map; // relName -> start index, length
@@ -138,7 +139,7 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 			dataAttrs.push_back(DataAttrInfo (*attrcat, true));
 		}
 	}
-	Printer printer(&dataAttrs[0], qPlan.root->numOutAttrs);
+	Printer printer(&dataAttrs[1], qPlan.root->numOutAttrs);
 	printer.PrintHeader(cout);
 	 // cerr << "select A" << endl;
 
