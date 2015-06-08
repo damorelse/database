@@ -953,9 +953,10 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 				cerr << (*++(++needToJoin.begin()))->output << endl;
 				cerr << "makequeryplan F2  a" << endl;
 
-				// Remove left conditions
+				// Fence post
 				Node* left = *needToJoin.begin();
 				needToJoin.erase(needToJoin.begin());
+				// Remove left conditions
 				set<Condition> leftConds(left->conditions, left->conditions + left->numConditions);
 				vector<Condition> currConds;
 				for (vector<Condition>::iterator it = condGroups[k].begin(); it != condGroups[k].end(); ++it){
@@ -967,7 +968,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 						// Remove potential right conditions
 						Node* right = *it;
 						vector<Condition> newConds;
-						set<Condition> rightConds (right->conditions, right->conditions+right->numConditions);
+						set<Condition> rightConds (right->conditions, right->conditions + right->numConditions);
 						for (vector<Condition>::iterator inItr = currConds.begin(); inItr != currConds.end(); ++inItr){
 							if (rightConds.find(*inItr) == rightConds.end())
 								newConds.push_back(*inItr);
@@ -976,8 +977,14 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 						// Determine if join is viable
 						Join* join = new Join(smm, rmm, ixm, *left, *right, newConds.size(), &newConds[0], calcProj, projVector.size(), &projVector[0]);
 						if(!join->rc){
-							// Update conditions
-							currConds = newConds;
+							// Update current conditions
+							currConds.clear();
+							// Remove join conditions
+							set<Condition> joinConds (join->conditions, join->conditions + join->numConditions);
+							for (vector<Condition>::iterator innerItr = newConds.begin(); innerItr != newConds.end(); ++innerItr){
+								if (joinConds.find(*innerItr) == joinConds.end())
+									currConds.push_back(*innerItr);
+							}
 							// Update left
 							left = join;
 							// Update needToJoin
