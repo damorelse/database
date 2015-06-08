@@ -672,6 +672,7 @@ Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& 
 	vector<Condition> condVector;
 	for (int i = 0; i < numConds; ++i){
 		if (JoinConditionApplies(conds[i], myRelations)){
+			cerr << "condition added " << endl;
 			condVector.push_back(conds[i]);
 			if (isJoinCondition(conds[i]))
 				foundJoinCondition = true;
@@ -682,6 +683,7 @@ Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& 
 		rc = QL_JOINNODE;
 		return;
 	}
+	cerr << " How many conditions does this join have? " << condVector.size() << endl;
 	numConditions = condVector.size();
 	conditions = new Condition[numConditions];
 	copy(condVector.begin(), condVector.end(), conditions);
