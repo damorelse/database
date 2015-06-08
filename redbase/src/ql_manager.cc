@@ -101,7 +101,7 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	vector<DataAttrInfo> dataAttrs; 
 	// Order attributes
 	if (nSelAttrs == 1 && strcmp(selAttrs[0].attrName, "*") == 0){
-		map<string, pair<int, int>> map; // relName -> start index, length
+		map<string, pair<int, int> > map; // relName -> start index, length
 		string relName = GetRelName(qPlan.root->outAttrs[0].attrName);
 		int start = 0;
 		int end = 1;
