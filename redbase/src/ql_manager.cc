@@ -952,35 +952,41 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 				cerr << (*++needToJoin.begin())->output << endl;
 				cerr << (*++(++needToJoin.begin()))->output << endl;
 				cerr << "makequeryplan F2  a" << endl;
+
+				// Remove left conditions
 				Node* left = *needToJoin.begin();
+				needToJoin.erase(needToJoin.begin());
 				set<Condition> leftConds(left->conditions, left->conditions + left->numConditions);
 				vector<Condition> currConds;
 				for (vector<Condition>::iterator it = condGroups[k].begin(); it != condGroups[k].end(); ++it){
 					if (leftConds.find(*it) == leftConds.end())
 						currConds.push_back(*it);
 				}
-				while (needToJoin.size() > 1){
-					for (list<Node*>::iterator it = (++needToJoin.begin()); it != needToJoin.end(); ++it){
+				while (needToJoin.size() > 0){
+					for (list<Node*>::iterator it = needToJoin.begin(); it != needToJoin.end(); ++it){
+						// Remove potential right conditions
 						Node* right = *it;
-
 						vector<Condition> newConds;
 						set<Condition> rightConds (right->conditions, right->conditions+right->numConditions);
-						for (vector<Condition>::iterator it = currConds.begin(); it != currConds.end(); ++it){
-							if (rightConds.find(*it) == rightConds.end())
-								newConds.push_back(*it);
+						for (vector<Condition>::iterator inItr = currConds.begin(); inItr != currConds.end(); ++inItr){
+							if (rightConds.find(*inItr) == rightConds.end())
+								newConds.push_back(*inItr);
 						}
-						currConds = newConds;
-
 						
-						Join* join = new Join(smm, rmm, ixm, *left, *right, currConds.size(), &currConds[0], calcProj, projVector.size(), &projVector[0]);
+						// Determine if join is viable
+						Join* join = new Join(smm, rmm, ixm, *left, *right, newConds.size(), &newConds[0], calcProj, projVector.size(), &projVector[0]);
 						if(!join->rc){
+							// Update conditions
+							currConds = newConds;
+							// Update left
 							left = join;
+							// Update needToJoin
 							needToJoin.erase(it);
 							break;
 						}
 					}
 				}
-				groupNodes.push_back(*needToJoin.begin());
+				groupNodes.push_back(left);
 			}
 		}
 		cerr << "makequeryplan F3" << endl;
