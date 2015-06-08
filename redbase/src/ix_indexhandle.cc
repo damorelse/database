@@ -259,7 +259,7 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 	// Get page data
 	char *pData;
 	//RC rc = GetPage(pfFileHandle, currPage, pData);
-	PF_PageHandle pfPageHandle = PF_PageHandle();
+	PF_PageHandle pfPageHandle;
 	RC rc = pfFileHandle.GetThisPage(currPage, pfPageHandle);
 	if (rc != OK_RC){
 		PrintError(rc);
@@ -271,6 +271,7 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 		PrintError(rc);
 		return rc;
 	}
+
 	// If at an internal node...
 	if (height != 0){
 		PageNum nextPage;
@@ -417,6 +418,12 @@ RC IX_IndexHandle::InsertEntryHelper(PageNum currPage, int height, void* attribu
 		// Get number of entries
 		int numEntries;
 		memcpy(&numEntries, pData, sizeof(int));
+
+		// TODO GINA HERE
+		int tmperInt;
+		memcpy(&tmperInt, pData, sizeof(int));
+		cerr << "InsertEntryHelper numEntries: " << tmperInt << endl;
+		// TODO GINA HERE END
 
 		// If L has space... usual case
 		if (numEntries - 1 < ixIndexHeader.maxEntryIndex){
@@ -686,7 +693,7 @@ RC IX_IndexHandle::LeafInsert(PageNum pageNum, void* attribute, const RID &rid)
 	// Get page data
 	char *pData;
 	//RC rc = GetPage(pfFileHandle, pageNum, pData);
-	PF_PageHandle pfPageHandle = PF_PageHandle();
+	PF_PageHandle pfPageHandle;
 	RC rc = pfFileHandle.GetThisPage(pageNum, pfPageHandle);
 	if (rc != OK_RC){
 		PrintError(rc);
@@ -698,6 +705,12 @@ RC IX_IndexHandle::LeafInsert(PageNum pageNum, void* attribute, const RID &rid)
 		PrintError(rc);
 		return rc;
 	}
+
+	// TODO GINA HERE
+	int tmperInt;
+	memcpy(&tmperInt, pData, sizeof(int));
+	cerr << "LeafInsert numEntries: " << tmperInt << endl;
+	// TODO GINA HERE END
 
 	char* copyBack;
 	int copyBackSize;
@@ -730,11 +743,18 @@ RC IX_IndexHandle::LeafInsert(PageNum pageNum, void* attribute, const RID &rid)
 }
 
 void IX_IndexHandle::MakeEntryCopyBack(char* pData, void* attribute, const RID &rid, char*& copyBack, int &copyBackSize, int &numEntries){
+	// TODO GINA HERE
+	int tmperInt;
+	memcpy(&tmperInt, pData, sizeof(int));
+	cerr << "MakeEntryCopyBack numEntries: " << tmperInt << endl;
+	// TODO GINA HERE END
+
+
 	// Initialize state
 	memcpy(&numEntries, pData, sizeof(int));
 	numEntries += 1;
 	if (numEntries <= 0){ //TODO
-		//cerr << "Should be greater than 0: " << numEntries << endl;
+		cerr << "Should be greater than 0: " << numEntries << endl;
         // numEntries = 1; // TODO: HERE
     }
 	int entrySize = ixIndexHeader.attrLength + sizeof(PageNum) + sizeof(SlotNum);
