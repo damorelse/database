@@ -747,16 +747,17 @@ void IX_IndexHandle::MakeEntryCopyBack(char* pData, void* attribute, const RID &
 	int tmperInt;
 	memcpy(&tmperInt, pData, sizeof(int));
 	cerr << "MakeEntryCopyBack numEntries: " << tmperInt << endl;
+	numEntries = tmperInt + 1;
 	// TODO GINA HERE END
 
 
 	// Initialize state
-	memcpy(&numEntries, pData, sizeof(int));
-	numEntries += 1;
-	if (numEntries <= 0){ //TODO
-		cerr << "Should be greater than 0: " << numEntries << endl;
-        // numEntries = 1; // TODO: HERE
-    }
+	//memcpy(&numEntries, pData, sizeof(int));
+	//numEntries += 1;
+	//if (numEntries <= 0){ //TODO
+	//	cerr << "Should be greater than 0: " << numEntries << endl;
+ //       // numEntries = 1; // TODO: HERE
+ //   }
 	int entrySize = ixIndexHeader.attrLength + sizeof(PageNum) + sizeof(SlotNum);
 
 	copyBackSize = (numEntries) * entrySize;
