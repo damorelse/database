@@ -652,12 +652,14 @@ RC Node::SelectionExecute(){
 
 // Both selection and join conditions
 Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& right, int numConds, Condition *conds, bool calcProj, int numTotalPairs, RelAttrCount *pTotals){
+	cerr << "join A" << endl;
 	// set parent for both children
 	left.parent = this;
 	right.parent = this;
 
 	// numConditions and conditions
 	set<string> myRelations;
+	cerr << "num relations: " << left.numRelations << " " << right.numRelations << endl;
 	for (int i = 0; i < left.numRelations; ++i){
 		myRelations.insert(left.relations + i * (MAXNAME + 1));
 		cerr << "relation: " << (string)(left.relations + i * (MAXNAME + 1)) << endl;
