@@ -942,7 +942,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 				cerr << "just before join node creation" << endl;
 				cerr <<  (*needToJoin.begin())->numRelations << endl;
 				cerr << (*needToJoin.begin()++)->numRelations << endl;
-				Join* join = new Join(smm, rmm, ixm, **needToJoin.begin(), **(needToJoin.begin()++), condGroups[k].size(), &condGroups[k][0], calcProj, projVector.size(), &projVector[0]);
+				Join* join = new Join(smm, rmm, ixm, **needToJoin.begin(), **(++needToJoin.begin()), condGroups[k].size(), &condGroups[k][0], calcProj, projVector.size(), &projVector[0]);
 				if (join->rc)
 					return join->rc;
 				groupNodes.push_back(join);
