@@ -991,10 +991,10 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 				 // cerr << "makequeryplan F2" << endl;
 
 				// Fence post
-				cout << "before pop front : " << needToJoin.size() << endl;
+				//cout << "before pop front : " << needToJoin.size() << endl;
 				Node* left = *needToJoin.begin();
 				needToJoin.pop_front();
-				cout << "after pop front : " << needToJoin.size() << endl;;
+				//cout << "after pop front : " << needToJoin.size() << endl;;
 				// Remove left conditions
 				set<Condition> leftConds(left->conditions, left->conditions + left->numConditions);
 				vector<Condition> currConds;
