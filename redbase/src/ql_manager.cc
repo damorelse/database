@@ -917,6 +917,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 			cerr << "makequeryplan F1" << endl;
 			// Initialize list, create relation/selection nodes
 			list<Node*> needToJoin;
+			cerr << condGroups[k].size() << endl;
 			for (set<string>::iterator it = relGroups[k].begin(); it != relGroups[k].end(); ++it){
 				Relation* rel = new Relation (smm, it->c_str(), relProject, projVector.size(), &projVector[0]);
 				if (rel->rc)
@@ -938,13 +939,6 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 				groupNodes.push_back(*needToJoin.begin());
 				continue;
 			}
-			/*else if (relGroups[k].size() == 2){
-				Join* join = new Join(smm, rmm, ixm, **needToJoin.begin(), **(++needToJoin.begin()), condGroups[k].size(), &condGroups[k][0], calcProj, projVector.size(), &projVector[0]);
-				if (join->rc)
-					return join->rc;
-				groupNodes.push_back(join);
-				continue;
-			}*/
 			else {
 				cerr << "makequeryplan F2" << endl;
 
@@ -1011,7 +1005,6 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 	if (groupNodes.size() == 1){
 		cerr << "makequeryplan H" << endl;
 		qPlan.root = groupNodes[0];
-		PrintQueryPlan(*groupNodes[0]);
 		cerr << "makequeryplan H.2" << endl;
 	}
 	else if (groupNodes.size() == 2){

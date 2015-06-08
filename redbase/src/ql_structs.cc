@@ -43,7 +43,7 @@ bool isJoinCondition(Condition &cond){
 // Assumes condition not yet applied
 bool SelectionConditionApplies(Condition &cond, set<string> &myRelations){
 	// Check left attribute is in relations
-	if (myRelations.find(getRelAttrNames(cond.lhsAttr.attrName).first)  == myRelations.end())
+	if (myRelations.find(cond.lhsAttr.relName)  == myRelations.end())
 		return false;
 	// Check is not a join condition
 	if (isJoinCondition(cond))
@@ -57,7 +57,6 @@ bool JoinConditionApplies(Condition &cond, set<string> &myRelations){
 		return SelectionConditionApplies(cond, myRelations);
 	}
 	// Check both attributes included in relations
-	cerr << "  " << cond.lhsAttr.relName << "  " << cond.rhsAttr.relName;
 	if (myRelations.find(cond.lhsAttr.relName) == myRelations.end() ||
 		myRelations.find(cond.rhsAttr.relName) == myRelations.end()){
 		return false;
