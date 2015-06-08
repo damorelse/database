@@ -976,7 +976,10 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 							currConds.clear();
 							// Remove join conditions
 							set<Condition> joinConds (join->conditions, join->conditions + join->numConditions);
+							cerr << "new Conds size: " << newConds.size() << endl;
+							cerr << "joinConds size: " << joinConds.size() << endl;
 							for (vector<Condition>::iterator innerItr = newConds.begin(); innerItr != newConds.end(); ++innerItr){
+								cerr << " should repeat " << newConds.size() << "times" ;
 								if (joinConds.find(*innerItr) == joinConds.end())
 									currConds.push_back(*innerItr);
 							}
