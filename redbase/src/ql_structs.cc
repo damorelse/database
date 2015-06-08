@@ -158,7 +158,7 @@ Node::Node(const Node& other){
 	project = other.project;
 
 	rc = other.rc;
-	execution = other.execution;
+	strcpy(execution, other.execution);
 	cost = other.cost;
 	numTuples = other.numTuples;
 	tupleSize = other.tupleSize;
@@ -223,7 +223,7 @@ Node& Node::operator=(const Node& other){
 	project = other.project;
 
 	rc = other.rc;
-	execution = other.execution;
+	strcpy(execution, other.execution);
 	cost = other.cost;
 	numTuples = other.numTuples;
 	tupleSize = other.tupleSize;
