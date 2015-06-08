@@ -957,7 +957,8 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 						currConds.push_back(*it);
 				}
 				while (needToJoin.size() > 0){
-					for (list<Node*>::iterator it = needToJoin.begin(); it != needToJoin.end(); ++it){
+					list<Node*>::iterator it;
+					for (it = needToJoin.begin(); it != needToJoin.end(); ++it){
 						// Remove potential right conditions
 						Node* right = *it;
 						vector<Condition> newConds;
@@ -968,6 +969,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 						}
 						
 						// Determine if join is viable
+						cerr << "Number of conditions left (must be > 0) : " << newConds.size() << endl;
 						Join* join = new Join(smm, rmm, ixm, *left, *right, newConds.size(), &newConds[0], calcProj, projVector.size(), &projVector[0]);
 						if(!join->rc){
 							// Update current conditions
@@ -985,6 +987,8 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 							break;
 						}
 					}
+					if (it == needToJoin.end())
+						return QL_JOINNODE;
 					cerr << "after erase it : " << needToJoin.size() << endl;
 				}
 				groupNodes.push_back(left);

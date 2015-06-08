@@ -664,7 +664,7 @@ Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& 
 	}
 	for (int i = 0; i < right.numRelations; ++i){
 		myRelations.insert(right.relations + i * (MAXNAME + 1));
-		cerr << "right relation: " << (string)(left.relations + i * (MAXNAME + 1)) << endl;
+		cerr << "right relation: " << (string)(right.relations + i * (MAXNAME + 1)) << endl;
 	}
 	bool foundJoinCondition = false;
 	vector<Condition> condVector;
