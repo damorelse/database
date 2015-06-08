@@ -40,6 +40,7 @@ public:
 	Node(const Node& other);
 	virtual ~Node();
 	Node& operator=(const Node& other);
+
 	virtual RC execute();
 	void printType();
 	Attrcat getAttrcat(const char *relName, const char* attrName);
@@ -71,20 +72,22 @@ public:
 
 	RC rc; // set optionally
 	int execution; //set during query plan building
-	int cost;
-	int numTuples;
-	int tupleSize;
+	int cost; //set during query plan building
+	int numTuples; //set during query plan building
+	int tupleSize; //set during query plan building
 
 private:
 	RC SelectionExecute();
 	RC JoinExecute();
 	RC CrossExecute();
+
 protected:
 	// Constructor
 	void SetRelations();
 	void SetRids();
 	void SetOutAttrs();
 	void Project(bool calcProj, int numTotalPairs, RelAttrCount *pTotals);
+
 	// Execution
 	RC CreateTmpOutput();
 	RC DeleteTmpInput();
@@ -178,9 +181,17 @@ private:
 	int CrossCost(Node &left, Node &right);
 	void SetParents(Node &node);
 
+	// Get query plan results
 	RC GetResults(Node &node);
+
+	// Print query plan
 	void PrintQueryPlan(Node &node);
 	void RecursivePrint(Node &node, int indent);
+
+	// Helper functions
+	bool isRelation(const Node &node);
+	RC DropOutput(Node &node);
+	void RecursiveDelete(Node* node);
 };
 
 void QL_PrintError(RC rc);

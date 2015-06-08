@@ -23,16 +23,13 @@
 #include "printer.h"
 using namespace std;
 
-bool isRelation(const Node &node){
-	return node.numRids == 0;
+list<set<string> >::iterator GetJoinSet(list<set<string> >joinGroups, char* relName){
+	for (list<set<string> >::iterator  it = joinGroups.begin(); it!=joinGroups.end(); ++it)
+		if (it->find(relName) != it->end())
+			return it;
+	return joinGroups.end();
 }
-void RecursiveDelete(Node* node){
-	if (!node)
-		return;
-	RecursiveDelete(node->child);
-	RecursiveDelete(node->otherChild);
-	delete node;
-}
+
 //
 // QL_Manager::QL_Manager(SM_Manager &smm, IX_Manager &ixm, RM_Manager &rmm)
 //
@@ -59,7 +56,6 @@ QL_Manager::~QL_Manager()
 	ixm = NULL;
 	rmm = NULL;
 }
-
 
 //
 // Handle the select clause
@@ -110,19 +106,19 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	// Print
 	RM_FileHandle tmpFileHandle;
 	RM_FileScan tmpFileScan;
-	if (!smm->isCatalog(qPlan.root->output)){
+	if (smm->isCatalog(qPlan.root->output)){
+		if (strcmp(qPlan.root->output, MYRELCAT) == 0)
+			rc = tmpFileScan.OpenScan(smm->relFile, INT, 4, 0, NO_OP, NULL);
+		else 
+			rc = tmpFileScan.OpenScan(smm->attrFile, INT, 4, 0, NO_OP, NULL);
+	} 
+	else {
 		if (rc = rmm->OpenFile(qPlan.root->output, tmpFileHandle)){
 			if (!isRelation(*qPlan.root))
 				smm->DropTable(qPlan.root->output);
 			return rc;
 		}
 		rc = tmpFileScan.OpenScan(tmpFileHandle, INT, 4, 0, NO_OP, NULL);
-	} 
-	else if (strcmp(qPlan.root->output, MYRELCAT) == 0){
-		rc = tmpFileScan.OpenScan(smm->relFile, INT, 4, 0, NO_OP, NULL);
-	}
-	else {
-		rc = tmpFileScan.OpenScan(smm->attrFile, INT, 4, 0, NO_OP, NULL);
 	}
 	if (rc){
 		if (!isRelation(*qPlan.root))
@@ -677,6 +673,7 @@ RC QL_Manager::Update(const char *relName,
     return 0;
 }
 
+
 // Check input
 RC QL_Manager::CheckRelation(const char * relName){
 	RM_Record record;
@@ -689,9 +686,9 @@ RC QL_Manager::CheckRelation(const char * relName){
 	}
 	return 0;
 }
-// Note: fills in attribute.relName if previously NULL
 RC QL_Manager::CheckAttribute(RelAttr &attribute, const char * const relations[], int nRelations){
-	
+	// Note: fills in attribute.relName if previously NULL
+
 	RM_Record record;
 	RC rc;
 
@@ -773,12 +770,7 @@ RC QL_Manager::CheckCondition(Condition &condition, const char * const relations
 	return 0;
 }
 
-list<set<string> >::iterator GetJoinSet(list<set<string> >joinGroups, char* relName){
-	for (list<set<string> >::iterator  it = joinGroups.begin(); it!=joinGroups.end(); ++it)
-		if (it->find(relName) != it->end())
-			return it;
-	return joinGroups.end();
-}
+// Create select query plan
 RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
                        int nRelations, const char * const relations[],
                        int nConditions, const Condition conditions[],
@@ -1113,14 +1105,8 @@ void QL_Manager::SetParents(Node &node){
 		SetParents(*node.otherChild);
 	}
 }
-//bool sortJoins(const Node left, const Node right){
-//	int leftSize = left.numTuples * (left.tupleSize);
-//	int rightSize = right.numTuples * (right.tupleSize);
-//	// right.outAttrs[right.numOutAttrs - 1].offset + right.outAttrs[right.numOutAttrs - 1].attrLen
-//
-//	return  leftSize < rightSize;
-//}
 
+// Get query plan results
 RC QL_Manager::GetResults(Node &qPlan)
 {
 	 map<Node*, int> counts;
@@ -1166,12 +1152,14 @@ RC QL_Manager::GetResults(Node &qPlan)
 	 return 0;
 }
 
+// Print query plan
 void QL_Manager::PrintQueryPlan(Node &qPlan)
 {
 	RecursivePrint(qPlan, 0);
 }
-// Go down tree, print each branch one at a time, right-most branch first
 void QL_Manager::RecursivePrint(Node &node, int indent){
+	// Go down tree, print each branch one at a time, right-most branch first
+
 	// Print projection (if it exists)
 	if (node.project){
 		for (int i = 0; i < indent; ++i)
@@ -1214,6 +1202,26 @@ void QL_Manager::RecursivePrint(Node &node, int indent){
 		RecursivePrint(*node.otherChild, indent + 1);
 
 	RecursivePrint(*node.child, indent);
+}
+
+// Helper functions
+bool QL_Manager::isRelation(const Node &node){
+	return node.numRids == 0;
+}
+RC QL_Manager::DropOutput(Node &node){
+	RC rc;
+	if (!isRelation(node)){
+		if (rc = smm->DropTable(node.output))
+			return rc;
+	}
+	return 0;
+}
+void QL_Manager::RecursiveDelete(Node* node){
+	if (!node)
+		return;
+	RecursiveDelete(node->child);
+	RecursiveDelete(node->otherChild);
+	delete node;
 }
 
 

@@ -14,14 +14,44 @@
 
 using namespace std;
 
-RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAttrs, map<pair<string, string>, Attrcat> &attrcats, map<pair<string, string>, Attrcat> &otherAttrcats, RM_Record& record, RM_Record& otherRecord, char* outPData, RM_FileHandle &outFile);
+// Forward declaration
 bool CheckSelectionCondition(char* pData, Condition cond, map<pair<string, string>, Attrcat> &attrcats);
 bool CheckJoinCondition(char* pData, char* otherPData, Condition cond, map<pair<string, string>, Attrcat> &attrcats, map<pair<string, string>, Attrcat> &otherAttrcats);
 bool CheckCondition(CompOp op, AttrType attrType, char* leftPtr, const int leftLen, char* rightPtr, const int rightLen);
-bool isJoinCondition(Condition &cond);
-bool SelectionConditionApplies(Condition &cond, set<string> &myRelations);
-bool JoinConditionApplies(Condition &cond, set<string> &myRelations);
-Attrcat GetAttrcat(RelAttr relAttr, map<pair<string, string>, Attrcat> &attrcats, map<pair<string, string>, Attrcat> &otherAttrcats);
+bool isJoinCondition(Condition &cond){
+	return cond.bRhsIsAttr && strcmp(cond.lhsAttr.relName, cond.rhsAttr.relName) != 0;
+}
+// Assumes condition not yet applied
+bool SelectionConditionApplies(Condition &cond, set<string> &myRelations){
+	// Check left attribute is in relations
+	if (myRelations.find(cond.lhsAttr.relName)  == myRelations.end())
+		return false;
+	// Check is not a join condition
+	if (isJoinCondition(cond))
+		return false;
+	return true;
+}
+// Assumes condition not yet applied
+bool JoinConditionApplies(Condition &cond, set<string> &myRelations){
+	// Selection condition
+	if (!isJoinCondition(cond)){
+		return SelectionConditionApplies(cond, myRelations);
+	}
+	// Check both attributes included in relations
+	if (myRelations.find(cond.lhsAttr.relName) == myRelations.end() ||
+		myRelations.find(cond.rhsAttr.relName) == myRelations.end()){
+		return false;
+	}
+	// Join condition
+	return true;
+}
+
+Attrcat GetAttrcat(RelAttr relAttr, map<pair<string, string>, Attrcat> &attrcats, map<pair<string, string>, Attrcat> &otherAttrcats){
+	pair<string, string> key(relAttr.relName, relAttr.attrName);
+	if (attrcats.find(key) != attrcats.end())
+		return attrcats[key];
+	return otherAttrcats[key];
+}
 string makeNewAttrName(const char* relName, const char* attrName){
 	string result(relName);
 	result += ".";
@@ -34,6 +64,11 @@ pair<string, string> getRelAttrNames(const char* attrName){
 	return pair<string, string>(str.substr(0, delim), str.substr(delim+1));
 }
 
+RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAttrs, map<pair<string, string>, Attrcat> &attrcats, map<pair<string, string>, Attrcat> &otherAttrcats, RM_Record& record, RM_Record& otherRecord, char* outPData, RM_FileHandle &outFile);
+// Forward declaration end
+
+
+
 RelAttrCount::RelAttrCount():first(RelAttr()){
 	second = 0;
 }
@@ -41,7 +76,6 @@ RelAttrCount::RelAttrCount( const RelAttr& relAttr, const int& count): first(rel
 bool RelAttrCount::operator==(const RelAttrCount &other) const{
 	return (first == other.first && second == other.second);
 }
-
 
 
 // Public
@@ -194,6 +228,7 @@ Node& Node::operator=(const Node& other){
 
 	return *this;
 }
+
 RC Node::execute(){
 	if (strcmp(type, QL_JOIN) == 0)
 		rc = JoinExecute();
@@ -295,8 +330,7 @@ CompOp Node::FlipOp(CompOp op){
 	return flipOp;
 }
 
-
-// Protected
+// Protected Constructor
 void Node::SetRelations(){
 	numRelations = child->numRelations;
 	if (otherChild)
@@ -404,6 +438,8 @@ void Node::Project(bool calcProj, int numTotalPairs, RelAttrCount *pTotals){
 		}
 	}
 }
+
+// Protected Execution
 RC Node::CreateTmpOutput(){
 	// Set output
 	char tmp[MAXNAME+5];
@@ -442,239 +478,6 @@ RC Node::DeleteTmpInput(){
 	return 0;
 }
 
-
-// Local functions
-RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAttrs, map<pair<string, string>, Attrcat> &attrcats, map<pair<string, string>, Attrcat> &otherAttrcats, RM_Record &record, RM_Record &otherRecord, char* outPData, RM_FileHandle &outFile){
-	RC rc;
-	char* pData;
-	if (rc = record.GetData(pData))
-		return rc;
-	RID rid;
-	if (rc = record.GetRid(rid))
-		return rc;
-	char* otherPData;
-	RID otherRid;
-	if (otherChild){
-		if (rc = otherRecord.GetData(otherPData))
-			return rc;
-		if (rc = otherRecord.GetRid(otherRid))
-			return rc;
-	}
-	// Write to output
-	char* outItr = outPData;
-	// RIDS
-	if (child->numRids == 0){
-		memcpy(outItr, &rid, sizeof(RID));
-		outItr += sizeof(RID);
-	}
-	else {
-		memcpy(outItr, pData, child->numRids *sizeof(RID));
-		outItr += child->numRids *sizeof(RID);
-	}
-	if (otherChild){
-		if (otherChild->numRids == 0){
-			memcpy(outItr, &otherRid, sizeof(RID));
-			outItr += sizeof(RID);
-		}
-		else{
-			memcpy(outItr, otherPData, otherChild->numRids * sizeof(RID));
-			outItr += otherChild->numRids * sizeof(RID);
-		}
-	}
-	cerr << "writeToOutput C" << endl;
-	for (int i = 0; i < numOutAttrs; ++i){
-		pair<string, string> key = getRelAttrNames(outAttrs[i].attrName);
-		cerr << key.first << " " << key.second << endl;
-		if (attrcats.find(key) != attrcats.end()){
-			memcpy(outPData + outAttrs[i].offset, pData + attrcats[key].offset, outAttrs[i].attrLen);
-		}
-		else{
-			memcpy(outPData + outAttrs[i].offset, otherPData + otherAttrcats[key].offset, outAttrs[i].attrLen);
-		}
-	}
-	cerr << "writeToOutput D" << endl;
-	// Insert
-	RID tmp;
-	if (rc = outFile.InsertRec(outPData, tmp))
-		return rc;
-	return 0;
-}
-// Value condition OR condition's attributes from same relation
-bool CheckSelectionCondition(char* pData, Condition cond, map<pair<string, string>, Attrcat> &attrcats){
-	pair<string, string> leftKey(cond.lhsAttr.relName, cond.lhsAttr.attrName);
-
-	Attrcat leftAttrcat = attrcats[leftKey];
-	int leftLen = leftAttrcat.attrLen;
-	char* leftPtr = pData + leftAttrcat.offset;
-
-	char* rightPtr = (char*)cond.rhsValue.data;
-	if (cond.bRhsIsAttr){
-		pair<string, string> rightKey(cond.rhsAttr.relName, cond.rhsAttr.attrName);
-		rightPtr = pData + attrcats[rightKey].offset;
-	}
-
-	return CheckCondition(cond.op, leftAttrcat.attrType, leftPtr, leftLen, rightPtr, -1);
-}
-// Condition's attributes from different relations
-bool CheckJoinCondition(char* pData, char* otherPData, Condition cond, map<pair<string, string>, Attrcat> &attrcats, map<pair<string, string>, Attrcat> &otherAttrcats)
-{
-	pair<string, string> leftKey(cond.lhsAttr.relName, cond.lhsAttr.attrName);
-
-	if (!isJoinCondition(cond)){
-		if (attrcats.find(leftKey) != attrcats.end())
-			return CheckSelectionCondition(pData, cond, attrcats);
-		else
-			return CheckSelectionCondition(otherPData, cond, otherAttrcats);
-	}
-
-	pair<string, string> rightKey(cond.rhsAttr.relName, cond.rhsAttr.attrName);
-
-	int leftLen, rightLen;
-	char* leftPtr; 
-	char* rightPtr;
-	AttrType attrType;
-	if (attrcats.find(leftKey) != attrcats.end()){
-		Attrcat leftAttrcat = attrcats[leftKey];
-		leftLen = leftAttrcat.attrLen;
-		leftPtr = pData + leftAttrcat.offset;
-
-		Attrcat rightAttrcat = otherAttrcats[rightKey];
-		rightLen = rightAttrcat.attrLen;
-		rightPtr = otherPData + rightAttrcat.offset;
-
-		attrType = leftAttrcat.attrType;
-	}
-	else {
-		Attrcat leftAttrcat = otherAttrcats[leftKey];
-		leftLen = leftAttrcat.attrLen;
-		leftPtr = otherPData + leftAttrcat.offset;
-
-		Attrcat rightAttrcat = attrcats[rightKey];
-		rightLen = rightAttrcat.attrLen;
-		rightPtr = pData + rightAttrcat.offset;
-
-		attrType = leftAttrcat.attrType;
-	}
-	
-	return CheckCondition(cond.op, attrType, leftPtr, leftLen, rightPtr, rightLen);
-}
-bool CheckCondition(CompOp op, AttrType attrType, char* leftPtr, const int leftLen, char* rightPtr, const int rightLen){
-	int a_i, v_i;
-	float a_f, v_f;
-	string a_s, v_s;
-	switch(attrType) {
-	case INT:
-		memcpy(&a_i, leftPtr, 4);
-		memcpy(&v_i, rightPtr, 4);
-        break;
-	case FLOAT:
-		memcpy(&a_f, leftPtr, 4);
-		memcpy(&v_f, rightPtr, 4);
-        break;
-	case STRING:
-		char*  tmp = new char [leftLen + 1];
-		tmp[leftLen] = '\0';
-		memcpy(tmp, leftPtr, leftLen);
-		a_s = string(tmp);
-		delete [] tmp;
-
-		if (rightLen == -1)
-			v_s = string(rightPtr);
-		else 
-		{
-			tmp = new char [rightLen + 1];
-			tmp[rightLen] = '\0';
-			memcpy(tmp, rightPtr, rightLen);
-			v_s = string(tmp);
-			delete [] tmp;
-		}
-        break;
-	}
-	// Check if fulfills condition
-	switch(op) {
-	case EQ_OP:
-		switch(attrType) {
-		case INT:
-			return a_i == v_i;
-            break;
-		case FLOAT:
-			return a_f == v_f;
-            break;
-		case STRING:
-			return a_s == v_s;
-            break;
-		}
-        break;
-	case LT_OP:
-		switch(attrType) {
-		case INT:
-			return a_i < v_i;
-            break;
-		case FLOAT:
-			return a_f < v_f;
-            break;
-		case STRING:
-			return a_s < v_s;
-            break;
-		}
-        break;
-	case GT_OP:
-		switch(attrType) {
-		case INT:
-			return a_i > v_i;
-            break;
-		case FLOAT:
-			return a_f > v_f;
-            break;
-		case STRING:
-			return a_s > v_s;
-            break;
-		}
-        break;
-	case LE_OP:
-		switch(attrType) {
-		case INT:
-			return a_i <= v_i;
-            break;
-		case FLOAT:
-			return a_f <= v_f;
-            break;
-		case STRING:
-			return a_s <= v_s;
-            break;
-		}
-        break;
-	case GE_OP:
-		switch(attrType) {
-		case INT:
-			return a_i >= v_i;
-            break;
-		case FLOAT:
-			return a_f >= v_f;
-            break;
-		case STRING:
-			return a_s >= v_s;
-            break;
-		}
-        break;
-	case NE_OP:
-		switch(attrType) {
-		case INT:
-			return a_i != v_i;
-            break;
-		case FLOAT:
-			return a_f != v_f;
-            break;
-		case STRING:
-			return a_s != v_s;
-            break;
-		}
-        break;
-	}
-}
-bool isJoinCondition(Condition &cond){
-	return cond.bRhsIsAttr && strcmp(cond.lhsAttr.relName, cond.rhsAttr.relName) != 0;
-}
 
 // Only selection conditions
 Selection::Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, int numConds, Condition *conds, bool calcProj, int numTotalPairs, RelAttrCount *pTotals){
@@ -825,17 +628,6 @@ RC Node::SelectionExecute(){
 		return rc;
 	return 0;
 }
-// Assumes condition not yet applied
-bool SelectionConditionApplies(Condition &cond, set<string> &myRelations){
-	// Check left attribute is in relations
-	if (myRelations.find(cond.lhsAttr.relName)  == myRelations.end())
-		return false;
-	// Check is not a join condition
-	if (isJoinCondition(cond))
-		return false;
-	return true;
-}
-
 
 // Both selection and join conditions
 Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& right, int numConds, Condition *conds, bool calcProj, int numTotalPairs, RelAttrCount *pTotals){
@@ -1058,27 +850,6 @@ RC Node::JoinExecute(){
 
 	return 0;
 }
-// Assumes condition not yet applied
-bool JoinConditionApplies(Condition &cond, set<string> &myRelations){
-	// Selection condition
-	if (!isJoinCondition(cond)){
-		return SelectionConditionApplies(cond, myRelations);
-	}
-	// Check both attributes included in relations
-	if (myRelations.find(cond.lhsAttr.relName) == myRelations.end() ||
-		myRelations.find(cond.rhsAttr.relName) == myRelations.end()){
-		return false;
-	}
-	// Join condition
-	return true;
-}
-Attrcat GetAttrcat(RelAttr relAttr, map<pair<string, string>, Attrcat> &attrcats, map<pair<string, string>, Attrcat> &otherAttrcats){
-	pair<string, string> key(relAttr.relName, relAttr.attrName);
-	if (attrcats.find(key) != attrcats.end())
-		return attrcats[key];
-	return otherAttrcats[key];
-}
-
 
 Cross::Cross(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, Node &right, bool calcProj, int numTotalPairs, RelAttrCount *pTotals){
 	// set parent for both children
@@ -1185,7 +956,6 @@ RC Node::CrossExecute(){
 	return 0;
 }
 
-
 Relation::Relation(SM_Manager *smm, const char *relName, bool calcProj, int numTotalPairs, RelAttrCount *pTotals){
 	// numConditions/conditions set by default
 
@@ -1266,4 +1036,235 @@ Node* QueryTree::RecursiveClone(Node* node){
 		newNode->otherChild->parent = newNode;
 
 	return newNode;
+}
+
+
+// Local functions
+// Value condition OR condition's attributes from same relation
+bool CheckSelectionCondition(char* pData, Condition cond, map<pair<string, string>, Attrcat> &attrcats){
+	pair<string, string> leftKey(cond.lhsAttr.relName, cond.lhsAttr.attrName);
+
+	Attrcat leftAttrcat = attrcats[leftKey];
+	int leftLen = leftAttrcat.attrLen;
+	char* leftPtr = pData + leftAttrcat.offset;
+
+	char* rightPtr = (char*)cond.rhsValue.data;
+	if (cond.bRhsIsAttr){
+		pair<string, string> rightKey(cond.rhsAttr.relName, cond.rhsAttr.attrName);
+		rightPtr = pData + attrcats[rightKey].offset;
+	}
+
+	return CheckCondition(cond.op, leftAttrcat.attrType, leftPtr, leftLen, rightPtr, -1);
+}
+// Condition's attributes from different relations
+bool CheckJoinCondition(char* pData, char* otherPData, Condition cond, map<pair<string, string>, Attrcat> &attrcats, map<pair<string, string>, Attrcat> &otherAttrcats)
+{
+	pair<string, string> leftKey(cond.lhsAttr.relName, cond.lhsAttr.attrName);
+
+	if (!isJoinCondition(cond)){
+		if (attrcats.find(leftKey) != attrcats.end())
+			return CheckSelectionCondition(pData, cond, attrcats);
+		else
+			return CheckSelectionCondition(otherPData, cond, otherAttrcats);
+	}
+
+	pair<string, string> rightKey(cond.rhsAttr.relName, cond.rhsAttr.attrName);
+
+	int leftLen, rightLen;
+	char* leftPtr; 
+	char* rightPtr;
+	AttrType attrType;
+	if (attrcats.find(leftKey) != attrcats.end()){
+		Attrcat leftAttrcat = attrcats[leftKey];
+		leftLen = leftAttrcat.attrLen;
+		leftPtr = pData + leftAttrcat.offset;
+
+		Attrcat rightAttrcat = otherAttrcats[rightKey];
+		rightLen = rightAttrcat.attrLen;
+		rightPtr = otherPData + rightAttrcat.offset;
+
+		attrType = leftAttrcat.attrType;
+	}
+	else {
+		Attrcat leftAttrcat = otherAttrcats[leftKey];
+		leftLen = leftAttrcat.attrLen;
+		leftPtr = otherPData + leftAttrcat.offset;
+
+		Attrcat rightAttrcat = attrcats[rightKey];
+		rightLen = rightAttrcat.attrLen;
+		rightPtr = pData + rightAttrcat.offset;
+
+		attrType = leftAttrcat.attrType;
+	}
+	
+	return CheckCondition(cond.op, attrType, leftPtr, leftLen, rightPtr, rightLen);
+}
+bool CheckCondition(CompOp op, AttrType attrType, char* leftPtr, const int leftLen, char* rightPtr, const int rightLen){
+	int a_i, v_i;
+	float a_f, v_f;
+	string a_s, v_s;
+	switch(attrType) {
+	case INT:
+		memcpy(&a_i, leftPtr, 4);
+		memcpy(&v_i, rightPtr, 4);
+        break;
+	case FLOAT:
+		memcpy(&a_f, leftPtr, 4);
+		memcpy(&v_f, rightPtr, 4);
+        break;
+	case STRING:
+		char*  tmp = new char [leftLen + 1];
+		tmp[leftLen] = '\0';
+		memcpy(tmp, leftPtr, leftLen);
+		a_s = string(tmp);
+		delete [] tmp;
+
+		if (rightLen == -1)
+			v_s = string(rightPtr);
+		else 
+		{
+			tmp = new char [rightLen + 1];
+			tmp[rightLen] = '\0';
+			memcpy(tmp, rightPtr, rightLen);
+			v_s = string(tmp);
+			delete [] tmp;
+		}
+        break;
+	}
+	// Check if fulfills condition
+	switch(op) {
+	case EQ_OP:
+		switch(attrType) {
+		case INT:
+			return a_i == v_i;
+            break;
+		case FLOAT:
+			return a_f == v_f;
+            break;
+		case STRING:
+			return a_s == v_s;
+            break;
+		}
+        break;
+	case LT_OP:
+		switch(attrType) {
+		case INT:
+			return a_i < v_i;
+            break;
+		case FLOAT:
+			return a_f < v_f;
+            break;
+		case STRING:
+			return a_s < v_s;
+            break;
+		}
+        break;
+	case GT_OP:
+		switch(attrType) {
+		case INT:
+			return a_i > v_i;
+            break;
+		case FLOAT:
+			return a_f > v_f;
+            break;
+		case STRING:
+			return a_s > v_s;
+            break;
+		}
+        break;
+	case LE_OP:
+		switch(attrType) {
+		case INT:
+			return a_i <= v_i;
+            break;
+		case FLOAT:
+			return a_f <= v_f;
+            break;
+		case STRING:
+			return a_s <= v_s;
+            break;
+		}
+        break;
+	case GE_OP:
+		switch(attrType) {
+		case INT:
+			return a_i >= v_i;
+            break;
+		case FLOAT:
+			return a_f >= v_f;
+            break;
+		case STRING:
+			return a_s >= v_s;
+            break;
+		}
+        break;
+	case NE_OP:
+		switch(attrType) {
+		case INT:
+			return a_i != v_i;
+            break;
+		case FLOAT:
+			return a_f != v_f;
+            break;
+		case STRING:
+			return a_s != v_s;
+            break;
+		}
+        break;
+	}
+}
+RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAttrs, map<pair<string, string>, Attrcat> &attrcats, map<pair<string, string>, Attrcat> &otherAttrcats, RM_Record &record, RM_Record &otherRecord, char* outPData, RM_FileHandle &outFile){
+	RC rc;
+	char* pData;
+	if (rc = record.GetData(pData))
+		return rc;
+	RID rid;
+	if (rc = record.GetRid(rid))
+		return rc;
+	char* otherPData;
+	RID otherRid;
+	if (otherChild){
+		if (rc = otherRecord.GetData(otherPData))
+			return rc;
+		if (rc = otherRecord.GetRid(otherRid))
+			return rc;
+	}
+	// Write to output
+	char* outItr = outPData;
+	// RIDS
+	if (child->numRids == 0){
+		memcpy(outItr, &rid, sizeof(RID));
+		outItr += sizeof(RID);
+	}
+	else {
+		memcpy(outItr, pData, child->numRids *sizeof(RID));
+		outItr += child->numRids *sizeof(RID);
+	}
+	if (otherChild){
+		if (otherChild->numRids == 0){
+			memcpy(outItr, &otherRid, sizeof(RID));
+			outItr += sizeof(RID);
+		}
+		else{
+			memcpy(outItr, otherPData, otherChild->numRids * sizeof(RID));
+			outItr += otherChild->numRids * sizeof(RID);
+		}
+	}
+	cerr << "writeToOutput C" << endl;
+	for (int i = 0; i < numOutAttrs; ++i){
+		pair<string, string> key = getRelAttrNames(outAttrs[i].attrName);
+		cerr << key.first << " " << key.second << endl;
+		if (attrcats.find(key) != attrcats.end()){
+			memcpy(outPData + outAttrs[i].offset, pData + attrcats[key].offset, outAttrs[i].attrLen);
+		}
+		else{
+			memcpy(outPData + outAttrs[i].offset, otherPData + otherAttrcats[key].offset, outAttrs[i].attrLen);
+		}
+	}
+	cerr << "writeToOutput D" << endl;
+	// Insert
+	RID tmp;
+	if (rc = outFile.InsertRec(outPData, tmp))
+		return rc;
+	return 0;
 }
