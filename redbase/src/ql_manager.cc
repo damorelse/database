@@ -81,14 +81,14 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 		return rc;
 
 	PrintQueryPlan(*qPlan.root);
-	cerr << "start getResults" << endl;
+	 // cerr << "start getResults" << endl;
 	if (rc = GetResults(*qPlan.root)){
-		cerr << "BUG IN getResults!!!!!!!!!!!" << endl;
+		 // cerr << "BUG IN getResults!!!!!!!!!!!" << endl;
 		if (!isRelation(*qPlan.root))
 			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
-	cerr << "finished getResults" << endl;
+	 // cerr << "finished getResults" << endl;
 	if (bQueryPlans){
 		PrintQueryPlan(*qPlan.root);
 	}
@@ -100,7 +100,7 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	}
 	Printer printer(&dataAttrs[0], qPlan.root->numOutAttrs);
 	printer.PrintHeader(cout);
-	cerr << "select A" << endl;
+	 // cerr << "select A" << endl;
 
 	// Print
 	RM_FileHandle tmpFileHandle;
@@ -124,7 +124,7 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
-	cerr << "select B" << endl;
+	 // cerr << "select B" << endl;
 	RM_Record record;
 	while (OK_RC == (rc = tmpFileScan.GetNextRec(record))){
 		char* pData;
@@ -141,7 +141,7 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
-	cerr << "select C" << endl;
+	 // cerr << "select C" << endl;
 	if (rc = tmpFileScan.CloseScan()){
 		if (!isRelation(*qPlan.root))
 			smm->DropTable(qPlan.root->output);
@@ -181,7 +181,7 @@ RC QL_Manager::Insert(const char *relName,
 		return QL_INVALIDCATACTION;
 	if (rc = CheckRelation(relName))
 		return rc;
-	cerr << "insert A" << endl;
+	 // cerr << "insert A" << endl;
 	// Check number of values matches relation attribute count
 	RM_Record record;
 	if (rc = smm->GetRelcatRecord(relName, record)){
@@ -196,14 +196,14 @@ RC QL_Manager::Insert(const char *relName,
 	if (nValues != relcat.attrCount)
 		return QL_INVALIDTUPLE;
 
-	cerr << "insert B" << endl;
+	 // cerr << "insert B" << endl;
 	// Check values' types matches relation attribute order
 	Attrcat* attributes = new Attrcat[nValues];
 	if (rc = smm->GetAttrcats(relName, attributes)){
 		delete [] attributes;
 		return rc;
 	}
-	cerr << "insert C" << endl;
+	 // cerr << "insert C" << endl;
 	for (int i = 0; i < nValues; ++i){
 		if (values[i].type != attributes[i].attrType){
 			delete [] attributes;
@@ -211,7 +211,7 @@ RC QL_Manager::Insert(const char *relName,
 		}
 	}
 	// End check input
-	cerr << "insert D" << endl;
+	 // cerr << "insert D" << endl;
 	// Create temp file
 	char* fileName = tmpnam(NULL);
 	ofstream file(fileName);
@@ -220,7 +220,7 @@ RC QL_Manager::Insert(const char *relName,
 		remove(fileName);
 		return QL_FILEERROR;
 	}
-	cerr << "insert E" << endl;
+	 // cerr << "insert E" << endl;
 	// Write tuple to temp file (and construct pData to print to screen)
 	pData = new char[relcat.tupleLen];
 	for (int i = 0; i < nValues; ++i){
@@ -275,7 +275,7 @@ RC QL_Manager::Insert(const char *relName,
 		}
 	}
 	file.close();
-	cerr << "insert F" << endl;
+	 // cerr << "insert F" << endl;
 	// Load file tuples
 	if (rc = smm->Load(relName, fileName)){
 		delete [] pData;
@@ -283,7 +283,7 @@ RC QL_Manager::Insert(const char *relName,
 		remove(fileName);
 		return rc;
 	}
-	cerr << "insert G" << endl;
+	 // cerr << "insert G" << endl;
 
 	// Destroy temp file
 	if (remove(fileName)){
@@ -291,21 +291,21 @@ RC QL_Manager::Insert(const char *relName,
 		delete [] attributes;
 		return QL_FILEERROR;
 	}
-	cerr << "insert H" << endl;
+	 // cerr << "insert H" << endl;
 
 	//Print result
 	vector<DataAttrInfo> dataAttrs; 
 	for (int i = 0; i < relcat.attrCount; ++i){
 		dataAttrs.push_back(DataAttrInfo (attributes[i]));
 	}
-	cerr << "insert I" << endl;
+	 // cerr << "insert I" << endl;
 	Printer printer(&dataAttrs[0], relcat.attrCount);
 	printer.PrintHeader(cout);
-	cerr << "insert J" << endl;
+	 // cerr << "insert J" << endl;
 	printer.Print(cout, pData);
 	printer.PrintFooter(cout);
 
-	cerr << "insert K" << endl;
+	 // cerr << "insert K" << endl;
 
 	//  Clean up
 	delete [] pData;
@@ -494,17 +494,17 @@ RC QL_Manager::Update(const char *relName,
 	// Check update attributes valid
 	const char * const relations[1] = {relName};
 
-	cerr << "Update A" << endl;
+	 // cerr << "Update A" << endl;
 	RelAttr myUpdAttr(updAttr);
 	strcpy(myUpdAttr.relName, relName);
 	RelAttr myRhsRelAttr(rhsRelAttr);
 	strcpy(myRhsRelAttr.relName, relName);
 	Condition misleading(myUpdAttr, EQ_OP, !bIsValue, myRhsRelAttr, rhsValue);
-	cerr << "..." << endl;
+	 // cerr << "..." << endl;
 	if (rc = CheckCondition(misleading, relations, 1))
 		return rc;
 	// End check input
-	cerr << "Update B" << endl;
+	 // cerr << "Update B" << endl;
 	QueryTree qPlan;
 	if (rc = MakeSelectQueryPlan(0, NULL, 1, relations, nConditions, conditions, qPlan))
 		return rc;
@@ -516,7 +516,7 @@ RC QL_Manager::Update(const char *relName,
 	if (bQueryPlans){
 		PrintQueryPlan(*qPlan.root);
 	}
-	cerr << "Update C" << endl;
+	 // cerr << "Update C" << endl;
 	// OPEN START
 	// Open relation file
 	RM_FileHandle fileHandle;
@@ -537,12 +537,12 @@ RC QL_Manager::Update(const char *relName,
 			return rc;
 		}
 	}
-	cerr << "Update D" << endl;
+	 // cerr << "Update D" << endl;
 	// Get right attrcat (if necessary)
 	Attrcat rightAttrcat;
 	if (!bIsValue)
 		rightAttrcat = qPlan.root->getAttrcat(relName, rhsRelAttr.attrName);
-	cerr << "Update E" << endl;
+	 // cerr << "Update E" << endl;
 	// Start Printer
 	vector<DataAttrInfo> dataAttrs; 
 	for (int i = 0; i < qPlan.root->numOutAttrs; ++i){
@@ -551,7 +551,7 @@ RC QL_Manager::Update(const char *relName,
 	Printer printer(&dataAttrs[0], qPlan.root->numOutAttrs);
 	printer.PrintHeader(cout);
 	// OPEN END
-	cerr << "Update F" << endl;
+	 // cerr << "Update F" << endl;
 	// Update tuples
 	RM_FileHandle tmpFileHandle;
 	RM_FileScan tmpFileScan;
@@ -572,7 +572,7 @@ RC QL_Manager::Update(const char *relName,
 			return rc;
 		}
 	}
-	cerr << "Update G" << endl;
+	 // cerr << "Update G" << endl;
 	while (OK_RC == (rc = tmpFileScan.GetNextRec(record))){
 		char* pData;
 		if (rc = record.GetData(pData)){
@@ -596,7 +596,7 @@ RC QL_Manager::Update(const char *relName,
 				return rc;
 			}
 		}
-		cerr << "Update H" << endl;
+		 // cerr << "Update H" << endl;
 		// Update record
 		if (bIsValue){
 			memcpy(attribute, rhsValue.data, leftAttrcat.attrLen);
@@ -605,7 +605,7 @@ RC QL_Manager::Update(const char *relName,
 			char* rightAttribute = pData + rightAttrcat.offset;
 			memcpy(attribute, rightAttribute, min(leftAttrcat.attrLen, rightAttrcat.attrLen));
 		}
-		cerr << "Update I" << endl;
+		 // cerr << "Update I" << endl;
 		// If update attribute has an index, insert new entry
 		if (leftAttrcat.indexNo != SM_INVALID){
 			if (rc = indexHandle.InsertEntry(attribute, rid)){
@@ -614,7 +614,7 @@ RC QL_Manager::Update(const char *relName,
 				return rc;
 			}
 		}
-		cerr << "Update J" << endl;
+		 // cerr << "Update J" << endl;
 		// Update relation 
 		if(isRelation(*qPlan.root)){
 			if (rc = fileHandle.UpdateRec(record))
@@ -633,7 +633,7 @@ RC QL_Manager::Update(const char *relName,
 				return rc;
 		}
 
-		cerr << "Update K" << endl;
+		 // cerr << "Update K" << endl;
 		// Print 
 		printer.Print(cout, pData);
 	}
@@ -642,7 +642,7 @@ RC QL_Manager::Update(const char *relName,
 			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
-	cerr << "Update L" << endl;
+	 // cerr << "Update L" << endl;
 	if (rc = tmpFileScan.CloseScan()){
 		if (!isRelation(*qPlan.root))
 			smm->DropTable(qPlan.root->output);
@@ -655,7 +655,7 @@ RC QL_Manager::Update(const char *relName,
 			return rc;
 		}
 	}
-	cerr << "Update M" << endl;
+	 // cerr << "Update M" << endl;
 	// CLOSE START
 	// Close relation file
 	if (rc = rmm->CloseFile(fileHandle)){
@@ -747,7 +747,7 @@ RC QL_Manager::CheckCondition(Condition &condition, const char * const relations
 
 	// Check right hand attribute (if it is an attribute)
 	if (condition.bRhsIsAttr){
-		cerr << "right hand attribute" << endl;
+		 // cerr << "right hand attribute" << endl;
 		if (rc = CheckAttribute(condition.rhsAttr, relations, nRelations))
 			return rc;
 	}
@@ -793,7 +793,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 		if (rc = CheckRelation(relations[i]))
 			return rc;
 	}
-	cerr << "makequeryplan A" << endl;
+	 // cerr << "makequeryplan A" << endl;
 	// Check relation uniqueness
 	set<string> myRels(relations, relations+nRelations);
 	if (myRels.size() != nRelations)
@@ -804,7 +804,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 	vector<Condition> myConds;
 	vector<Condition> myAttrConds;
 	vector<Condition> myValConds;
-	cerr << "makequeryplan AA" << endl;
+	 // cerr << "makequeryplan AA" << endl;
 	bool calcProj = true;
 	if (nSelAttrs == 0)
 		calcProj = false;
@@ -815,7 +815,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 				return rc;
 		}
 	}
-	cerr << "makequeryplan AAA" << endl;
+	 // cerr << "makequeryplan AAA" << endl;
 	for (int i = 0; i < nConditions; ++i){
 		if(conditions[i].bRhsIsAttr){
 			myAttrConds.push_back(conditions[i]);
@@ -830,12 +830,12 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 		if (rc)
 			return rc;
 	}
-	cerr << "Conditions : " << myConds.size() << endl;
-	cerr << "attribute conds : " << myAttrConds.size() << endl;
-	cerr << "value conds : " << myValConds.size() << endl;
+	 // cerr << "Conditions : " << myConds.size() << endl;
+	 // cerr << "attribute conds : " << myAttrConds.size() << endl;
+	 // cerr << "value conds : " << myValConds.size() << endl;
 	// End check input
 
-	cerr << "makequeryplan B" << endl;
+	 // cerr << "makequeryplan B" << endl;
 	// Make projection map
 	map<RelAttr, int> projMap;
 	for (int i = 0; i < mySelAttrs.size(); ++i){
@@ -850,7 +850,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 	vector<RelAttrCount> projVector;
 	for(map<RelAttr, int>::iterator it = projMap.begin(); it != projMap.end(); ++it)
 		projVector.push_back(RelAttrCount(it->first, it->second));
-	cerr << "makequeryplan C" << endl;
+	 // cerr << "makequeryplan C" << endl;
 
 	// Make join lists
 	map<string, set<string> > joinLists;
@@ -860,7 +860,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 			joinLists[myAttrConds[i].rhsAttr.relName].insert(myAttrConds[i].lhsAttr.relName);
 		}
 	}
-	cerr << "makequeryplan D" << endl;
+	 // cerr << "makequeryplan D" << endl;
 	// Make relation groups
 	vector<set<string> > relGroups;
 	set<string> processed;
@@ -891,7 +891,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 		relGroups.push_back(currProcessed);
 		processed.insert(currProcessed.begin(), currProcessed.end());
 	}
-	cerr << "makequeryplan E" << endl;
+	 // cerr << "makequeryplan E" << endl;
 
 	// Make condition groups
 	vector<vector<Condition> > condGroups(relGroups.size());
@@ -904,7 +904,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 		}
 	}
 
-	cerr << "makequeryplan F" << endl;
+	 // cerr << "makequeryplan F" << endl;
 	// Create relation/selection/join nodes
 	bool relProject = (calcProj && nRelations == 1 && nConditions == 0);
 	vector<Node*> groupNodes;
@@ -914,25 +914,25 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 		// Only does file iteration for now...
 
 		for (int k = 0; k < relGroups.size(); ++k){
-			cerr << "makequeryplan F1" << endl;
+			 // cerr << "makequeryplan F1" << endl;
 			// Initialize list, create relation/selection nodes
 			list<Node*> needToJoin;
-			cerr << condGroups[k].size() << endl;
+			 // cerr << condGroups[k].size() << endl;
 			for (set<string>::iterator it = relGroups[k].begin(); it != relGroups[k].end(); ++it){
 				Relation* rel = new Relation (smm, it->c_str(), relProject, projVector.size(), &projVector[0]);
 				if (rel->rc)
 					return rel->rc;
 				Selection* sel = new Selection(smm, rmm, ixm, *rel, condGroups[k].size(), &condGroups[k][0], calcProj, projVector.size(), &projVector[0]);
 				if (sel->rc){
-					cerr << "rel" << rel->output << endl;
+					 // cerr << "rel" << rel->output << endl;
 					needToJoin.push_back(rel);
-					cerr << rel->output << endl;
+					 // cerr << rel->output << endl;
 					delete sel;
 				}
 				else{
-					cerr << "sel" << sel ->child->output << endl;
+					 // cerr << "sel" << sel ->child->output << endl;
 					needToJoin.push_back(sel);
-					cerr << sel->relations << endl;
+					 // cerr << sel->relations << endl;
 				}
 			}
 
@@ -942,7 +942,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 				continue;
 			}
 			else {
-				cerr << "makequeryplan F2" << endl;
+				 // cerr << "makequeryplan F2" << endl;
 
 				// Fence post
 				cout << "before pop front : " << needToJoin.size() << endl;
@@ -969,17 +969,17 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 						}
 						
 						// Determine if join is viable
-						cerr << "Number of conditions left (must be > 0) : " << newConds.size() << endl;
+						 // cerr << "Number of conditions left (must be > 0) : " << newConds.size() << endl;
 						Join* join = new Join(smm, rmm, ixm, *left, *right, newConds.size(), &newConds[0], calcProj, projVector.size(), &projVector[0]);
 						if(!join->rc){
 							// Update current conditions
 							currConds.clear();
 							// Remove join conditions
 							set<Condition> joinConds (join->conditions, join->conditions + join->numConditions);
-							cerr << "new Conds size: " << newConds.size() << endl;
-							cerr << "joinConds size: " << joinConds.size() << endl;
+							 // cerr << "new Conds size: " << newConds.size() << endl;
+							 // cerr << "joinConds size: " << joinConds.size() << endl;
 							for (vector<Condition>::iterator innerItr = newConds.begin(); innerItr != newConds.end(); ++innerItr){
-								cerr << " should repeat " << newConds.size() << "times" ;
+								 // cerr << " should repeat " << newConds.size() << "times" ;
 								if (joinConds.find(*innerItr) == joinConds.end()){
 									currConds.push_back(*innerItr);
 								}
@@ -993,12 +993,12 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 					}
 					if (it == needToJoin.end())
 						return QL_JOINNODE;
-					cerr << "after erase it : " << needToJoin.size() << endl;
+					 // cerr << "after erase it : " << needToJoin.size() << endl;
 				}
 				groupNodes.push_back(left);
 			}
 		}
-		cerr << "makequeryplan F3" << endl;
+		 // cerr << "makequeryplan F3" << endl;
 	}
 	else {
 		//// TODO
@@ -1012,23 +1012,23 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 		//	SetParents(*groupNodes[i]);
 	}
 
-	cerr << "makequeryplan G" << endl;
+	 // cerr << "makequeryplan G" << endl;
 	// Create cross nodes 
 	// No cross needed
 	if (groupNodes.size() == 1){
-		cerr << "makequeryplan H" << endl;
+		 // cerr << "makequeryplan H" << endl;
 		qPlan.root = groupNodes[0];
-		cerr << "makequeryplan H.2" << endl;
+		 // cerr << "makequeryplan H.2" << endl;
 	}
 	else if (groupNodes.size() == 2){
-		cerr << "makequeryplan I" << endl;
+		 // cerr << "makequeryplan I" << endl;
 		Node* left = groupNodes[0];
 		Node* right = groupNodes[1];
 		Cross* tmp = new Cross(smm, rmm, ixm, *left, *right, calcProj, projVector.size(), &projVector[0]);
 		qPlan.root = tmp;
 	}
 	else {
-		cerr << "makequeryplan J" << endl;
+		 // cerr << "makequeryplan J" << endl;
 		if (!EXT){
 			// Arbitrary crossing
 			Node* left = groupNodes[0];
@@ -1111,7 +1111,7 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 		}
 	}
 
-	cerr << "makequeryplan K" << endl;
+	 // cerr << "makequeryplan K" << endl;
 	return 0;
 }
 int QL_Manager::SelectCost(Node &left){
@@ -1169,7 +1169,7 @@ RC QL_Manager::GetResults(Node &qPlan)
 
 		 nextNodes.pop();
 	 }
-	 cerr << "getresults A" << endl;
+	  // cerr << "getresults A" << endl;
 	 RC rc;
 	 while (!zeroCounts.empty()){
 		if (rc = zeroCounts.front()->execute())
@@ -1185,7 +1185,7 @@ RC QL_Manager::GetResults(Node &qPlan)
 
 		 zeroCounts.pop();
 	 }
-	 cerr << "getresults B" << endl;
+	  // cerr << "getresults B" << endl;
 	 return 0;
 }
 

@@ -54,7 +54,7 @@ bool SelectionConditionApplies(Condition &cond, set<string> &myRelations){
 bool JoinConditionApplies(Condition &cond, set<string> &myRelations){
 	// Selection condition
 	if (!isJoinCondition(cond)){
-		cerr << "selection condition  : " << cond.lhsAttr.relName << endl;
+		 // cerr << "selection condition  : " << cond.lhsAttr.relName << endl;
 		return SelectionConditionApplies(cond, myRelations);
 	}
 	// Check both attributes included in relations
@@ -63,8 +63,8 @@ bool JoinConditionApplies(Condition &cond, set<string> &myRelations){
 		return false;
 	}
 	// Join condition
-	cerr << cond.lhsAttr.relName << "   " << cond.rhsAttr.relName << endl;
-	cerr << "Join condition found!!!" << endl;
+	 // cerr << cond.lhsAttr.relName << "   " << cond.rhsAttr.relName << endl;
+	 // cerr << "Join condition found!!!" << endl;
 	return true;
 }
 
@@ -118,39 +118,39 @@ Node::Node(const Node& other){
 	conditions = new Condition[numConditions];
 	if (other.conditions)
 		memcpy(conditions, other.conditions, numConditions * sizeof(Condition));
-	cerr << "Node A" << endl;
+	 // cerr << "Node A" << endl;
 	smm = other.smm;
 	rmm = other.rmm;
 	ixm = other.ixm;
-	cerr << "Node B" << endl;
+	 // cerr << "Node B" << endl;
 	memset(type, '\0', MAXNAME+1);
 	strcpy(type, other.type);
 	child = other.child;
 	otherChild = other.otherChild;
 	parent = other.parent;
-	cerr << "Node C" << endl;
+	 // cerr << "Node C" << endl;
 	memset(output, '\0', MAXNAME+1);
 	memcpy(output, other.output, MAXNAME);
 
 	numRelations = other.numRelations;
-	cerr << "Node D" << endl;
-	cerr << numRelations << "    " << string(other.relations) << endl;
+	 // cerr << "Node D" << endl;
+	 // cerr << numRelations << "    " << string(other.relations) << endl;
 	relations = new char[numRelations * (MAXNAME+1)];
 	if (other.numRelations)
 		memcpy(relations, other.relations, numRelations * (MAXNAME+1));
 
-	cerr << "Node E" << endl;
+	 // cerr << "Node E" << endl;
 	numRids = other.numRids;
 	rids = new Attrcat[numRids];
 	if (other.rids)
 		memcpy(rids, other.rids, numRids * sizeof(Attrcat));
 
-	cerr << "Node F" << endl;
+	 // cerr << "Node F" << endl;
 	numOutAttrs = other.numOutAttrs;
 	outAttrs = new Attrcat[numOutAttrs];
 	if (other.outAttrs)
 		memcpy(outAttrs, other.outAttrs, numOutAttrs * sizeof(Attrcat));
-	cerr << "Node G" << endl;
+	 // cerr << "Node G" << endl;
 	numCountPairs = other.numCountPairs;
 	pCounts = new RelAttrCount[numCountPairs];
 	if (other.pCounts)
@@ -467,10 +467,10 @@ RC Node::CreateTmpOutput(){
 	}
 	for (int i = 0; i < numOutAttrs; ++i)
 		attributes.push_back(AttrInfo(outAttrs[i]));
-	cerr << "create tmp output, BEFORE createtable" << endl;
+	 // cerr << "create tmp output, BEFORE createtable" << endl;
 	if (rc = smm->CreateTable(output, numOutAttrs + numRids, &attributes[0]))
 		return rc;
-	cerr << "create tmp output, AFTER createtable" << endl;
+	 // cerr << "create tmp output, AFTER createtable" << endl;
 	return 0;
 }
 RC Node::DeleteTmpInput(){
@@ -526,7 +526,7 @@ Selection::Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& le
 }
 Selection::~Selection(){}
 RC Node::SelectionExecute(){
-	cerr << "select execute" << endl;
+	 // cerr << "select execute" << endl;
 	if (rc = CreateTmpOutput())
 		return rc;
 
@@ -652,27 +652,27 @@ RC Node::SelectionExecute(){
 
 // Both selection and join conditions
 Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& right, int numConds, Condition *conds, bool calcProj, int numTotalPairs, RelAttrCount *pTotals){
-	cerr << "join A" << endl;
+	 // cerr << "join A" << endl;
 	// set parent for both children
 	left.parent = this;
 	right.parent = this;
 
 	// numConditions and conditions
 	set<string> myRelations;
-	cerr << "num relations: " << left.numRelations << " " << right.numRelations << endl;
+	 // cerr << "num relations: " << left.numRelations << " " << right.numRelations << endl;
 	for (int i = 0; i < left.numRelations; ++i){
 		myRelations.insert(left.relations + i * (MAXNAME + 1));
-		cerr << " left relation: " << (string)(left.relations + i * (MAXNAME + 1)) << endl;
+		 // cerr << " left relation: " << (string)(left.relations + i * (MAXNAME + 1)) << endl;
 	}
 	for (int i = 0; i < right.numRelations; ++i){
 		myRelations.insert(right.relations + i * (MAXNAME + 1));
-		cerr << "right relation: " << (string)(right.relations + i * (MAXNAME + 1)) << endl;
+		 // cerr << "right relation: " << (string)(right.relations + i * (MAXNAME + 1)) << endl;
 	}
 	bool foundJoinCondition = false;
 	vector<Condition> condVector;
 	for (int i = 0; i < numConds; ++i){
 		if (JoinConditionApplies(conds[i], myRelations)){
-			cerr << "condition added " << endl;
+			 // cerr << "condition added " << endl;
 			condVector.push_back(conds[i]);
 			if (isJoinCondition(conds[i]))
 				foundJoinCondition = true;
@@ -683,13 +683,13 @@ Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& 
 		rc = QL_JOINNODE;
 		return;
 	}
-	cerr << " How many conditions does this join have? " << condVector.size() << endl;
+	 // cerr << " How many conditions does this join have? " << condVector.size() << endl;
 	numConditions = condVector.size();
 	conditions = new Condition[numConditions];
 	copy(condVector.begin(), condVector.end(), conditions);
 
 
-	cerr << "JOIN CREATION HERE" << endl;
+	 // cerr << "JOIN CREATION HERE" << endl;
 	this->smm = smm;
 	this->rmm = rmm;
 	this->ixm = ixm;
@@ -706,7 +706,7 @@ Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& 
 }
 Join::~Join(){}
 RC Node::JoinExecute(){
-	cerr << "join execute" << endl;
+	 // cerr << "join execute" << endl;
 	if (rc = CreateTmpOutput())
 		return rc;
 	
@@ -950,12 +950,12 @@ Cross::Cross(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node &left, Node
 }
 Cross::~Cross(){}
 RC Node::CrossExecute(){
-	cerr << "CROSS EXECUTE START" << endl;
+	 // cerr << "CROSS EXECUTE START" << endl;
 	if (rc = CreateTmpOutput()){
-		cerr << "cross execute A" << endl;
+		 // cerr << "cross execute A" << endl;
 		return rc;
 	}
-	cerr << "Cross output: " << output << endl;
+	 // cerr << "Cross output: " << output << endl;
 
 	// Open files and filescans
 	RM_FileHandle outFile;
@@ -972,11 +972,11 @@ RC Node::CrossExecute(){
 			return rc;
 	}
 
-	cerr << "cross execute B" << endl;
+	 // cerr << "cross execute B" << endl;
 	// Make outPData
-	cerr << "RID size (should be 8) : " << sizeof(RID) << endl;
+	 // cerr << "RID size (should be 8) : " << sizeof(RID) << endl;
 	int len = outAttrs[numOutAttrs-1].offset + outAttrs[numOutAttrs-1].attrLen;
-	cerr << "outPData len (should be 88) : " << len << endl;
+	 // cerr << "outPData len (should be 88) : " << len << endl;
 	char* outPData = new char[len];
 	memset(outPData, '\0', len);
 
@@ -991,7 +991,7 @@ RC Node::CrossExecute(){
 		pair<string, string> key = getRelAttrNames(otherChild->outAttrs[i].attrName);
 		otherAttrcats[key] = otherChild->outAttrs[i];
 	}
-	cerr << "cross execute C" << endl;
+	 // cerr << "cross execute C" << endl;
 	// Iterate over files
 	RM_Record record;
 	RM_FileScan scan;
@@ -1033,7 +1033,7 @@ RC Node::CrossExecute(){
 	if (rc = scan.CloseScan())
 		return rc;
 
-	cerr << "cross execute D" << endl;
+	 // cerr << "cross execute D" << endl;
 	delete [] outPData;
 
 	// Close filescans and files
@@ -1100,10 +1100,10 @@ Relation::Relation(SM_Manager *smm, const char *relName, bool calcProj, int numT
 		map<RelAttr, int> projTotals;
 		for (int i = 0; i < numTotalPairs; ++i){
 			projTotals[pTotals[i].first] = pTotals[i].second;
-			cerr << pTotals[i].first.relName << "." << pTotals[i].first.attrName << endl;
+			 // cerr << pTotals[i].first.relName << "." << pTotals[i].first.attrName << endl;
 		}
 		
-		cerr << endl << endl;
+		 // cerr << endl << endl;
 		vector<Attrcat> newOutAttrs;
 		for (int i = 0; i < numOutAttrs; ++i){
 			pair<string, string> pair = getRelAttrNames(outAttrs[i].attrName);
@@ -1150,7 +1150,7 @@ Node* QueryTree::RecursiveClone(Node* node){
 	if (!node)
 		return NULL;
 	Node* newNode = new Node(*node);
-	cerr << "query tree recursive clone CHECK OFFSET (not 0) : " << newNode->outAttrs[1].offset << endl;
+	 // cerr << "query tree recursive clone CHECK OFFSET (not 0) : " << newNode->outAttrs[1].offset << endl;
 	newNode->child = RecursiveClone(node->child);
 	if (newNode->child)
 		newNode->child->parent = newNode;
@@ -1374,7 +1374,7 @@ RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAtt
 			outItr += otherChild->numRids * sizeof(RID);
 		}
 	}
-	cerr << "writeToOutput C" << endl;
+	 // cerr << "writeToOutput C" << endl;
 	for (int i = 0; i < numOutAttrs; ++i){
 		pair<string, string> key = getRelAttrNames(outAttrs[i].attrName);
 		if (attrcats.find(key) != attrcats.end())
@@ -1382,7 +1382,7 @@ RC WriteToOutput(Node* child, Node* otherChild, int numOutAttrs, Attrcat *outAtt
 		else
 			memcpy(outPData + outAttrs[i].offset, otherPData + otherAttrcats[key].offset, outAttrs[i].attrLen);
 	}
-	cerr << "writeToOutput D" << endl;
+	 // cerr << "writeToOutput D" << endl;
 	// Insert
 	RID tmp;
 	if (rc = outFile.InsertRec(outPData, tmp))
