@@ -148,21 +148,12 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	// Print
 	RM_FileHandle tmpFileHandle;
 	RM_FileScan tmpFileScan;
-	if (smm->isCatalog(qPlan.root->output)){
-		if (strcmp(qPlan.root->output, MYRELCAT) == 0)
-			rc = tmpFileScan.OpenScan(smm->relFile, INT, 4, 0, NO_OP, NULL);
-		else 
-			rc = tmpFileScan.OpenScan(smm->attrFile, INT, 4, 0, NO_OP, NULL);
-	} 
-	else {
-		if (rc = rmm->OpenFile(qPlan.root->output, tmpFileHandle)){
-			if (!isRelation(*qPlan.root))
-				smm->DropTable(qPlan.root->output);
-			return rc;
-		}
-		rc = tmpFileScan.OpenScan(tmpFileHandle, INT, 4, 0, NO_OP, NULL);
+	if (rc = rmm->OpenFile(qPlan.root->output, tmpFileHandle)){
+		if (!isRelation(*qPlan.root))
+			smm->DropTable(qPlan.root->output);
+		return rc;
 	}
-	if (rc){
+	if (rc = tmpFileScan.OpenScan(tmpFileHandle, INT, 4, 0, NO_OP, NULL)){
 		if (!isRelation(*qPlan.root))
 			smm->DropTable(qPlan.root->output);
 		return rc;
@@ -190,13 +181,12 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
-	if (!smm->isCatalog(qPlan.root->output)){
-		if (rc = rmm->CloseFile(tmpFileHandle)){
-			if (!isRelation(*qPlan.root))
-				smm->DropTable(qPlan.root->output);
-			return rc;
-		}
+	if (rc = rmm->CloseFile(tmpFileHandle)){
+		if (!isRelation(*qPlan.root))
+			smm->DropTable(qPlan.root->output);
+		return rc;
 	}
+
 
 	// Finish Printer
 	printer.PrintFooter(cout);
