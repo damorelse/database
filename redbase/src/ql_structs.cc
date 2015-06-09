@@ -782,7 +782,6 @@ Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& 
 }
 Join::~Join(){}
 RC Node::JoinExecute(){
-	 // cerr << "join execute" << endl;
 	if (rc = CreateTmpOutput())
 		return rc;
 	

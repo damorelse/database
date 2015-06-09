@@ -93,6 +93,10 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	if (rc = MakeSelectQueryPlan(nSelAttrs, selAttrs, nRelations, relations, nConditions, conditions, qPlan))
 		return rc;
 
+	if (bQueryPlans){
+		PrintQueryPlan(*qPlan.root);
+	}
+
 	 // cerr << "start getResults" << endl;
 	if (rc = GetResults(*qPlan.root)){
 		 // cerr << "BUG IN getResults!!!!!!!!!!!" << endl;
@@ -101,9 +105,6 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 		return rc;
 	}
 	 // cerr << "finished getResults" << endl;
-	if (bQueryPlans){
-		PrintQueryPlan(*qPlan.root);
-	}
 
 	// Start Printer
 	vector<DataAttrInfo> dataAttrs; 
@@ -373,13 +374,13 @@ RC QL_Manager::Delete(const char *relName,
 	QueryTree qPlan;
 	if (rc = MakeSelectQueryPlan(0, NULL, 1, relations, nConditions, conditions, qPlan))
 		return rc;
+	if (bQueryPlans){
+		PrintQueryPlan(*qPlan.root);
+	}
 	if (rc = GetResults(*qPlan.root)){
 		if (!isRelation(*qPlan.root))
 			smm->DropTable(qPlan.root->output);
 		return rc;
-	}
-	if (bQueryPlans){
-		PrintQueryPlan(*qPlan.root);
 	}
 
 	// OPEN START
@@ -549,14 +550,15 @@ RC QL_Manager::Update(const char *relName,
 	QueryTree qPlan;
 	if (rc = MakeSelectQueryPlan(0, NULL, 1, relations, nConditions, conditions, qPlan))
 		return rc;
+	if (bQueryPlans){
+		PrintQueryPlan(*qPlan.root);
+	}
 	if (rc = GetResults(*qPlan.root)){
 		if (!isRelation(*qPlan.root))
 			smm->DropTable(qPlan.root->output);
 		return rc;
 	}
-	if (bQueryPlans){
-		PrintQueryPlan(*qPlan.root);
-	}
+	
 	 // cerr << "Update C" << endl;
 	// OPEN START
 	// Open relation file
