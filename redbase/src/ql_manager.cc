@@ -75,6 +75,14 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	// Check select attributes/relation numbers
 	if (nSelAttrs < 1 || nRelations < 1)
 		return QL_INVALIDNUM;
+	for (int i = 0; i < nRelations; ++i){
+		if (strcmp(MYATTRCAT, relations[i]) == 0)
+			if (rc = smm->attrFile.ForcePages())
+				return rc;
+		else if (strcmp(MYRELCAT, relations[i]) == 0)
+			if (rc = smm->relFile.ForcePages())
+				return rc;
+	}
 	// End check input
 
 	QueryTree qPlan;
