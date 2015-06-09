@@ -872,7 +872,7 @@ RC Node::JoinExecute(){
 				cerr << string(child->relations) << endl;
 		} else {
 				rc = fileScan.OpenScan(otherFile, INT, 4, 0, NO_OP, NULL);
-				cerr << string(child->relations) << endl;
+				cerr << string(otherChild->relations) << endl;
 		}
 		if (rc)
 			return rc;
@@ -885,12 +885,12 @@ RC Node::JoinExecute(){
 			if (rc = fileRecord.GetData(fileData))
 				return rc;
 			char * value = fileData + right.offset; //TESTING
-			cerr << "Offset's offset in attrcat (88) : " << right.offset;
+			cerr << "Offset's offset in attrcat (75 + 8 = 83) : " << right.offset << endl;
 
 			// TESTING
 			int intTemp;
 			memcpy(&intTemp, value, 4);
-			cerr << "Test offset value: " << endl;
+			cerr << "Test offset value: " << intTemp << endl;
 			// TESTING
 
 			IX_IndexHandle index;
