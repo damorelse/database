@@ -714,14 +714,14 @@ Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& 
 
 	// Make attribute-attrcat maps
 	map<pair<string, string>, Attrcat> attrcats;
-	for (int i = 0; i < child->numOutAttrs; ++i){
-		pair<string, string> key = getRelAttrNames(child->outAttrs[i].attrName);
-		attrcats[key] = child->outAttrs[i];
+	for (int i = 0; i < left.numOutAttrs; ++i){
+		pair<string, string> key = getRelAttrNames(left.outAttrs[i].attrName);
+		attrcats[key] = left.outAttrs[i];
 	}
 	map<pair<string, string>, Attrcat> otherAttrcats;
-	for (int i = 0; i < otherChild->numOutAttrs; ++i){
-		pair<string, string> key = getRelAttrNames(otherChild->outAttrs[i].attrName);
-		otherAttrcats[key] = otherChild->outAttrs[i];
+	for (int i = 0; i < right.numOutAttrs; ++i){
+		pair<string, string> key = getRelAttrNames(right.outAttrs[i].attrName);
+		otherAttrcats[key] = right.outAttrs[i];
 	}
 	// Order conditions
 	if (!EXT){
@@ -755,7 +755,8 @@ Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& 
 				tmp.lhsAttr = conditions[i].rhsAttr;
 
 				// Place flipped condition first
-				memcpy(conditions + i, conditions, sizeof(Condition));
+				if (i > 0)
+					memcpy(conditions + i, conditions, sizeof(Condition));
 				memcpy(conditions, &tmp, sizeof(Condition));
 				strcpy(execution, QL_INDEX);
 				break;
