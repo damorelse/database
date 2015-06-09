@@ -1,0 +1,78 @@
+Gina Pai
+gpai
+05603432
+
+Overall Design:
+
+	*RQL Queries Overview
+The Select, Delete, and Update RQL queries are first converted into equivalent-select queries. The select queries are then converted into query plans by method "MakeSelectQueryPlan". If the environment variable bQueryPlans is set, the query plans are printed to screen by "PrintQueryPlan". Tuples satisfying the select queries/query plans are then calculated by method "GetResults". These tuples are then deleted or modified if the RQL query was a Delete or Update, and lastly printed to screen.
+
+The Insert query constructs a tuple from the given values and outputs it to a temporary ASCII file. The file is then loaded into the target relation by the "SM_Manager::Load" method and deleted. The tuple is printed to screen.
+
+
+	*Query Plan Structure
+Query plans are tree-structured collections of nodes. The output tuples of children nodes are used as input tuples for parent nodes.
+
+Node Classes
+	Relation: Represent the original relation. Has zero children.
+	Select: Represent one or more conditions that only apply to a single relation. Has one child which must be a Relation.
+	Join: Represent joining of two results. Has two children which can be Joins, Selects, or Relations.
+	Cross: Represent crossing of two results. Has two children which can be Crosses, Joins, Selects, or Relations.
+
+Projections are represented not as a separate Node class but as an internal node property. This is because projections can be performed when returning results with 0 additional cost. 
+
+
+	*Query Plan generation
+Trees are generated from the bottom up. This method of generation was chosen to work with an extension using dynamic algorithms to optimize query plan costs.
+
+1. First, a Relation node is generated for each from-clause relation. Let's call these little trees.
+2. Next, if one or more selection condition exists for the relation (ex. a = 4, A.b < A.c), a Selection node is added as the root of each little tree.
+3. The little trees are grouped into join-groups. Within each join group, the little trees are then joined semi-arbitrarily as long as a join condition exists (ex. AB join CD, A.x = C.y).
+4. The little trees are then crossed arbitrarily.
+
+
+	*Query Plan execution
+Except for the Relation node, intermediate results are stored in temporary relation files. This execution method was chosen to handle big data, to function without assuming all the results can be stored in memory.
+
+	*Query Plan printing
+Plans are printed one node at a time, top-down and right to left. The print-outs include the node type, conditions, and access type. An example print out:
+
+select relcat.relName, attrCount, id 
+from relcat, attrcat, students 
+where id = attrCount and relcat.relName = attrcat.relName and id > 4;
+
+			Join (students.id = relcat.attrCount)
+			Full Table Scan
+			|___
+			|   |
+			|   Project (students.id)
+			|   |
+			|   Select (students.id > 4)
+			|   Full Table Scan
+			|   |
+			|   students
+			|
+			Project (relcat.relName, relcat.attrCount)
+			|
+			Join (relcat.relName = attrcat.relName)
+			Full Table Scan
+			|___
+			|   |
+			|   relcat
+			|
+			attrcat
+
+
+Key Data Structures:
+	Query Trees
+	Select, Join, Cross, Relation nodes
+	Intermediate result relations
+
+Testing Process:
+My testing process involved running the code against personal tests and finally the grading tests.
+
+Known Bugs:
+The selection and join index scans have bugs that causes a reduced performance. The 110% performance was achieved after commenting out those sections.
+
+Received Assistance:
+I received assistance from Michael Fitzpatrick. He showed me print outs of his query trees.
