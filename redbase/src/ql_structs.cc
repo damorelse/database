@@ -869,8 +869,10 @@ RC Node::JoinExecute(){
 		RM_FileScan fileScan;
 		if (!swap){
 				rc = fileScan.OpenScan(file, INT, 4, 0, NO_OP, NULL);
+				cerr << string(child->relations) << endl;
 		} else {
 				rc = fileScan.OpenScan(otherFile, INT, 4, 0, NO_OP, NULL);
+				cerr << string(child->relations) << endl;
 		}
 		if (rc)
 			return rc;
@@ -882,8 +884,7 @@ RC Node::JoinExecute(){
 			char* fileData;
 			if (rc = fileRecord.GetData(fileData))
 				return rc;
-			//char * value = fileData + right.offset; TESTING
-			char * value = fileData + 88;
+			char * value = fileData + right.offset; //TESTING
 			cerr << "Offset's offset in attrcat (88) : " << right.offset;
 
 			// TESTING
