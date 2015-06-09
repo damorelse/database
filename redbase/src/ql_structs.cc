@@ -417,8 +417,6 @@ void Node::Project(bool calcProj, int numTotalPairs, RelAttrCount *pTotals){
 				pCounts[i] = RelAttrCount(it->first, it->second);
 		}
 		
-		// TODO TESTING: calcProj if here
-
 		// Recreate projection totals map
 		map<RelAttr, int> projTotals;
 		for (int i = 0; i < numTotalPairs; ++i)
@@ -718,10 +716,9 @@ Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& 
 		pair<string, string> key = getRelAttrNames(left.outAttrs[i].attrName);
 		attrcats[key] = left.outAttrs[i];
 	}
-	map<pair<string, string>, Attrcat> otherAttrcats;
 	for (int i = 0; i < right.numOutAttrs; ++i){
 		pair<string, string> key = getRelAttrNames(right.outAttrs[i].attrName);
-		otherAttrcats[key] = right.outAttrs[i];
+		attrcats[key] = right.outAttrs[i];
 	}
 	// Order conditions
 	if (!EXT){
