@@ -584,7 +584,7 @@ RC Node::SelectionExecute(){
 	}
 	// cerr << "selection execute A" << endl;
 	// No index scan
-	if (strcmp(execution, QL_FILE) == 0){
+	if (strcmp(execution, QL_FILE) == 0 || (strcmp(execution, QL_INDEX) == 0 && !EXT)){ // TODO
 		RM_FileScan scan;
 		if (rc = scan.OpenScan(file, INT, 4, 0, NO_OP, NULL))
 			return rc;
