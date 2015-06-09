@@ -865,6 +865,7 @@ RC Node::JoinExecute(){
 	// (AB join C with index on C's attribute, A join B with index on one attribute)
 	else if (strcmp(execution, QL_INDEX) == 0)
 	{
+		cerr << "Reached the index scan" << endl;
 		// Assumes lhsAttr is the indexed one
 		Attrcat left = GetAttrcat(conditions[0].lhsAttr, attrcats, otherAttrcats);
 		Attrcat right = GetAttrcat(conditions[0].rhsAttr, attrcats, otherAttrcats);
