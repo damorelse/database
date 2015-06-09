@@ -33,3 +33,8 @@ Attrcat& Attrcat::operator=(char* pData){
 	memcpy(this, pData, sizeof(Attrcat));
 	return *this;
 }
+
+Attrcat& Attrcat::operator=(const Attrcat& other){
+	memcpy(this, &other, sizeof(Attrcat));
+	return *this;
+}

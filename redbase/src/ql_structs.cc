@@ -874,6 +874,7 @@ RC Node::JoinExecute(){
 		}
 		if (rc)
 			return rc;
+		cerr << "Swap : " << swap << endl;
 
 		// Iterate over files
 		RM_Record fileRecord;
@@ -882,6 +883,7 @@ RC Node::JoinExecute(){
 			if (rc = fileRecord.GetData(fileData))
 				return rc;
 			char * value = fileData + right.offset;
+			cerr << "Offset's offset in attrcat (88) : " << right.offset;
 
 			// TESTING
 			int intTemp;
