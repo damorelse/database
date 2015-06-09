@@ -816,8 +816,33 @@ RC QL_Manager::CheckCondition(Condition &condition, const char * const relations
 	}
 	else {
 		AttrType rhsType = condition.rhsValue.type;
-		if (lhsType != rhsType)
-			return QL_TYPEINCOM;
+		if (lhsType != rhsType){
+			if (rhsType != STRING)
+				return QL_TYPEINCOM;
+
+			switch(lhsType){
+			case INT:{
+				int tmp;
+				istringstream ss((char*)condition.rhsValue.data);
+				ss >> tmp;
+				if (ss.fail() || ss.rdbuf()->in_avail() != 0)
+					return QL_TYPEINCOM;
+				condition.rhsValue.type = lhsType;
+				// copy back
+				break;
+					 }
+			case FLOAT:{
+				float tmp;
+				istringstream ss((char*)condition.rhsValue.data);
+				ss >> tmp;
+				if (ss.fail() || ss.rdbuf()->in_avail() != 0)
+					return QL_TYPEINCOM;
+				condition.rhsValue.type = lhsType;
+				// copy back
+				break;
+					   }
+			}
+		}
 	}
 
 	return 0;
