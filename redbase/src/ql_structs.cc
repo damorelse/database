@@ -705,14 +705,61 @@ Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& 
 		rc = QL_JOINNODE;
 		return;
 	}
-	 // cerr << " How many conditions does this join have? " << condVector.size() << endl;
+
 	numConditions = condVector.size();
 	conditions = new Condition[numConditions];
 	copy(condVector.begin(), condVector.end(), conditions);
 
+
+	// Make attribute-attrcat maps
+	map<pair<string, string>, Attrcat> attrcats;
+	for (int i = 0; i < child->numOutAttrs; ++i){
+		pair<string, string> key = getRelAttrNames(child->outAttrs[i].attrName);
+		attrcats[key] = child->outAttrs[i];
+	}
+	map<pair<string, string>, Attrcat> otherAttrcats;
+	for (int i = 0; i < otherChild->numOutAttrs; ++i){
+		pair<string, string> key = getRelAttrNames(otherChild->outAttrs[i].attrName);
+		otherAttrcats[key] = otherChild->outAttrs[i];
+	}
 	// Order conditions
 	if (!EXT){
-		// TODO: Determine if Index scan possible
+		// Find a condition that an index scan can be performed upon
+		for (int i = 0; i < numConditions; ++i){
+			pair<string, string> leftKey = make_pair(conditions[i].lhsAttr.relName, conditions[i].lhsAttr.attrName);
+			pair<string, string> rightKey = make_pair(conditions[i].rhsAttr.relName, conditions[i].rhsAttr.attrName);
+
+			// Check is an attribute condition
+			if (!conditions[i].bRhsIsAttr)
+				continue;
+
+			// If a left attribute has an index...
+			if (attrcats[leftKey].indexNo != -1){
+				// Place condition first
+				if (i > 0){
+					Condition tmp(conditions[0]);
+					memcpy(conditions, conditions + i, sizeof(Condition));
+					memcpy(conditions + i, &tmp, sizeof(Condition));
+				}
+				strcpy(execution, QL_INDEX);
+				break;
+			}
+
+			// If a right attribute has an index...
+			if (attrcats[rightKey].indexNo != -1){
+				// Flip the condition
+				Condition tmp;
+				tmp.op = FlipOp(conditions[i].op);
+				tmp.rhsAttr = conditions[i].lhsAttr;
+				tmp.lhsAttr = conditions[i].rhsAttr;
+
+				// Place flipped condition first
+				memcpy(conditions + i, conditions, sizeof(Condition));
+				memcpy(conditions, &tmp, sizeof(Condition));
+				strcpy(execution, QL_INDEX);
+				break;
+			}
+		}
 	}
 	else {
 		// TODO: Order conditions by statistics calculated selectivity / access cost

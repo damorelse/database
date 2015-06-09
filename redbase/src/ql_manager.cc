@@ -1084,6 +1084,8 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 			qPlan.root = last;
 		}
 		else {
+			// TODO: Test
+
 			//// Initialize tables
 			//vector<map<set<int>, pair<int, Node> > > tables;
 			//for (int i = 0; i < groupNodes.size(); ++i){
