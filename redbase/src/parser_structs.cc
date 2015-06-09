@@ -102,7 +102,7 @@ Value& Value::operator=(const Value &other){
 	return *this;
 }
 Value::~Value(){
-	if (del){
+	if (del && data){
 		delete [] data;
 		data = NULL;
 		del = false;
