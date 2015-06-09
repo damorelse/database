@@ -867,7 +867,7 @@ RC Node::JoinExecute(){
 		bool swap = (attrcats.find(pair<string, string>(right.relName, right.attrName)) == attrcats.end());
 
 		RM_FileScan fileScan;
-		if (!swap){
+		if (swap){
 				rc = fileScan.OpenScan(file, INT, 4, 0, NO_OP, NULL);
 				cerr << string(child->relations) << endl;
 		} else {
@@ -909,7 +909,7 @@ RC Node::JoinExecute(){
 				RID rid;
 				while (OK_RC == (rc = indexScan.GetNextEntry(rid))){
 					RM_Record indexRecord;
-					if (!swap)
+					if (swap)
 						rc = otherFile.GetRec(rid,indexRecord);
 					else 
 						rc = file.GetRec(rid, indexRecord);
@@ -925,7 +925,7 @@ RC Node::JoinExecute(){
 					// Check rest of conditions
 					bool insert = true;
 					for (int k = 1; insert && k < numConditions; ++k){
-						if (!swap)
+						if (swap)
 							insert = CheckJoinCondition(fileData, indexData, conditions[k], attrcats, otherAttrcats);
 						else
 							insert = CheckJoinCondition(indexData, fileData, conditions[k], attrcats, otherAttrcats);
