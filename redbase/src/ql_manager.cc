@@ -83,8 +83,6 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 			if (rc = smm->relFile.ForcePages())
 				return rc;
 	}
-	smm->attrFile.ForcePages();
-	smm->relFile.ForcePages();
 	// End check input
 
 	QueryTree qPlan;
