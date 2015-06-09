@@ -557,15 +557,7 @@ RC Node::SelectionExecute(){
 	// No index scan
 	if (strcmp(execution, QL_FILE) == 0){
 		RM_FileScan scan;
-		if (!smm->isCatalog(child->output)){
-			rc = scan.OpenScan(file, INT, 4, 0, NO_OP, NULL);
-		} else {
-			if (strcmp(child->output, MYRELCAT) == 0)
-				rc = scan.OpenScan(smm->relFile, INT, 4, 0, NO_OP, NULL);
-			else 
-				rc = scan.OpenScan(smm->attrFile, INT, 4, 0, NO_OP, NULL);
-		}
-		if (rc)
+		if (rc = scan.OpenScan(file, INT, 4, 0, NO_OP, NULL))
 			return rc;
 
 		RM_Record record;
@@ -640,10 +632,8 @@ RC Node::SelectionExecute(){
 	delete [] outPData;
 
 	// Close files
-	if (!smm->isCatalog(child->output)){
-		if (rc = rmm->CloseFile(file))
-			return rc;
-	}
+	if (rc = rmm->CloseFile(file))
+		return rc;
 	if (rc = rmm->CloseFile(outFile))
 		return rc;
 
@@ -717,15 +707,11 @@ RC Node::JoinExecute(){
 	if (rc = rmm->OpenFile(output, outFile))
 		return rc;
 	RM_FileHandle file;
-	if (!smm->isCatalog(child->output)){
-		if(rc = rmm->OpenFile(child->output, file))
-			return rc;
-	}
+	if(rc = rmm->OpenFile(child->output, file))
+		return rc;
 	RM_FileHandle otherFile;
-	if (!smm->isCatalog(otherChild->output)){
-		if(rc = rmm->OpenFile(otherChild->output, otherFile))
-			return rc;
-	}
+	if(rc = rmm->OpenFile(otherChild->output, otherFile))
+		return rc;
 
 	// Make outPData
 	int len = outAttrs[numOutAttrs-1].offset + outAttrs[numOutAttrs-1].attrLen;
@@ -748,15 +734,7 @@ RC Node::JoinExecute(){
 	if (strcmp(execution, QL_FILE) == 0)
 	{
 		RM_FileScan scan;
-		if (!smm->isCatalog(child->output)){
-			rc = scan.OpenScan(file, INT, 4, 0, NO_OP, NULL);
-		} else {
-			if (strcmp(child->output, MYRELCAT) == 0)
-				rc = scan.OpenScan(smm->relFile, INT, 4, 0, NO_OP, NULL);
-			else 
-				rc = scan.OpenScan(smm->attrFile, INT, 4, 0, NO_OP, NULL);
-		}
-		if (rc)
+		if (rc = scan.OpenScan(file, INT, 4, 0, NO_OP, NULL))
 			return rc;
 
 		// Iterate over files
@@ -767,15 +745,7 @@ RC Node::JoinExecute(){
 				return rc;
 
 			RM_FileScan otherScan;
-			if (!smm->isCatalog(otherChild->output)){
-				rc = otherScan.OpenScan(otherFile, INT, 4, 0, NO_OP, NULL);
-			} else {
-				if (strcmp(otherChild->output, MYRELCAT) == 0)
-					rc = otherScan.OpenScan(smm->relFile, INT, 4, 0, NO_OP, NULL);
-				else 
-					rc = otherScan.OpenScan(smm->attrFile, INT, 4, 0, NO_OP, NULL);
-			}
-			if (rc)
+			if (rc = otherScan.OpenScan(otherFile, INT, 4, 0, NO_OP, NULL))
 				return rc;
 
 			RM_Record otherRecord;
@@ -815,23 +785,9 @@ RC Node::JoinExecute(){
 
 		RM_FileScan fileScan;
 		if (!swap){
-			if (!smm->isCatalog(child->output)){
 				rc = fileScan.OpenScan(file, INT, 4, 0, NO_OP, NULL);
-			} else {
-				if (strcmp(child->output, MYRELCAT) == 0)
-					rc = fileScan.OpenScan(smm->relFile, INT, 4, 0, NO_OP, NULL);
-				else 
-					rc = fileScan.OpenScan(smm->attrFile, INT, 4, 0, NO_OP, NULL);
-			}
 		} else {
-			if (!smm->isCatalog(otherChild->output)){
 				rc = fileScan.OpenScan(otherFile, INT, 4, 0, NO_OP, NULL);
-			} else {
-				if (strcmp(otherChild->output, MYRELCAT) == 0)
-					rc = fileScan.OpenScan(smm->relFile, INT, 4, 0, NO_OP, NULL);
-				else 
-					rc = fileScan.OpenScan(smm->attrFile, INT, 4, 0, NO_OP, NULL);
-			}
 		}
 		if (rc)
 			return rc;
@@ -910,14 +866,10 @@ RC Node::JoinExecute(){
 	delete [] outPData;
 
 	// Close filescans and files
-	if (!smm->isCatalog(otherChild->output)){
-		if (rc = rmm->CloseFile(otherFile))
-			return rc;
-	}
-	if (!smm->isCatalog(child->output)){
-		if (rc = rmm->CloseFile(file))
-			return rc;
-	}
+	if (rc = rmm->CloseFile(otherFile))
+		return rc;
+	if (rc = rmm->CloseFile(file))
+		return rc;
 	if (rc = rmm->CloseFile(outFile))
 		return rc;
 
