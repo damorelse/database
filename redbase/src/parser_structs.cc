@@ -101,7 +101,12 @@ Value& Value::operator=(const Value &other){
 	}
 	return *this;
 }
-Value::~Value(){}
+Value::~Value(){
+	if (del){
+		delete [] data;
+		data = NULL;
+	}
+}
 bool Value::operator==(const Value &other) const{
 	if (type != other.type)
 		return false;
