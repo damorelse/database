@@ -722,53 +722,53 @@ Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& 
 		attrcats[key] = right.outAttrs[i];
 	}
 	// Order conditions
-	if (!EXT){
-		// Find a condition that an index scan can be performed upon
-		for (int i = 0; i < numConditions; ++i){
-			pair<string, string> leftKey = make_pair(conditions[i].lhsAttr.relName, conditions[i].lhsAttr.attrName);
-			pair<string, string> rightKey = make_pair(conditions[i].rhsAttr.relName, conditions[i].rhsAttr.attrName);
+	//if (!EXT){
+	//	// Find a condition that an index scan can be performed upon
+	//	for (int i = 0; i < numConditions; ++i){
+	//		pair<string, string> leftKey = make_pair(conditions[i].lhsAttr.relName, conditions[i].lhsAttr.attrName);
+	//		pair<string, string> rightKey = make_pair(conditions[i].rhsAttr.relName, conditions[i].rhsAttr.attrName);
 
-			// Check is an attribute condition
-			if (!conditions[i].bRhsIsAttr)
-				continue;
+	//		// Check is an attribute condition
+	//		if (!conditions[i].bRhsIsAttr)
+	//			continue;
 
-			// If a left attribute has an index...
-			if ((left.numRelations == 1 && attrcats.find(leftKey) != attrcats.end() && attrcats[leftKey].indexNo != -1)
-			||
-			(right.numRelations == 1 && otherAttrcats.find(leftKey) != otherAttrcats.end() && otherAttrcats[leftKey].indexNo != -1)){
-				// Place condition first
-				if (i > 0){
-					Condition tmp(conditions[0]);
-					memcpy(conditions, conditions + i, sizeof(Condition));
-					memcpy(conditions + i, &tmp, sizeof(Condition));
-				}
-				strcpy(execution, QL_INDEX);
-				break;
-			}
+	//		// If a left attribute has an index...
+	//		if ((left.numRelations == 1 && attrcats.find(leftKey) != attrcats.end() && attrcats[leftKey].indexNo != -1)
+	//		||
+	//		(right.numRelations == 1 && otherAttrcats.find(leftKey) != otherAttrcats.end() && otherAttrcats[leftKey].indexNo != -1)){
+	//			// Place condition first
+	//			if (i > 0){
+	//				Condition tmp(conditions[0]);
+	//				memcpy(conditions, conditions + i, sizeof(Condition));
+	//				memcpy(conditions + i, &tmp, sizeof(Condition));
+	//			}
+	//			strcpy(execution, QL_INDEX);
+	//			break;
+	//		}
 
-			// If a right attribute has an index...
-			if ((left.numRelations == 1 && attrcats.find(rightKey) != attrcats.end() && attrcats[rightKey].indexNo != -1)
-			||
-			(right.numRelations == 1 && otherAttrcats.find(rightKey) != otherAttrcats.end() && otherAttrcats[rightKey].indexNo != -1)){
-				// Flip the condition
-				Condition tmp;
-				tmp.op = FlipOp(conditions[i].op);
-				tmp.rhsAttr = conditions[i].lhsAttr;
-				tmp.lhsAttr = conditions[i].rhsAttr;
+	//		// If a right attribute has an index...
+	//		if ((left.numRelations == 1 && attrcats.find(rightKey) != attrcats.end() && attrcats[rightKey].indexNo != -1)
+	//		||
+	//		(right.numRelations == 1 && otherAttrcats.find(rightKey) != otherAttrcats.end() && otherAttrcats[rightKey].indexNo != -1)){
+	//			// Flip the condition
+	//			Condition tmp;
+	//			tmp.op = FlipOp(conditions[i].op);
+	//			tmp.rhsAttr = conditions[i].lhsAttr;
+	//			tmp.lhsAttr = conditions[i].rhsAttr;
 
-				// Place flipped condition first
-				if (i > 0)
-					memcpy(conditions + i, conditions, sizeof(Condition));
-				memcpy(conditions, &tmp, sizeof(Condition));
-				strcpy(execution, QL_INDEX);
-				break;
-			}
-		}
-	}
-	else {
-		// TODO: Determine most selective/least IO costing conditions by statistics
-		// TODO: set cost, numTuples
-	}
+	//			// Place flipped condition first
+	//			if (i > 0)
+	//				memcpy(conditions + i, conditions, sizeof(Condition));
+	//			memcpy(conditions, &tmp, sizeof(Condition));
+	//			strcpy(execution, QL_INDEX);
+	//			break;
+	//		}
+	//	}
+	//}
+	//else {
+	//	// TODO: Determine most selective/least IO costing conditions by statistics
+	//	// TODO: set cost, numTuples
+	//}
 
 	 // cerr << "JOIN CREATION HERE" << endl;
 	this->smm = smm;
