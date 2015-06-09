@@ -887,10 +887,10 @@ RC Node::JoinExecute(){
 			IX_IndexHandle index;
 			if (rc = ixm->OpenIndex(conditions[0].lhsAttr.relName, left.indexNo, index))
 				return rc;
-			IX_IndexScan indexScan;
-			
-			CompOp op = conditions[0].op;
+			cerr << "index: " << conditions[0].lhsAttr.relName << " " << left.indexNo << endl;
 
+			IX_IndexScan indexScan;
+			CompOp op = conditions[0].op;
 			if (op == NE_OP){
 				op = LT_OP;
 			}
@@ -912,6 +912,8 @@ RC Node::JoinExecute(){
 					if (rc = indexRecord.GetData(indexData))
 						return rc;
 
+					cerr << "Found a tuple" << endl;
+
 					// Check rest of conditions
 					bool insert = true;
 					for (int k = 1; insert && k < numConditions; ++k){
@@ -921,6 +923,7 @@ RC Node::JoinExecute(){
 							insert = CheckJoinCondition(indexData, fileData, conditions[k], attrcats, otherAttrcats);
 					}
 					if (insert){
+						cerr << "inserted!!!!!!!!!!" << endl;
 						if (!swap)
 							rc = WriteToOutput(child, otherChild, numOutAttrs, outAttrs, attrcats, otherAttrcats, fileRecord, indexRecord, outPData, outFile);
 						else
