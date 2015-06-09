@@ -735,7 +735,7 @@ Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& 
 			// If a left attribute has an index...
 			if ((left.numRelations == 1 && attrcats.find(leftKey) != attrcats.end() && attrcats[leftKey].indexNo != -1)
 			||
-			(right.numRelations == 1 && otherAttrcats.find(rightKey) != otherAttrcats.end() && otherAttrcats[rightKey].indexNo != -1)){
+			(right.numRelations == 1 && otherAttrcats.find(leftKey) != otherAttrcats.end() && otherAttrcats[leftKey].indexNo != -1)){
 				// Place condition first
 				if (i > 0){
 					Condition tmp(conditions[0]);
