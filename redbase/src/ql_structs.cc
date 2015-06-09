@@ -861,7 +861,6 @@ RC Node::JoinExecute(){
 	// (AB join C with index on C's attribute, A join B with index on one attribute)
 	else if (strcmp(execution, QL_INDEX) == 0)
 	{
-		cerr << "Reached the index scan" << endl;
 		// Assumes lhsAttr is the indexed one
 		Attrcat left = GetAttrcat(conditions[0].lhsAttr, attrcats, otherAttrcats);
 		Attrcat right = GetAttrcat(conditions[0].rhsAttr, attrcats, otherAttrcats);
@@ -884,10 +883,15 @@ RC Node::JoinExecute(){
 				return rc;
 			char * value = fileData + right.offset;
 
+			// TESTING
+			int intTemp;
+			memcpy(&intTemp, value, 4);
+			cerr << "Test offset value: " << endl;
+			// TESTING
+
 			IX_IndexHandle index;
 			if (rc = ixm->OpenIndex(conditions[0].lhsAttr.relName, left.indexNo, index))
 				return rc;
-			cerr << "index: " << conditions[0].lhsAttr.relName << " " << left.indexNo << endl;
 
 			IX_IndexScan indexScan;
 			CompOp op = conditions[0].op;
