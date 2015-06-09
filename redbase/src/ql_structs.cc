@@ -929,7 +929,7 @@ RC Node::JoinExecute(){
 							return rc;
 					}
 				}
-				if (rc != RM_EOF)
+				if (rc != IX_EOF)
 					return rc;
 				if (rc = indexScan.CloseScan())
 					return rc;
