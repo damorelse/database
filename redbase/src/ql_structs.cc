@@ -542,6 +542,7 @@ Selection::Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& le
 	}
 	else {
 		// TODO: Determine most selective/least IO costing condition by statistics
+		// TODO: set cost, numTuples
 	}
 
 	this->smm = smm;
@@ -762,7 +763,8 @@ Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& 
 		}
 	}
 	else {
-		// TODO: Order conditions by statistics calculated selectivity / access cost
+		// TODO: Determine most selective/least IO costing conditions by statistics
+		// TODO: set cost, numTuples
 	}
 
 	 // cerr << "JOIN CREATION HERE" << endl;
