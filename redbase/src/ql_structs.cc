@@ -932,7 +932,7 @@ RC Node::JoinExecute(){
 					}
 					if (insert){
 						cerr << "inserted!!!!!!!!!!" << endl;
-						if (!swap)
+						if (swap)
 							rc = WriteToOutput(child, otherChild, numOutAttrs, outAttrs, attrcats, otherAttrcats, fileRecord, indexRecord, outPData, outFile);
 						else
 							rc = WriteToOutput(child, otherChild, numOutAttrs, outAttrs, attrcats, otherAttrcats, indexRecord, fileRecord, outPData, outFile);
