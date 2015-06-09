@@ -505,15 +505,45 @@ Selection::Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& le
 		if (SelectionConditionApplies(conds[i], myRelations))
 			condVector.push_back(conds[i]);
 	}
-	numConditions = condVector.size();
-	conditions = new Condition[numConditions];
-	memcpy(conditions, &condVector[0], numConditions * sizeof(Condition));
 	// Early exit
-	if (numConditions == 0){
+	if (condVector.size() == 0){
 		rc = QL_SELNODE;
 		return;
 	}
+
+	numConditions = condVector.size();
+	conditions = new Condition[numConditions];
+	memcpy(conditions, &condVector[0], numConditions * sizeof(Condition));
+
 	
+	// Make attribute-attrcat maps
+	map<pair<string, string>, Attrcat> attrcats;
+	for (int i = 0; i < left.numOutAttrs; ++i){
+		pair<string, string> key = getRelAttrNames(left.outAttrs[i].attrName);
+		attrcats[key] = left.outAttrs[i];
+	}
+	// Order conditions
+	if (!EXT){
+		// Find a condition that an index scan can be performed upon
+		for (int i = 0; i < numConditions; ++i){
+			pair<string, string> key = make_pair(conditions[i].lhsAttr.relName, conditions[i].lhsAttr.attrName);
+			// If is a value condition and attribute has an index...
+			if (!conditions[i].bRhsIsAttr && attrcats[key].indexNo != -1){
+				// Place condition first
+				if (i > 0){
+					Condition tmp(conditions[0]);
+					memcpy(conditions, conditions + i, sizeof(Condition));
+					memcpy(conditions + i, &tmp, sizeof(Condition));
+				}
+				strcpy(execution, QL_INDEX);
+				break;
+			}
+		}
+	}
+	else {
+		// TODO: Determine most selective/least IO costing condition by statistics
+	}
+
 	this->smm = smm;
 	this->rmm = rmm;
 	this->ixm = ixm;
@@ -680,6 +710,13 @@ Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& 
 	conditions = new Condition[numConditions];
 	copy(condVector.begin(), condVector.end(), conditions);
 
+	// Order conditions
+	if (!EXT){
+		// TODO: Determine if Index scan possible
+	}
+	else {
+		// TODO: Order conditions by statistics calculated selectivity / access cost
+	}
 
 	 // cerr << "JOIN CREATION HERE" << endl;
 	this->smm = smm;
