@@ -829,9 +829,6 @@ RC QL_Manager::CheckCondition(Condition &condition, const char * const relations
 					return QL_TYPEINCOM;
 				condition.rhsValue.type = lhsType;
 				// copy back
-				//delete [] condition.rhsValue.data;
-				/*condition.rhsValue.del = true;
-				condition.rhsValue.data = new char[4];*/
 				memcpy(condition.rhsValue.data, &tmp, 4);
 				break;
 					 }
@@ -843,7 +840,6 @@ RC QL_Manager::CheckCondition(Condition &condition, const char * const relations
 					return QL_TYPEINCOM;
 				condition.rhsValue.type = lhsType;
 				// copy back
-				condition.rhsValue.data = new char[4];
 				memcpy(condition.rhsValue.data, &tmp, 4);
 				break;
 					   }
