@@ -127,7 +127,6 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 	else {
 		map<string, Attrcat*> map; // relName.attrName -> outAttr pointer
 		for (int i = 0; i < qPlan.root->numOutAttrs; ++i){
-			cerr << "OutAttr attrName : " << endl;
 			map[qPlan.root->outAttrs[i].attrName] = qPlan.root->outAttrs + i;
 		}
 		Attrcat* attrcat;
@@ -135,8 +134,6 @@ RC QL_Manager::Select(int nSelAttrs, const RelAttr selAttrs[],
 			RelAttr tmp(selAttrs[i]);
 			if (rc = CheckAttribute(tmp, relations, nRelations))
 				return rc;
-			cerr << "Relation name : " << tmp.relName << endl;
-			cerr << "Attribute name : " << tmp.attrName << endl;
 			attrcat = map[string(tmp.relName) + "." + string(tmp.attrName)];
 			dataAttrs.push_back(DataAttrInfo (*attrcat, true));
 		}
@@ -1239,6 +1236,7 @@ RC QL_Manager::GetResults(Node &qPlan)
 // Print query plan
 void QL_Manager::PrintQueryPlan(Node &node)
 {
+	cout << endl << endl << "Query Plan: " << endl << endl;
 	RecursivePrint(node, 0);
 }
 void QL_Manager::RecursivePrint(Node &node, int indent){
