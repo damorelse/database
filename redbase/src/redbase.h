@@ -134,6 +134,7 @@ struct Attrcat {
 	Attrcat(char* pData);
 	Attrcat(const char* relName, const char * attrName, int offset, AttrType attrType, int attrLen, int indexNo);
 	Attrcat& operator=(char* pData);
+	Attrcat& operator=(const Attrcat& other);
 };
 
 #endif
