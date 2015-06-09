@@ -751,7 +751,7 @@ Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& 
 			||
 			(right.numRelations == 1 && otherAttrcats.find(rightKey) != otherAttrcats.end() && otherAttrcats[rightKey].indexNo != -1)){
 				// Flip the condition
-				Condition tmp;
+				Condition tmp(conditions[i]);
 				tmp.op = FlipOp(conditions[i].op);
 				tmp.rhsAttr = conditions[i].lhsAttr;
 				tmp.lhsAttr = conditions[i].rhsAttr;
