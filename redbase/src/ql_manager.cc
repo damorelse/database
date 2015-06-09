@@ -991,10 +991,9 @@ RC QL_Manager::MakeSelectQueryPlan(int nSelAttrs, const RelAttr selAttrs[],
 				 // cerr << "makequeryplan F2" << endl;
 
 				// Fence post
-				//cout << "before pop front : " << needToJoin.size() << endl;
 				Node* left = *needToJoin.begin();
 				needToJoin.pop_front();
-				//cout << "after pop front : " << needToJoin.size() << endl;;
+
 				// Remove left conditions
 				set<Condition> leftConds(left->conditions, left->conditions + left->numConditions);
 				vector<Condition> currConds;
@@ -1269,10 +1268,12 @@ void QL_Manager::RecursivePrint(Node &node, int indent){
 	cout << endl;
 
 	// Print access type
-	for (int i = 0; i < indent; ++i)
-		cout << "|   ";
-	node.printExecution();
-	cout << endl;
+	if (strcmp(node.type, QL_JOIN) == 0 || strcmp(node.type, QL_SEL) == 0){
+		for (int i = 0; i < indent; ++i)
+			cout << "|   ";
+		node.printExecution();
+		cout << endl;
+	}
 
 	for (int i = 0; i < indent; ++i)
 		cout << "|   ";

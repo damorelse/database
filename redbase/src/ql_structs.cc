@@ -109,6 +109,7 @@ Node::Node(){
 	tupleSize = 0;
 
 	rc = 0;
+	memset(execution, '\0', MAXNAME+1);
 	strcpy(execution, QL_FILE);
 	cost = 0;
 	numTuples = 0;
@@ -158,7 +159,7 @@ Node::Node(const Node& other){
 	project = other.project;
 
 	rc = other.rc;
-	strcpy(execution, other.execution);
+	memcpy(execution, other.execution, MAXNAME+1);
 	cost = other.cost;
 	numTuples = other.numTuples;
 	tupleSize = other.tupleSize;

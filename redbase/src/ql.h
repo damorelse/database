@@ -73,7 +73,7 @@ public:
 	int tupleSize;
 
 	RC rc; // set optionally
-	char execution[20]; //set during query plan building
+	char execution[MAXNAME+1]; //set during query plan building
 	int cost; //set during query plan building
 	int numTuples; //set during query plan building
 
