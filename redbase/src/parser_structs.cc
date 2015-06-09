@@ -105,6 +105,7 @@ Value::~Value(){
 	if (del){
 		delete [] data;
 		data = NULL;
+		del = false;
 	}
 }
 bool Value::operator==(const Value &other) const{
