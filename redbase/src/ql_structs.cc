@@ -716,6 +716,7 @@ Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& 
 		pair<string, string> key = getRelAttrNames(left.outAttrs[i].attrName);
 		attrcats[key] = left.outAttrs[i];
 	}
+	map<pair<string, string>, Attrcat> otherAttrcats;
 	for (int i = 0; i < right.numOutAttrs; ++i){
 		pair<string, string> key = getRelAttrNames(right.outAttrs[i].attrName);
 		attrcats[key] = right.outAttrs[i];
@@ -732,7 +733,9 @@ Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& 
 				continue;
 
 			// If a left attribute has an index...
-			if (attrcats[leftKey].indexNo != -1){
+			if ((left.numRelations == 1 && attrcats.find(leftKey) != attrcats.end() && attrcats[leftKey].indexNo != -1)
+			||
+			(right.numRelations == 1 && otherAttrcats.find(rightKey) != otherAttrcats.end() && otherAttrcats[rightKey].indexNo != -1)){
 				// Place condition first
 				if (i > 0){
 					Condition tmp(conditions[0]);
@@ -744,7 +747,9 @@ Join::Join(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& left, Node& 
 			}
 
 			// If a right attribute has an index...
-			if (attrcats[rightKey].indexNo != -1){
+			if ((left.numRelations == 1 && attrcats.find(rightKey) != attrcats.end() && attrcats[rightKey].indexNo != -1)
+			||
+			(right.numRelations == 1 && otherAttrcats.find(rightKey) != otherAttrcats.end() && otherAttrcats[rightKey].indexNo != -1)){
 				// Flip the condition
 				Condition tmp;
 				tmp.op = FlipOp(conditions[i].op);
