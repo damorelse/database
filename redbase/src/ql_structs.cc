@@ -514,34 +514,42 @@ Selection::Selection(SM_Manager *smm, RM_Manager *rmm, IX_Manager *ixm, Node& le
 	memcpy(conditions, &condVector[0], numConditions * sizeof(Condition));
 
 	
-	//// Make attribute-attrcat maps
-	//map<pair<string, string>, Attrcat> attrcats;
-	//for (int i = 0; i < left.numOutAttrs; ++i){
-	//	pair<string, string> key = getRelAttrNames(left.outAttrs[i].attrName);
-	//	attrcats[key] = left.outAttrs[i];
-	//}
-	//// Order conditions
-	//if (!EXT){
-	//	// Find a condition that an index scan can be performed upon
-	//	for (int i = 0; i < numConditions; ++i){
-	//		pair<string, string> key = make_pair(conditions[i].lhsAttr.relName, conditions[i].lhsAttr.attrName);
-	//		// If is a value condition and attribute has an index...
-	//		if (!conditions[i].bRhsIsAttr && attrcats[key].indexNo != -1){
-	//			// Place condition first
-	//			if (i > 0){
-	//				Condition tmp(conditions[0]);
-	//				memcpy(conditions, conditions + i, sizeof(Condition));
-	//				memcpy(conditions + i, &tmp, sizeof(Condition));
-	//			}
-	//			strcpy(execution, QL_INDEX);
-	//			break;
-	//		}
-	//	}
-	//}
-	//else {
-	//	// TODO: Determine most selective/least IO costing condition by statistics
-	//	// TODO: set cost, numTuples
-	//}
+	// Make attribute-attrcat maps
+	map<pair<string, string>, Attrcat> attrcats;
+	for (int i = 0; i < left.numOutAttrs; ++i){
+		pair<string, string> key = getRelAttrNames(left.outAttrs[i].attrName);
+		attrcats[key] = left.outAttrs[i];
+	}
+	// Order conditions
+	if (!EXT){
+	// Find a condition that an index scan can be performed upon
+		for (int i = 0; i < numConditions; ++i){
+			cerr << "Select start" << endl;
+			pair<string, string> key = make_pair(conditions[i].lhsAttr.relName, conditions[i].lhsAttr.attrName);
+			cerr << "Select A" << endl;
+			// If is a value condition and attribute has an index...
+			if (!conditions[i].bRhsIsAttr && attrcats[key].indexNo != -1){
+				cerr << "Select B" << endl;
+				// Place condition first
+				if (i > 0){
+					cerr << "Select C" << endl;
+					Condition tmp(conditions[0]);
+					cerr << "Select D" << endl;
+					memcpy(conditions, conditions + i, sizeof(Condition));
+					cerr << "Select E" << endl;
+					memcpy(conditions + i, &tmp, sizeof(Condition));
+				}
+				cerr << "Select G" << endl;
+				strcpy(execution, QL_INDEX);
+				break;
+			}
+			cerr << "Select end" << endl;
+		}
+	}
+	else {
+		// TODO: Determine most selective/least IO costing condition by statistics
+		// TODO: set cost, numTuples
+	}
 
 	this->smm = smm;
 	this->rmm = rmm;
@@ -611,6 +619,7 @@ RC Node::SelectionExecute(){
 	}
 	// Use index scan (for value conditions only, with an index on lhs attribute)
 	else if (strcmp(execution, QL_INDEX) == 0) {
+		cerr << "  Sel-Ex A" << endl;
 		pair<string, string> key(conditions[0].lhsAttr.relName, conditions[0].lhsAttr.attrName);
 		IX_IndexHandle index;
 		if (rc = ixm->OpenIndex(attrcats[key].relName, attrcats[key].indexNo, index))
@@ -621,23 +630,26 @@ RC Node::SelectionExecute(){
 		if (conditions[0].op == NE_OP){
 			op = LT_OP;
 		}
+		cerr << "  Sel-Ex B" << endl;
 		for (int i = 0; i < 1 || (conditions[0].op == NE_OP && i < 2); ++i){
 			if (rc = indexScan.OpenScan(index, op, conditions[0].rhsValue.data))
 				return rc;
-
+			cerr << "  Sel-Ex C" << endl;
 			RID rid;
 			while(OK_RC == (rc = indexScan.GetNextEntry(rid))){
+				cerr << "  Sel-Ex D" << endl;
 				RM_Record record;
 				if (rc = file.GetRec(rid, record))
 					return rc;
 				char* pData;
 				if (rc = record.GetData(pData))
 					return rc;
-
+				cerr << "  Sel-Ex E" << endl;
 				// Check rest of conditions
 				bool insert = true;
 				for (int k = 1; insert && k < numConditions; ++k)
 					insert = CheckSelectionCondition(pData, conditions[k], attrcats);
+				cerr << "  Sel-Ex F" << endl;
 				if (insert){
 					if (rc = WriteToOutput(child, otherChild, numOutAttrs, outAttrs, attrcats, attrcats, record, record, outPData, outFile))
 						return rc;
@@ -659,7 +671,7 @@ RC Node::SelectionExecute(){
 
 	// Delete pData
 	delete [] outPData;
-
+	cerr << "  Sel-Ex G" << endl;
 	// Close files
 	if (rc = rmm->CloseFile(file))
 		return rc;
